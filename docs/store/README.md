@@ -5,6 +5,7 @@ show:
 
 ```
 npm run build -w @sf-claws/shared
+node tools/render-icons.mjs          # only when src/icons/logo.svg changed
 npm run build:store -w @sf-claws/extension
 npm run build -w @sf-claws/admin-ui
 node tools/demo-server.mjs --port 8799 > /tmp/demo.json &

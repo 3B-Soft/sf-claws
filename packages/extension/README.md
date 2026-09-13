@@ -53,7 +53,7 @@ npm run build:store -w @sf-claws/extension  # the Chrome Web Store upload — se
 - The side panel also runs as a plain web page (`dist/sidepanel.html` via `file://` or any static server): `chrome.*` is shimmed by `src/lib/storage.js` / `src/lib/bridge.js` (storage falls back to `localStorage`). Add `?sfUrl=https://acme.lightning.force.com/lightning/r/Account/001.../view` to simulate a Salesforce tab context.
 - The version comes from `package.json` alone; `src/manifest.json` must not declare one (postbuild
   throws if it does, because a second copy silently drifts from the one that ships).
-- `scripts/postbuild.mjs` bundles `src/content.js` as a classic IIFE (content scripts cannot be ES modules; `src/recorder.js` is bundled into `background.js` as a self-contained function passed to `executeScript`), copies `src/manifest.json` (version taken from `package.json`), generates the 16/32/48/128 PNG icons with a tiny deterministic PNG encoder, and writes the release zip.
+- `scripts/postbuild.mjs` bundles `src/content.js` as a classic IIFE (content scripts cannot be ES modules; `src/recorder.js` is bundled into `background.js` as a self-contained function passed to `executeScript`), copies `src/manifest.json` (version taken from `package.json`) and the 16/32/48/128 icons from `src/icons/`, and writes the release zip. The icons are the 3B logo, rasterised from `src/icons/logo.svg` by `tools/render-icons.mjs` — re-run it and commit the PNGs when the logo changes.
 - CSP: `script-src 'self'` — no inline scripts; all JS is loaded from `assets/`.
 
 ## Server routes used

@@ -20,7 +20,7 @@ const arg = (name, fallback) => {
 };
 const shotsDir = path.resolve(arg('shots', 'docs/screenshots'));
 const outDir = path.resolve(arg('out', 'docs/store'));
-const iconPath = path.resolve('packages/extension/dist/icons/icon-128.png');
+const iconPath = path.resolve('packages/extension/src/icons/icon-128.png');
 fs.mkdirSync(outDir, { recursive: true });
 
 const asUrl = (p) => {
@@ -28,23 +28,24 @@ const asUrl = (p) => {
   return `data:image/png;base64,${fs.readFileSync(p).toString('base64')}`;
 };
 
-const BRAND = '#0176D3';
-const BRAND_DARK = '#014486';
+const BRAND = '#00ca72'; // 3B green: the accent, never behind white text
+const BRAND_DEEP = '#007c44'; // green that is dark enough to read as text on a light ground
+const BRAND_DARKEST = '#002d18';
 const INK = '#0B1B2B';
 const MUTED = '#4A5D70';
 
 const base = `
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Liberation Sans','DejaVu Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-  .frame{position:relative;overflow:hidden;background:#EEF3F8}
+  .frame{position:relative;overflow:hidden;background:#F1F9F5}
   .frame::after{content:'';position:absolute;inset:0;background:
-    radial-gradient(1100px 520px at 88% -12%, rgba(1,118,211,.16), transparent 60%),
-    radial-gradient(760px 420px at -8% 108%, rgba(1,68,134,.12), transparent 62%)}
+    radial-gradient(1100px 520px at 88% -12%, rgba(0,202,114,.20), transparent 60%),
+    radial-gradient(760px 420px at -8% 108%, rgba(0,124,68,.13), transparent 62%)}
   .inner{position:relative;z-index:1;height:100%;display:flex;align-items:center;gap:56px;padding:0 64px}
   .copy{flex:1;max-width:560px}
   .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:15px;font-weight:700;
-    letter-spacing:.10em;text-transform:uppercase;color:${BRAND_DARK};margin-bottom:20px}
-  .eyebrow img{width:26px;height:26px;border-radius:7px}
+    letter-spacing:.10em;text-transform:uppercase;color:${BRAND_DEEP};margin-bottom:20px}
+  .eyebrow img{width:26px;height:26px}
   h1{font-size:46px;line-height:1.1;color:${INK};letter-spacing:-.022em;font-weight:700}
   p.sub{margin-top:20px;font-size:21px;line-height:1.48;color:${MUTED}}
   ul{margin-top:26px;list-style:none;display:flex;flex-direction:column;gap:13px}
@@ -94,18 +95,17 @@ function promoTile({ icon, w, h, title, sub, shot }) {
   const big = w > 600;
   return `<style>${base}</style>
   <div style="width:${w}px;height:${h}px;position:relative;overflow:hidden;
-       background:linear-gradient(135deg,${BRAND_DARK} 0%,${BRAND} 62%,#2A97E8 100%)">
-    <div style="position:absolute;inset:0;background:radial-gradient(620px 300px at 82% 118%,rgba(255,255,255,.20),transparent 62%)"></div>
+       background:linear-gradient(118deg,${BRAND_DARKEST} 0%,#00542f 54%,${BRAND_DEEP} 84%,${BRAND} 100%)">
+    <div style="position:absolute;inset:0;background:radial-gradient(520px 240px at 94% 126%,rgba(0,202,114,.30),transparent 62%)"></div>
     <div style="position:relative;z-index:1;height:100%;display:flex;align-items:center;
          gap:${big ? 52 : 22}px;padding:0 ${big ? 62 : 30}px">
       <div style="flex:1">
         <div style="display:flex;align-items:center;gap:${big ? 16 : 11}px;margin-bottom:${big ? 20 : 12}px">
-          <img src="${icon}" style="width:${big ? 60 : 40}px;height:${big ? 60 : 40}px;border-radius:${big ? 15 : 10}px;
-               box-shadow:0 5px 16px rgba(0,0,0,.26)"/>
+          <img src="${icon}" style="width:${big ? 62 : 42}px;height:${big ? 62 : 42}px"/>
           <div style="font-size:${big ? 46 : 31}px;font-weight:700;color:#fff;letter-spacing:-.02em">SF Claws</div>
         </div>
-        <div style="font-size:${big ? 27 : 16}px;line-height:1.34;color:rgba(255,255,255,.95);font-weight:600">${title}</div>
-        <div style="font-size:${big ? 19 : 13}px;line-height:1.45;color:rgba(255,255,255,.80);margin-top:${big ? 14 : 8}px">${sub}</div>
+        <div style="font-size:${big ? 27 : 16}px;line-height:1.34;color:#fff;font-weight:600">${title}</div>
+        <div style="font-size:${big ? 19 : 13}px;line-height:1.45;color:rgba(255,255,255,.93);margin-top:${big ? 14 : 8}px">${sub}</div>
       </div>
       ${
         shot
