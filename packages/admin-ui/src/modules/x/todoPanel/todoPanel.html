@@ -1,0 +1,27 @@
+<template lwc:render-mode="light">
+  <div class="card mb-4 overflow-hidden">
+    <button class="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-surface-sunken" onclick={toggle}>
+      <x-icon name={chevron} cls="h-4 w-4 text-content-subtle"></x-icon>
+      <x-icon name="list" cls="h-4 w-4 text-brand-600"></x-icon>
+      <span class="text-sm font-semibold text-content-strong">Plan</span>
+      <span class="text-xs text-content-muted">{summary}</span>
+      <div class="ml-auto hidden h-1.5 w-40 overflow-hidden rounded-full bg-surface-sunken sm:block"><div class="h-1.5 rounded-full bg-emerald-500 transition-all" style={progressStyle}></div></div>
+      <span class="w-10 text-right font-mono text-[11px] text-content-muted">{percent}</span>
+    </button>
+    <template lwc:if={collapsed}></template>
+    <template lwc:else>
+      <ul class="divide-y divide-line border-t border-line">
+        <template for:each={rows} for:item="t">
+          <li key={t.id} class={t.cls}>
+            <span class={t.iconCls}>
+              <template lwc:if={t.inProgress}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template>
+              <template lwc:else>{t.glyph}</template>
+            </span>
+            <span class="min-w-0 flex-1"><span class={t.textCls}>{t.text}</span><template lwc:if={t.owner}><span class="ml-2 text-[10px] text-content-subtle">{t.owner}</span></template></span>
+            <x-badge value={t.status} color={t.color}></x-badge>
+          </li>
+        </template>
+      </ul>
+    </template>
+  </div>
+</template>

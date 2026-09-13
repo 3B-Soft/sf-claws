@@ -1,0 +1,27 @@
+<template lwc:render-mode="light">
+  <template lwc:if={mobileOpen}><div class="fixed inset-0 z-30 bg-canvas lg:hidden" onclick={closeMobile}></div></template>
+  <aside class={asideCls}>
+    <div class="flex h-14 items-center gap-3 border-b border-line px-4">
+      <a href="#/" class="flex items-center gap-3" onclick={navigate}>
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500 font-bold text-white shadow-lg shadow-content-strong/10">x3</span>
+        <span class={labelCls}><span class="block text-sm font-semibold leading-tight text-content-strong">SF Claws</span><span class="block text-[10px] uppercase tracking-wider text-content-subtle">Admin console</span></span>
+      </a>
+      <button class="ml-auto rounded p-1 text-content-muted hover:text-content-strong lg:hidden" onclick={closeMobile} aria-label="Close menu"><x-icon name="close"></x-icon></button>
+    </div>
+    <nav class="flex-1 overflow-y-auto px-3 py-3">
+      <template for:each={sections} for:item="s">
+        <div key={s.id}>
+          <div class={sectionLabelCls}>{s.label}</div>
+          <div class="space-y-0.5">
+            <template for:each={s.items} for:item="i">
+              <a key={i.id} href={i.href} class={i.cls} title={i.title} onclick={navigate}><x-icon name={i.icon} cls="h-[18px] w-[18px]"></x-icon><span class={labelCls}>{i.label}</span></a>
+            </template>
+          </div>
+        </div>
+      </template>
+    </nav>
+    <div class="hidden border-t border-line p-3 lg:block">
+      <button class="nav-item w-full justify-center text-content-subtle" onclick={toggle} title="Toggle sidebar"><x-icon name="chevronRight" cls={toggleIconCls}></x-icon><span class={labelCls}>Collapse</span></button>
+    </div>
+  </aside>
+</template>

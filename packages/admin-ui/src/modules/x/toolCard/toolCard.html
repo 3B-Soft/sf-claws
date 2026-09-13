@@ -1,0 +1,48 @@
+<template lwc:render-mode="light">
+  <div class={cls}>
+    <button class="flex w-full items-center gap-2.5 px-3 py-2 text-left" onclick={toggle}>
+      <x-icon name={chevron} cls="h-3.5 w-3.5 text-content-subtle"></x-icon>
+      <span class="flex h-6 w-6 items-center justify-center rounded-md bg-surface-sunken text-content"><x-icon name={icon} cls="h-3.5 w-3.5"></x-icon></span>
+      <span class="min-w-0 flex-1 truncate text-sm text-content">{label}</span>
+      <span class="mono hidden text-content-subtle sm:inline">{toolName}</span>
+      <template lwc:if={duration}><span class="text-[11px] text-content-subtle">{duration}</span></template>
+      <x-icon name={statusIcon} cls={statusCls}></x-icon>
+    </button>
+    <template lwc:if={isWrite}>
+      <div class="flex flex-wrap items-center gap-2 border-t border-line px-3 py-2 text-xs"><x-badge value={writeAction}></x-badge><span class="mono min-w-0 flex-1 truncate text-content">{writePath}</span><button class="link" onclick={openFile}>View diff</button></div>
+    </template>
+    <template lwc:if={open}>
+      <div class="space-y-3 border-t border-line p-3">
+        <template lwc:if={resultLabel}><div class="text-xs text-content-muted">{resultLabel}</div></template>
+        <template lwc:if={isSoql}>
+          <template lwc:if={soql}><pre class="overflow-x-auto rounded-lg bg-canvas p-2.5 font-mono text-[12px] text-sky-700">{soql}</pre></template>
+          <div class="text-xs text-content-subtle">{soqlMeta}</div>
+          <div class="max-h-80 overflow-auto rounded-lg border border-line"><table class="table"><thead><tr><template for:each={soqlColumns} for:item="c"><th key={c.key}>{c.label}</th></template></tr></thead><tbody><template for:each={soqlRows} for:item="r"><tr key={r.id}><template for:each={r.cells} for:item="c"><td key={c.key} class="whitespace-nowrap font-mono text-[12px]">{c.text}</td></template></tr></template></tbody></table></div>
+        </template>
+        <template lwc:elseif={isDescribe}>
+          <div class="text-xs text-content-subtle">{describeMeta}</div>
+          <div class="max-h-80 overflow-auto rounded-lg border border-line"><table class="table"><thead><tr><th>API name</th><th>Label</th><th>Type</th><th></th></tr></thead><tbody><template for:each={describeFields} for:item="f"><tr key={f.id}><td class="mono">{f.name}</td><td>{f.label}</td><td><x-badge value={f.type} color="sky" raw></x-badge></td><td class="text-[11px] text-amber-700">{f.req}</td></tr></template></tbody></table></div>
+        </template>
+        <template lwc:elseif={isList}>
+          <div class="text-xs text-content-subtle">{listMeta}</div>
+          <div class="flex max-h-72 flex-wrap gap-1.5 overflow-auto"><template for:each={listItems} for:item="it"><span key={it.id} class="chip border-line-strong bg-surface-sunken text-content"><template lwc:if={it.type}><span class="text-content-subtle">{it.type}</span></template>{it.name}</span></template></div>
+        </template>
+        <template lwc:elseif={isRead}>
+          <div class="text-xs text-content-subtle">Metadata source · {readMeta}</div>
+          <pre class="max-h-96 overflow-auto rounded-lg bg-canvas p-3 font-mono text-[12px] text-content">{readXml}</pre>
+        </template>
+        <template lwc:else>
+          <template lwc:if={genericSummary}><div class="text-sm text-content">{genericSummary}</div></template>
+          <template lwc:if={proMode}>
+            <template lwc:if={hasInput}><div><div class="label">Input</div><x-json-tree value={input}></x-json-tree></div></template>
+            <template lwc:if={hasOutput}><div><div class="label">Output</div><template lwc:if={outputIsObject}><x-json-tree value={out}></x-json-tree></template><template lwc:else><pre class="rounded-lg bg-canvas p-3 text-xs text-content whitespace-pre-wrap">{outputText}</pre></template></div></template>
+          </template>
+        </template>
+        <template lwc:if={proMode}>
+          <template lwc:if={isGeneric}></template>
+          <template lwc:else><details><summary class="cursor-pointer text-xs text-content-subtle hover:text-content">Raw input / output (pro)</summary><div class="mt-2 space-y-2"><template lwc:if={hasInput}><x-json-tree value={input}></x-json-tree></template><template lwc:if={hasOutput}><x-json-tree value={out}></x-json-tree></template></div></details></template>
+        </template>
+      </div>
+    </template>
+  </div>
+</template>

@@ -1,0 +1,50 @@
+<template lwc:render-mode="light">
+  <x-page-header title={greeting} subtitle="Here is what is happening across your Salesforce harness.">
+    <button class="btn-secondary btn-sm" onclick={load}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon>Refresh</button>
+  </x-page-header>
+
+  <template lwc:if={error}><div class="mb-6"><x-error-state title="Could not load dashboard data" error={error} compact onretry={load}></x-error-state></div></template>
+  <template lwc:elseif={hasPartialErrors}><div class="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700">Some widgets failed to load: {partialErrorText}</div></template>
+  <template lwc:if={ready}>
+    <div class={tilesCls}>
+      <template lwc:if={admin}><x-stat-card label="Users pending" value={pendingCount} hint={pendingHint} icon="users" tone={pendingTone} href="#/users" loading={loading}></x-stat-card></template>
+      <x-stat-card label="Sessions · 24h" value={sessions24h} hint={runningHint} icon="sessions" tone="brand" href={sessionsHref} loading={loading}></x-stat-card>
+      <x-stat-card label="Cost · 24h" value={cost24h} hint={costHint} icon="dollar" tone="emerald" href={usageHref} loading={loading}></x-stat-card>
+      <template lwc:if={admin}><x-stat-card label="Clients" value={clientsCount} hint={orgsHint} icon="clients" tone="sky" href={clientsHref} loading={loading}></x-stat-card></template>
+      <template lwc:if={admin}><x-stat-card label="Salesforce orgs" value={orgsCount} hint="Across all clients" icon="cloud" tone="amber" href={clientsHref} loading={loading}></x-stat-card></template>
+      <template lwc:if={admin}></template><template lwc:else><x-stat-card label="Your sessions" value={totalSessions} hint="All time" icon="clock" tone="sky" href={sessionsHref} loading={loading}></x-stat-card></template>
+    </div>
+
+    <div class="mt-6 grid gap-6 lg:grid-cols-3">
+      <div class="card lg:col-span-2">
+        <div class="flex items-center justify-between border-b border-line px-5 py-3"><h2 class="text-sm font-semibold text-content-strong">Recent sessions</h2><a href="#/sessions" class="link text-xs">View all</a></div>
+        <template lwc:if={loading}><x-skeleton rows="5"></x-skeleton></template>
+        <template lwc:elseif={hasRecent}>
+          <ul class="divide-y divide-line">
+            <template for:each={recentSessions} for:item="s">
+              <li key={s.id} class="flex cursor-pointer items-center gap-3 px-5 py-3 hover:bg-surface-sunken" data-id={s.id} onclick={openSession}>
+                <x-badge value={s.status} dot></x-badge>
+                <div class="min-w-0 flex-1"><div class="truncate text-sm text-content-strong">{s.title}</div><div class="text-xs text-content-subtle">{s.when}</div></div>
+                <template lwc:if={s.helpfulIcon}><x-icon name={s.helpfulIcon} cls={s.helpfulCls}></x-icon></template>
+                <span class="font-mono text-xs text-content">{s.cost}</span>
+                <x-icon name="chevronRight" cls="h-4 w-4 text-content-subtle"></x-icon>
+              </li>
+            </template>
+          </ul>
+        </template>
+        <template lwc:elseif={error}><div class="p-4 text-center text-sm text-content-subtle">Sessions unavailable until the server is reachable.</div></template>
+        <template lwc:else><div class="p-4"><x-empty-state icon="sessions" title="No sessions yet" description="Sessions are started from the Chrome side-panel extension while working in a Salesforce org."></x-empty-state></div></template>
+      </div>
+      <div class="space-y-3">
+        <h2 class="px-1 text-sm font-semibold text-content-strong">Quick links</h2>
+        <template for:each={quickLinks} for:item="l">
+          <a key={l.id} href={l.href} class="card flex items-center gap-3 p-4 transition-colors hover:border-line-strong hover:bg-surface">
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-sunken text-brand-600"><x-icon name={l.icon}></x-icon></span>
+            <span class="min-w-0"><span class="block text-sm font-medium text-content-strong">{l.label}</span><span class="block truncate text-xs text-content-subtle">{l.desc}</span></span>
+            <x-icon name="chevronRight" cls="ml-auto h-4 w-4 text-content-subtle"></x-icon>
+          </a>
+        </template>
+      </div>
+    </div>
+  </template>
+</template>

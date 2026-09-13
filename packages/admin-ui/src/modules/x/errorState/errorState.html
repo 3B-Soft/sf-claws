@@ -1,0 +1,12 @@
+<template lwc:render-mode="light">
+  <div class={cls} role="alert">
+    <div class="mb-2 text-rose-700"><x-icon name="error" cls="h-6 w-6"></x-icon></div>
+    <div class="min-w-0 flex-1">
+      <div class="text-sm font-semibold text-rose-700">{title}</div>
+      <p class="mt-1 break-words text-sm text-rose-700/80">{message}</p>
+      <template lwc:if={code}><span class="mt-2 inline-block kbd">{code}</span></template>
+      <template lwc:if={isNetwork}><p class="mt-2 text-xs text-content-muted">Tip: set <span class="kbd">localStorage['sfclaws.apiBase']</span> or <span class="kbd">window.SF_CLAWS_API_BASE</span> to point at the server.</p></template>
+    </div>
+    <button class="btn-secondary btn-sm mt-3" onclick={retry}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon>Retry</button>
+  </div>
+</template>

@@ -1,0 +1,75 @@
+<template lwc:render-mode="light">
+  <div class="space-y-3 px-3 py-3">
+    <template lwc:if={error}><div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">{error}</div></template>
+
+    <div class="rounded-xl border border-line bg-surface p-3">
+      <div class="flex items-center gap-2">
+        <label class="text-[11px] font-medium uppercase tracking-wide text-content-muted">Metadata type</label>
+        <template lwc:if={loadingTypes}><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
+        <button class="ml-auto text-[10px] text-content-subtle hover:text-content" onclick={onReload}>reload</button>
+      </div>
+      <select class="mt-1 w-full rounded-lg border border-line-strong bg-canvas px-2 py-1.5 text-[12px] text-content-strong outline-none focus:border-brand-500" onchange={onType}>
+        <option value="">Choose a type…</option>
+        <template for:each={typeOptions} for:item="t"><option key={t.value} value={t.value} selected={t.selected}>{t.label}</option></template>
+      </select>
+    </div>
+
+    <template lwc:if={showList}>
+      <div class="rounded-xl border border-line bg-surface p-3">
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] font-medium uppercase tracking-wide text-content-muted">{type}</span>
+          <template lwc:if={loadingItems}><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
+          <template lwc:else><span class="text-[11px] text-content-subtle">{itemCount} item(s)</span></template>
+        </div>
+        <input class="mt-2 w-full rounded-lg border border-line-strong bg-canvas px-2 py-1 text-[12px] text-content-strong outline-none focus:border-brand-500" placeholder="Filter…" value={itemFilter} oninput={onItemFilter} />
+        <template lwc:if={hasItems}>
+          <ul class="mt-2 max-h-[50vh] space-y-0.5 overflow-y-auto">
+            <template for:each={filteredItems} for:item="i">
+              <li key={i.fullName}>
+                <button class={i.cls} data-name={i.fullName} onclick={onPickItem}>
+                  <span class="min-w-0 flex-1 truncate font-mono">{i.fullName}</span>
+                  <template lwc:if={i.namespacePrefix}><span class="rounded bg-surface-sunken px-1 text-[9px] text-content-muted">{i.namespacePrefix}</span></template>
+                </button>
+              </li>
+            </template>
+          </ul>
+        </template>
+        <template lwc:elseif={loadingItems}></template>
+        <template lwc:else><div class="mt-2 text-[11px] text-content-subtle">Nothing found for this type.</div></template>
+      </div>
+    </template>
+
+    <template lwc:if={showItem}>
+      <div class="rounded-xl border border-line bg-surface">
+        <div class="flex items-center gap-2 border-b border-line px-3 py-2">
+          <button class="rounded-md px-1.5 py-0.5 text-[12px] text-content-muted hover:bg-surface-sunken hover:text-content-strong" onclick={onBack}>←</button>
+          <div class="min-w-0 flex-1"><div class="truncate font-mono text-[12px] text-content-strong">{itemTitle}</div><div class="text-[10px] text-content-subtle">{type}</div></div>
+          <template lwc:if={loadingItem}><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
+        </div>
+        <div class="p-2">
+          <template lwc:if={hasXml}>
+            <template lwc:if={isPro}>
+              <template lwc:if={hasMultipleFiles}>
+                <div class="mb-2 flex flex-wrap items-center gap-1"><span class="text-[10px] text-content-subtle">{fileCount}</span><template for:each={fileTabs} for:item="f"><button key={f.path} class={f.cls} data-path={f.path} onclick={onPickFile} title={f.path}>{f.name}</button></template></div>
+              </template>
+              <template lwc:if={selectedIsXml}><x-xml-view xml={selectedContent} max-height="70vh"></x-xml-view></template>
+              <template lwc:else><pre class="max-h-[70vh] overflow-auto rounded-lg border border-line bg-canvas p-2 font-mono text-[11px] leading-[1.45] text-content">{selectedContent}</pre></template>
+            </template>
+            <template lwc:else>
+              <template lwc:if={hasVisual}><x-metadata-visual xml={mainXml} type={type} full-name={fullName}></x-metadata-visual></template>
+              <template lwc:if={hasCode}>
+                <div class="mt-2 mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wide text-content-subtle"><span>Source</span><span class="font-mono normal-case text-content-muted">{codeName}</span></div>
+                <pre class="max-h-[50vh] overflow-auto rounded-lg border border-line bg-canvas p-2 font-mono text-[11px] leading-[1.45] text-content">{codeContent}</pre>
+              </template>
+            </template>
+          </template>
+          <template lwc:elseif={loadingItem}><div class="py-4 text-center text-[11px] text-content-subtle">Reading metadata…</div></template>
+        </div>
+      </div>
+    </template>
+
+    <template lwc:if={noTypeHint}>
+      <x-empty-state title="Browse org metadata" description="Flows, objects, layouts and Lightning pages are rendered visually. Switch to Pro mode to see the raw XML."></x-empty-state>
+    </template>
+  </div>
+</template>

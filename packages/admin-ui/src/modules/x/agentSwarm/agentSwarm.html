@@ -1,0 +1,31 @@
+<template lwc:render-mode="light">
+  <div class="card mb-4 overflow-hidden">
+    <button class="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-surface-sunken" onclick={toggle}>
+      <x-icon name={chevron} cls="h-4 w-4 text-content-subtle"></x-icon>
+      <x-icon name="ai" cls="h-4 w-4 text-brand-600"></x-icon>
+      <span class="text-sm font-semibold text-content-strong">Agent swarm</span>
+      <span class="text-xs text-content-muted">{summary}</span>
+    </button>
+    <template lwc:if={collapsed}></template>
+    <template lwc:else>
+      <div class="space-y-1.5 border-t border-line p-3">
+        <template for:each={items} for:item="a">
+          <div key={a.id} style={a.style}>
+            <div class={a.rowCls}>
+              <div class="mt-0.5">
+                <template lwc:if={a.running}><x-icon name="spinner" cls="h-4 w-4 text-brand-600"></x-icon></template>
+                <template lwc:elseif={a.ok}><x-icon name="check" cls="h-4 w-4 text-emerald-700"></x-icon></template>
+                <template lwc:elseif={a.failed}><x-icon name="error" cls="h-4 w-4 text-rose-700"></x-icon></template>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2"><span class={a.chipCls}>{a.label}</span><span class="mono text-content-subtle">{a.modelId}</span></div>
+                <template lwc:if={a.objective}><div class="mt-1 text-xs text-content">{a.objective}</div></template>
+                <template lwc:if={a.summary}><div class="mt-1 text-xs text-content-subtle">→ {a.summary}</div></template>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+  </div>
+</template>

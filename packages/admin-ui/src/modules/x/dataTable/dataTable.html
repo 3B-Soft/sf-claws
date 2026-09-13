@@ -1,0 +1,36 @@
+<template lwc:render-mode="light">
+  <template lwc:if={loading}><x-skeleton rows="6"></x-skeleton></template>
+  <template lwc:elseif={error}><x-error-state error={error} compact onretry={retry}></x-error-state></template>
+  <template lwc:elseif={isEmpty}><x-empty-state icon={emptyIcon} title={emptyTitle} description={emptyDescription}></x-empty-state></template>
+  <template lwc:if={showTable}>
+    <div class="overflow-x-auto">
+      <table class={tableCls}>
+        <thead><tr>
+          <template for:each={headers} for:item="h"><th key={h.key} class={h.cls}>{h.label}</th></template>
+          <template lwc:if={hasActions}><th class="text-right"></th></template>
+        </tr></thead>
+        <tbody>
+          <template for:each={viewRows} for:item="r">
+            <tr key={r.id} class={r.cls} data-id={r.id} onclick={handleRow}>
+              <template for:each={r.cells} for:item="c">
+                <td key={c.key} class={c.cls}>
+                  <template lwc:if={c.isBadge}><x-badge value={c.text} color={c.color}></x-badge></template>
+                  <template lwc:elseif={c.isBool}><span class={c.boolCls}>{c.text}</span></template>
+                  <template lwc:elseif={c.isLink}><a class="link" href={c.href} onclick={stop}>{c.text}</a></template>
+                  <template lwc:elseif={c.isMono}><span class="mono text-content">{c.text}</span></template>
+                  <template lwc:elseif={c.isMuted}><span class="text-content-muted">{c.text}</span></template>
+                  <template lwc:else>{c.text}</template>
+                </td>
+              </template>
+              <template lwc:if={hasActions}>
+                <td class="text-right"><div class="flex justify-end gap-1.5">
+                  <template for:each={r.acts} for:item="a"><button key={a.key} type="button" class={a.cls} data-id={r.id} data-action={a.id} onclick={handleAction}>{a.label}</button></template>
+                </div></td>
+              </template>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </template>
+</template>

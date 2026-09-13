@@ -1,0 +1,11 @@
+<template lwc:render-mode="light">
+  <a href={href} class={cardCls}>
+    <div class={iconCls}><x-icon name={icon} cls="h-5 w-5"></x-icon></div>
+    <div class="min-w-0 flex-1">
+      <div class="text-xs font-medium uppercase tracking-wide text-content-muted">{label}</div>
+      <template lwc:if={loading}><div class="skeleton mt-2 h-7 w-20"></div></template>
+      <template lwc:else><div class="mt-1 truncate text-2xl font-semibold text-content-strong">{value}</div></template>
+      <template lwc:if={hint}><div class="mt-1 text-xs text-content-subtle">{hint}</div></template>
+    </div>
+  </a>
+</template>

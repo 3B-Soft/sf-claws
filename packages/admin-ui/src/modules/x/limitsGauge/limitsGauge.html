@@ -1,0 +1,32 @@
+<template lwc:render-mode="light">
+  <div class={cls}>
+    <div class="flex flex-wrap items-center gap-2">
+      <x-icon name="gauge" cls="h-4 w-4 text-sky-700"></x-icon>
+      <span class="text-sm font-semibold text-content-strong">{title}</span>
+      <template lwc:if={hasWarnings}><x-badge value={warnLabel} color={warnColor} dot></x-badge></template>
+      <template lwc:else><x-badge value="healthy" color="emerald" dot></x-badge></template>
+      <span class="ml-auto text-[11px] text-content-subtle">{fetched}</span>
+      <template lwc:if={showRefresh}><button class="btn-ghost btn-xs" onclick={refresh} disabled={loading}><x-icon name="refresh" cls="h-3 w-3"></x-icon></button></template>
+    </div>
+    <template lwc:if={hasWarnings}>
+      <div class="mt-3 space-y-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
+        <template for:each={warningRows} for:item="w"><div key={w.id} class="flex items-start gap-2"><x-icon name="warning" cls="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700"></x-icon><span>{w.text}</span></div></template>
+      </div>
+    </template>
+    <template lwc:if={hasRows}>
+      <div class="mt-3 space-y-2">
+        <template for:each={rows} for:item="l">
+          <div key={l.id} class="grid grid-cols-[minmax(0,12rem)_1fr_auto] items-center gap-3 text-xs">
+            <span class="mono truncate text-content" title={l.name}>{l.name}</span>
+            <div class="h-2 w-full overflow-hidden rounded-full bg-surface-sunken"><div class={l.barCls} style={l.style}></div></div>
+            <span class={l.pctCls}>{l.pct}<span class="ml-1 hidden text-content-subtle sm:inline">· {l.remaining} left</span></span>
+          </div>
+        </template>
+      </div>
+      <template lwc:if={hasMore}><button class="link mt-2 text-xs" onclick={toggleAll}>{moreLabel}</button></template>
+    </template>
+    <template lwc:elseif={loading}><div class="mt-3"><x-skeleton variant="text" rows="4"></x-skeleton></div></template>
+    <template lwc:elseif={error}><div class="mt-3 text-xs text-rose-700">{errorMessage}</div></template>
+    <template lwc:else><div class="mt-3 text-xs text-content-subtle">No limit data yet.</div></template>
+  </div>
+</template>

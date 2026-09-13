@@ -1,0 +1,12 @@
+<template lwc:render-mode="light">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="flex items-center gap-1 border-b border-line px-3 py-1.5">
+      <button class={soqlCls} data-sub="soql" onclick={onSub}>Query records</button>
+      <button class={metaCls} data-sub="meta" onclick={onSub}>Browse metadata</button>
+    </div>
+    <div class="min-h-0 flex-1 overflow-y-auto">
+      <template lwc:if={isSoql}><x-soql-builder></x-soql-builder></template>
+      <template lwc:else><x-metadata-browser></x-metadata-browser></template>
+    </div>
+  </div>
+</template>

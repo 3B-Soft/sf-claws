@@ -1,0 +1,37 @@
+<template lwc:render-mode="light">
+  <div class="rounded-lg border border-line bg-canvas">
+    <div class="flex items-center justify-between border-b border-line px-2 py-1 text-[10px] text-content-subtle">
+      <span class="font-mono">{stats}</span>
+      <template lwc:if={sideBySideMode}><span>original · new</span></template>
+      <template lwc:else><span>unified</span></template>
+    </div>
+    <template lwc:if={isEmpty}><div class="px-3 py-3 text-center text-[11px] text-content-subtle">No differences</div></template>
+    <template lwc:elseif={sideBySideMode}>
+      <div class="max-h-[60vh] overflow-auto font-mono text-[11px] leading-5">
+        <template for:each={sbsRows} for:item="r">
+          <div key={r.key} class="flex">
+            <span class="w-8 shrink-0 select-none pr-1 text-right text-content-subtle">{r.ln}</span>
+            <span class={r.lcls}>{r.l}</span>
+            <span class="w-8 shrink-0 select-none border-l border-line pr-1 text-right text-content-subtle">{r.rn}</span>
+            <span class={r.rcls}>{r.r}</span>
+          </div>
+        </template>
+      </div>
+    </template>
+    <template lwc:else>
+      <div class="max-h-[60vh] overflow-auto">
+        <template for:each={unifiedRows} for:item="r">
+          <template lwc:if={r.gap}><div key={r.key} class="bg-surface px-2 py-0.5 text-center font-mono text-[10px] text-content-subtle">{r.text}</div></template>
+          <template lwc:else>
+            <div key={r.key} class={r.cls}>
+              <span class="w-7 shrink-0 select-none text-right text-content-subtle">{r.ln}</span>
+              <span class="w-7 shrink-0 select-none text-right text-content-subtle">{r.rn}</span>
+              <span class="w-4 shrink-0 select-none text-center">{r.sign}</span>
+              <span class="min-w-0 flex-1 whitespace-pre-wrap break-all pr-2">{r.text}</span>
+            </div>
+          </template>
+        </template>
+      </div>
+    </template>
+  </div>
+</template>

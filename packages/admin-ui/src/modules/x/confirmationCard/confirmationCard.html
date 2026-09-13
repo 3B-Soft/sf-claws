@@ -1,0 +1,48 @@
+<template lwc:render-mode="light">
+  <div class={cls}>
+    <div class="flex flex-wrap items-center gap-2"><x-icon name={icon} cls={iconCls}></x-icon><span class="text-sm font-semibold text-content-strong">{c.title}</span><x-badge value={c.kind} label={kindLabel} color={kindColor}></x-badge><template lwc:if={resolved}><x-badge value="resolved" color="emerald"></x-badge></template><template lwc:if={time}><span class="ml-auto text-[10px] text-content-subtle">{time}</span></template></div>
+
+    <template lwc:if={hasImpact}>
+      <div class="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+        <div class="mb-1 text-[10px] font-semibold uppercase tracking-wider text-amber-700">Who this affects</div>
+        <p class="text-sm text-content whitespace-pre-line">{impact}</p>
+      </div>
+    </template>
+
+    <template lwc:if={isCommand}>
+      <div class="mt-3 grid gap-3 md:grid-cols-2">
+        <div class="rounded-lg border border-line bg-canvas p-3">
+          <div class="mb-1 text-[10px] font-semibold uppercase tracking-wider text-brand-600">Why</div>
+          <p class="text-sm text-content whitespace-pre-line">{c.description}</p>
+        </div>
+        <div class="rounded-lg border border-line bg-canvas p-3">
+          <div class="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-amber-700">What<span class="mono normal-case tracking-normal text-content">{commandName}</span></div>
+          <template lwc:if={isApex}><pre class="max-h-64 overflow-auto rounded-md bg-canvas p-2.5 font-mono text-[12px] leading-relaxed text-sky-700 whitespace-pre-wrap">{apexCode}</pre></template>
+          <template lwc:elseif={hasKv}>
+            <dl class="grid grid-cols-[minmax(0,10rem)_1fr] gap-x-3 gap-y-1 text-xs">
+              <template for:each={kvRows} for:item="r"><dt key={r.k} class="mono truncate text-content-subtle">{r.k}</dt><dd key={r.v} class="min-w-0 break-words text-content">{r.v}</dd></template>
+            </dl>
+          </template>
+          <template lwc:elseif={inputIsObject}><x-json-tree value={commandInput} max-depth="3"></x-json-tree></template>
+          <template lwc:else><pre class="rounded-md bg-canvas p-2.5 text-xs text-content whitespace-pre-wrap">{inputText}</pre></template>
+          <template lwc:if={sessionAllowable}><div class="mt-2 text-[11px] text-content-subtle">Policy allows approving this command for the rest of the session.</div></template>
+        </div>
+      </div>
+    </template>
+    <template lwc:else>
+      <p class="mt-1.5 text-sm text-content whitespace-pre-line">{c.description}</p>
+      <template lwc:if={hasSummary}>
+        <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 rounded-lg border border-line bg-canvas p-3 text-xs sm:grid-cols-4">
+          <template for:each={detailsSummary} for:item="d"><div key={d.id}><dt class="text-content-subtle">{d.label}</dt><dd class="truncate text-content">{d.value}</dd></div></template>
+        </dl>
+      </template>
+      <template lwc:if={hasDetails}><details class="mt-2"><summary class="cursor-pointer text-xs text-content-subtle hover:text-content">Full details</summary><div class="mt-2"><template lwc:if={detailsIsObject}><x-json-tree value={details}></x-json-tree></template><template lwc:else><pre class="rounded-lg bg-canvas p-3 text-xs text-content whitespace-pre-wrap">{detailsText}</pre></template></div></details></template>
+    </template>
+
+    <template lwc:if={showButtons}>
+      <div class="mt-4 flex flex-wrap gap-2"><template for:each={options} for:item="o"><button key={o.id} class={o.cls} data-id={o.id} onclick={choose} disabled={busy}><template lwc:if={o.icon}><x-icon name={o.icon} cls="h-3.5 w-3.5"></x-icon></template>{o.label}</button></template></div>
+    </template>
+    <template lwc:elseif={resolved}><div class="mt-3 text-xs text-content-muted">Decision: <span class="font-medium text-content">{chosenLabel}</span></div></template>
+    <template lwc:else><div class="mt-3 text-xs text-amber-700/80">Waiting for the session owner to decide in the extension.</div></template>
+  </div>
+</template>

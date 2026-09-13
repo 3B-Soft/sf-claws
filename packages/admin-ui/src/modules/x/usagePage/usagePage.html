@@ -1,0 +1,70 @@
+<template lwc:render-mode="light">
+  <x-page-header title="Usage &amp; cost" subtitle="Token consumption and spend across the harness. Grouped summaries from the control plane."></x-page-header>
+
+  <div class="card mb-6 flex flex-wrap items-end gap-3 p-4">
+    <div class="w-40"><x-form-field label="Group by" name="groupBy" type="select" value={groupBy} options={groupOptions} compact onchange={handleGroup}></x-form-field></div>
+    <div class="w-40"><x-form-field label="From" name="from" type="date" value={from} compact onchange={handleFrom}></x-form-field></div>
+    <div class="w-40"><x-form-field label="To" name="to" type="date" value={to} compact onchange={handleTo}></x-form-field></div>
+    <div class="flex items-center gap-1 pb-0.5"><template for:each={presets} for:item="p"><button key={p.id} class={p.cls} data-id={p.id} onclick={applyPreset}>{p.label}</button></template></div>
+    <button class="btn-primary btn-sm" onclick={apply}>Apply</button>
+    <div class="ml-auto w-44"><x-form-field label="Chart metric" name="metric" type="select" value={metric} options={metricOptions} compact onchange={handleMetric}></x-form-field></div>
+  </div>
+
+  <template lwc:if={error}><x-error-state error={error} onretry={load}></x-error-state></template>
+  <template lwc:else>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <x-stat-card label="Total cost" value={totalCost} hint={avgCost} icon="dollar" tone="emerald" loading={loading}></x-stat-card>
+      <x-stat-card label="Sessions" value={totalSessions} icon="sessions" tone="brand" loading={loading}></x-stat-card>
+      <x-stat-card label="Input tokens" value={totalInput} hint={totalCached} icon="usage" tone="sky" loading={loading}></x-stat-card>
+      <x-stat-card label="Output tokens" value={totalOutput} icon="bolt" tone="amber" loading={loading}></x-stat-card>
+    </div>
+    <div class="mt-6 grid gap-6 lg:grid-cols-5">
+      <div class="card card-pad lg:col-span-2">
+        <h2 class="mb-4 text-sm font-semibold text-content-strong">Top by {groupLabel}</h2>
+        <template lwc:if={loading}><x-skeleton variant="text" rows="8"></x-skeleton></template>
+        <template lwc:else><x-usage-chart rows={rows} metric={metric}></x-usage-chart></template>
+      </div>
+      <div class="card lg:col-span-3">
+        <div class="border-b border-line px-5 py-3"><h2 class="text-sm font-semibold text-content-strong">Breakdown</h2></div>
+        <x-data-table columns={columns} rows={sortedRows} loading={loading} empty-title="No usage in this range" empty-icon="usage" dense></x-data-table>
+        <template lwc:if={hasRows}>
+          <div class="flex flex-wrap items-center justify-between gap-2 border-t border-line px-5 py-3 text-xs text-content-muted"><span>Totals</span><span class="flex gap-4 font-mono text-content"><span>{totalSessions} sessions</span><span>{totalInput} in</span><span>{totalOutput} out</span><span class="text-emerald-700">{totalCost}</span></span></div>
+        </template>
+      </div>
+    </div>
+
+    <div class="mt-6 grid gap-6 lg:grid-cols-5">
+      <div class="card card-pad lg:col-span-2">
+        <h2 class="text-sm font-semibold text-content-strong">Budget this month</h2>
+        <p class="mt-1 text-xs text-content-subtle">Spend against each client's monthly ceiling. A session that reaches its ceiling stops and stays resumable.</p>
+        <template lwc:if={hasBudgets}>
+          <div class="mt-4 space-y-3">
+            <template for:each={budgetRows} for:item="b">
+              <div key={b.clientId}>
+                <div class="flex items-baseline justify-between gap-2 text-xs">
+                  <span class="truncate font-medium text-content">{b.clientName}</span>
+                  <span class="shrink-0 font-mono text-content-muted">{b.spentLabel}</span>
+                </div>
+                <div class="mt-1 h-1.5 rounded-full bg-surface-sunken"><div class={b.barCls} style={b.barStyle}></div></div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template lwc:else>
+          <p class="mt-4 text-xs text-content-subtle">No client has a monthly ceiling configured.</p>
+        </template>
+        <template lwc:if={hasUnlimited}>
+          <div class="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-700">{unlimitedLabel}</div>
+        </template>
+      </div>
+
+      <div class="card lg:col-span-3">
+        <div class="border-b border-line px-5 py-3">
+          <h2 class="text-sm font-semibold text-content-strong">Tool usage</h2>
+          <p class="mt-0.5 text-xs text-content-subtle">Which tools the agents actually reach for, which fail, and how much context each returns.</p>
+        </div>
+        <x-data-table columns={toolColumns} rows={toolRows} loading={loading} empty-title="No tool calls in this range" empty-icon="usage" dense></x-data-table>
+      </div>
+    </div>
+  </template>
+</template>

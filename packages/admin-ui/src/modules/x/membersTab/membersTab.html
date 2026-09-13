@@ -1,0 +1,41 @@
+<template lwc:render-mode="light">
+  <div class="mb-4 flex items-start gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-xs text-content-muted">
+    <x-icon name="users" cls="mt-0.5 h-4 w-4 shrink-0 text-brand-600"></x-icon>
+    <span>
+      Only members see this client: its orgs, GitHub repository, skills, policy override and sessions. Super admins belong to
+      every client and are not listed. A platform <span class="kbd">admin</span> still needs a membership here to see it.
+    </span>
+  </div>
+  <div class="card">
+    <div class="flex items-center gap-3 border-b border-line px-4 py-3">
+      <div class="text-sm font-semibold text-content-strong">{count}</div>
+      <button class="btn-primary btn-sm ml-auto" onclick={openAdd} disabled={busy}><x-icon name="plus" cls="h-3.5 w-3.5"></x-icon>Add member</button>
+    </div>
+    <x-data-table
+      columns={columns}
+      rows={rows}
+      actions={actions}
+      loading={loading}
+      error={error}
+      empty-title="No members yet"
+      empty-description="Nobody except super admins can see this client. Add the consultants who work on it."
+      empty-icon="users"
+      onaction={handleAction}
+      onretry={load}
+    ></x-data-table>
+  </div>
+
+  <x-modal open={addOpen} title="Add member" size="sm" onclose={closeAdd}>
+    <template lwc:if={noCandidates}>
+      <p class="text-sm text-content-muted">Every active user is already a member (or a super admin). Approve a user on the Users page first.</p>
+    </template>
+    <template lwc:else>
+      <x-form-field label="User" name="userId" type="select" value={addUserId} options={candidateOptions} onchange={handleAddUser}></x-form-field>
+      <x-form-field label="Client role" name="role" type="select" value={addRole} options={roleOptions} onchange={handleAddRole}></x-form-field>
+    </template>
+    <div slot="footer">
+      <button class="btn-secondary" onclick={closeAdd}>Cancel</button>
+      <button class="btn-primary" onclick={submitAdd} disabled={cannotAdd}>Add</button>
+    </div>
+  </x-modal>
+</template>

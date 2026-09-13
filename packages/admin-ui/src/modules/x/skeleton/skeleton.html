@@ -1,0 +1,15 @@
+<template lwc:render-mode="light">
+  <template lwc:if={isTable}>
+    <div class="space-y-2.5 p-2" aria-busy="true">
+      <template for:each={items} for:item="it"><div key={it.id} class="flex items-center gap-4"><div class="skeleton h-4 w-8"></div><div class="skeleton h-4 w-1/3"></div><div class="skeleton h-4 w-1/5"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-5 w-16 rounded-full"></div></div></template>
+    </div>
+  </template>
+  <template lwc:elseif={isCards}>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true">
+      <template for:each={items} for:item="it"><div key={it.id} class="card card-pad space-y-3"><div class="skeleton h-3 w-1/2"></div><div class="skeleton h-8 w-1/3"></div><div class="skeleton h-3 w-2/3"></div></div></template>
+    </div>
+  </template>
+  <template lwc:else>
+    <div class="space-y-2" aria-busy="true"><template for:each={items} for:item="it"><div key={it.id} class={it.w}><div class="skeleton h-3.5 w-full"></div></div></template></div>
+  </template>
+</template>

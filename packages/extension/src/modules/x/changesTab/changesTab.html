@@ -1,0 +1,130 @@
+<template lwc:render-mode="light">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <template lwc:if={hasSession}>
+      <div class="flex items-center gap-2 border-b border-line px-3 py-2">
+        <div class="min-w-0 flex-1">
+          <div class="text-[13px] font-semibold text-content-strong">Changes</div>
+          <div class="truncate text-[11px] text-content-subtle">{fileCount} staged file(s) · {deployHint}</div>
+        </div>
+        <button class="rounded-md px-2 py-1 text-[11px] text-content-muted hover:bg-surface-sunken hover:text-content" onclick={onRefresh}>Refresh</button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 border-b border-line bg-surface px-3 py-2">
+        <button class="rounded-lg border border-brand-500/50 bg-brand-500/10 px-3 py-1.5 text-[12px] font-semibold text-brand-700 hover:bg-brand-500/20 disabled:cursor-not-allowed disabled:opacity-40" disabled={validateDisabled} onclick={onValidate}>{validateLabel}</button>
+        <button class="rounded-lg bg-emerald-600 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40" disabled={deployDisabled} title={deployTitle} onclick={onDeploy}>{deployLabel}</button>
+        <button class="rounded-lg border border-line-strong px-3 py-1.5 text-[12px] font-medium text-content hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40" disabled={commitDisabled} onclick={onToggleCommit}>{commitLabel}</button>
+      </div>
+
+      <template lwc:if={commitOpen}>
+        <div class="border-b border-line bg-surface px-3 py-2">
+          <label class="block text-[11px] font-medium uppercase tracking-wide text-content-muted">Commit message (optional)</label>
+          <textarea class="mt-1 w-full rounded-lg border border-line-strong bg-canvas px-2 py-1.5 text-[12px] text-content-strong outline-none focus:border-brand-500" rows="2" placeholder="Leave empty to let the assistant write one" data-commit oninput={onCommitMessage}></textarea>
+          <div class="mt-2 flex items-center gap-3">
+            <label class="flex items-center gap-1.5 text-[12px] text-content"><input type="checkbox" class="accent-brand-600" checked={createPr} onchange={onCreatePr} />Create pull request</label>
+            <button class="ml-auto rounded-lg bg-brand-500 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-500 disabled:opacity-50" disabled={commitDisabled} onclick={onCommit}>Review commit</button>
+            <button class="rounded-lg px-2 py-1.5 text-[12px] text-content-muted hover:text-content" onclick={onToggleCommit}>Cancel</button>
+          </div>
+        </div>
+      </template>
+
+      <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        <template lwc:if={message}><div class={messageCls}>{message}</div></template>
+
+        <template lwc:if={awaitingRun}>
+          <div class="mt-2 flex items-start gap-2 rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-2 text-[12px] text-brand-700">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400 pulse-dot"></span>
+            <span class="flex-1">{awaitingText}</span>
+            <button class="rounded px-1.5 text-[11px] text-brand-700/70 hover:text-brand-700" title="Stop showing progress" onclick={onStopWaiting}>✕</button>
+          </div>
+        </template>
+        <template lwc:if={confirmKind}>
+          <div class={confirmCls}>
+            <div class="text-[13px] font-semibold text-content-strong">{confirmTitle}</div>
+            <div class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-brand-600">What runs</div>
+            <div class="mt-0.5 rounded-md border border-line-strong bg-canvas px-1.5 py-0.5 font-mono text-[11px] text-content-strong">{confirmCommand}</div>
+            <div class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-brand-600">What it does</div>
+            <div class="mt-0.5 text-[12px] leading-relaxed text-content">{confirmSummary}</div>
+            <div class="mt-3 flex items-center gap-2">
+              <button class={confirmBtnCls} disabled={busy} onclick={onConfirm}>{confirmButtonLabel}</button>
+              <button class="rounded-lg px-2 py-1.5 text-[12px] text-content-muted hover:text-content" onclick={onCancelConfirm}>Cancel</button>
+            </div>
+          </div>
+        </template>
+
+        <template lwc:if={lastRun}><div class="mt-2"><x-validation-panel run={lastRun}></x-validation-panel></div></template>
+
+        <template lwc:if={selected}>
+          <div class="mt-3 rounded-xl border border-line bg-surface">
+            <div class="flex items-center gap-2 border-b border-line px-3 py-2">
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-[12px] font-semibold text-content-strong">{selectedName}</div>
+                <div class="truncate font-mono text-[10px] text-content-subtle" title={selectedPathText}>{selectedPathText}</div>
+              </div>
+              <template lwc:if={canEdit}>
+                <template lwc:if={editing}>
+                  <button class="rounded-md bg-brand-500 px-2 py-1 text-[11px] font-semibold text-white hover:bg-brand-500 disabled:opacity-50" disabled={busy} onclick={onSave}>{saveLabel}</button>
+                  <button class="rounded-md px-2 py-1 text-[11px] text-content-muted hover:text-content" onclick={onCancelEdit}>Cancel</button>
+                </template>
+                <template lwc:else><button class="rounded-md border border-line-strong px-2 py-1 text-[11px] text-content hover:bg-surface-sunken" onclick={onEdit}>Edit XML</button></template>
+              </template>
+              <button class="rounded-md px-1.5 py-1 text-[11px] text-content-muted hover:bg-surface-sunken hover:text-content" onclick={onClose}>✕</button>
+            </div>
+            <div class="p-2">
+              <template lwc:if={editing}>
+                <textarea class="h-72 w-full resize-y rounded-lg border border-line-strong bg-canvas p-2 font-mono text-[11px] leading-[1.45] text-content-strong outline-none focus:border-brand-500" spellcheck="false" data-edit oninput={onEditInput}></textarea>
+              </template>
+              <template lwc:elseif={showDiff}>
+                <template lwc:if={isVisualNoOriginal}><div class="mb-2 text-[11px] text-content-subtle">The original content isn't available; showing the new content.</div></template>
+                <x-file-diff original={diffOriginal} modified={diffModified}></x-file-diff>
+                <template lwc:if={isPro}>
+                  <div class="mt-2 text-[10px] uppercase tracking-wide text-content-subtle">raw</div>
+                  <x-xml-view xml={selectedContent} max-height="300px"></x-xml-view>
+                </template>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <template lwc:if={hasFiles}>
+          <div class="mt-3 space-y-3">
+            <template for:each={groups} for:item="g">
+              <div key={g.type}>
+                <div class="mb-1 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-content-muted"><span>{g.type}</span><span class="rounded bg-surface-sunken px-1.5 text-[10px] text-content">{g.count}</span></div>
+                <div class="space-y-0.5">
+                  <template for:each={g.files} for:item="f">
+                    <button key={f.path} class={f.cls} data-path={f.path} onclick={onSelect} title={f.path}>
+                      <span class={f.badgeCls}>{f.action}</span>
+                      <span class="min-w-0 flex-1 truncate text-[12px] text-content-strong">{f.name}</span>
+                      <span class="truncate text-[10px] text-content-subtle">{f.file}</span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template lwc:else>
+          <div class="mt-3"><x-empty-state title="No staged changes yet" description="When the assistant creates or edits metadata it appears here, grouped by type, with a visual diff for each file."></x-empty-state></div>
+        </template>
+
+        <template lwc:if={hasRuns}>
+          <div class="mt-4 rounded-xl border border-line">
+            <button class="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-content hover:bg-surface-sunken" onclick={onToggleHistory}>
+              <span class="font-medium">Deploy history</span><span class="text-content-subtle">{runCount}</span><span class="ml-auto text-content-subtle">{historyToggle}</span>
+            </button>
+            <template lwc:if={historyOpen}>
+              <div class="space-y-2 border-t border-line p-2">
+                <template for:each={historyRuns} for:item="r">
+                  <div key={r.key}><div class="mb-1 text-[11px] text-content-subtle">{r.label}</div><x-validation-panel run={r} compact></x-validation-panel></div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+    <template lwc:else>
+      <div class="p-4"><x-empty-state tone="brand" title="No session selected" description="Open or start a session in the Chat tab to review its staged changes, validate and deploy."></x-empty-state></div>
+    </template>
+  </div>
+</template>

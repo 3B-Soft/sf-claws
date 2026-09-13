@@ -1,0 +1,24 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --no-audit --no-fund
+
+      # Lint and typecheck are separate steps: a failure should say which gate broke, and a
+      # workspace whose bundler tolerates a type error must still fail the build.
+      - name: Lint and format check
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+
+      - run: npm run build
+      - run: npm test
+
+      - uses: actions/upload-artifact@v4
+        with: { name: extension, path: packages/extension/release/sf-claws.zip, if-no-files-found: ignore }

@@ -1,0 +1,60 @@
+<template lwc:render-mode="light">
+  <template lwc:if={error}><x-error-state error={error} onretry={reload}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="text" rows="3"></x-skeleton><div class="mt-6"><x-skeleton variant="cards" rows="4"></x-skeleton></div></template>
+  <template lwc:elseif={detail}>
+    <x-page-header title={title} subtitle={subtitle} back-href="#/sessions" back-label="All sessions">
+      <template lwc:if={showSse}><span class={sseCls}><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-current"></span>{sseLabel}</span></template>
+      <button class={proBtnCls} onclick={togglePro} title="Toggle visual / pro rendering"><x-icon name="eye" cls="h-3.5 w-3.5"></x-icon>{proLabel}</button>
+      <button class="btn-secondary btn-sm" onclick={reload} title="Reload"><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon></button>
+      <template lwc:if={canResume}><button class="btn-primary btn-sm" onclick={resume} disabled={busy}><x-icon name="play" cls="h-3.5 w-3.5"></x-icon>Resume session</button></template>
+      <template lwc:if={canComplete}><button class="btn-secondary btn-sm" onclick={complete} disabled={busy}><x-icon name="check" cls="h-3.5 w-3.5"></x-icon>Mark completed</button></template>
+      <template lwc:if={canCancel}><button class="btn-danger btn-sm" onclick={cancel}><x-icon name="stop" cls="h-3.5 w-3.5"></x-icon>Cancel</button></template>
+    </x-page-header>
+
+    <div class="card mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3 text-sm">
+      <div class="flex items-center gap-2"><x-badge value={session.status} dot></x-badge><template lwc:if={statusMessage}><span class="text-xs text-content-muted">{statusMessage}</span></template></div>
+      <div class="flex items-center gap-2 text-content"><x-icon name="cloud" cls="h-4 w-4 text-content-subtle"></x-icon><a href={orgHref} class="hover:text-content-strong">{detail.org.label}</a><x-badge value={orgKind}></x-badge><template lwc:if={orgProtected}><x-badge value="protected" color="rose"></x-badge></template></div>
+      <div class="flex items-center gap-2 text-content"><x-icon name="user" cls="h-4 w-4 text-content-subtle"></x-icon><span>{userLabel}</span></div>
+      <div class="flex items-center gap-2 text-content"><x-badge value={session.uiMode}></x-badge><span class="text-xs text-content-subtle">{created}</span></div>
+      <div class="ml-auto flex flex-wrap items-center gap-4">
+        <div class="text-xs text-content-muted">{tokens}<template lwc:if={cached}> · {cached}</template></div>
+        <div class="font-mono text-base font-semibold text-emerald-700">{cost}</div>
+        <div class="flex items-center gap-1"><button class={upCls} data-value="true" onclick={feedback} title="Helpful"><x-icon name="thumbUp"></x-icon></button><button class={downCls} data-value="false" onclick={feedback} title="Not helpful"><x-icon name="thumbDown"></x-icon></button></div>
+      </div>
+      <template lwc:if={feedbackNote}><div class="w-full text-xs text-content-muted">Feedback: “{feedbackNote}”</div></template>
+    </div>
+
+    <template lwc:if={isResumable}><div class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-700"><x-icon name="error" cls="h-4 w-4 text-rose-700"></x-icon><span class="flex-1">This session failed but can be recovered: the orchestrator continues from its persisted memory and plan.</span><button class="btn-primary btn-sm" onclick={resume} disabled={busy}><x-icon name="play" cls="h-3.5 w-3.5"></x-icon>Resume session</button></div></template>
+    <template lwc:if={hasPending}><div class="mb-4 flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-700"><x-icon name="warning" cls="h-4 w-4 text-amber-700"></x-icon>{pendingCount} decision(s) waiting — see the approval cards in the transcript.</div></template>
+    <template lwc:if={hasPermissions}>
+      <div class="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2 text-xs text-content-muted">
+        <x-icon name="key" cls="h-3.5 w-3.5 text-emerald-700"></x-icon><span>Allowed for this session:</span>
+        <template for:each={permissionChips} for:item="p"><span key={p.id} class="chip border-emerald-500/30 bg-emerald-500/10 text-emerald-700"><span class="mono">{p.command}</span><template lwc:if={canInteract}><button class="ml-1 rounded text-emerald-700/70 hover:text-content-strong" data-command={p.command} onclick={revoke} title="Revoke"><x-icon name="close" cls="h-3 w-3"></x-icon></button></template></span></template>
+      </div>
+    </template>
+    <template lwc:if={historyError}><div class="mb-4"><x-error-state title="Could not load the transcript" error={historyError} compact onretry={reload}></x-error-state></div></template>
+
+    <div class="mb-5"><x-tabs tabs={tabs} active={tab} onselect={selectTab}></x-tabs></div>
+
+    <template lwc:if={isTranscript}>
+      <template lwc:if={hasLimitWarnings}><div class="mb-4"><x-limits-gauge limits={limits} top="4" compact></x-limits-gauge></div></template>
+      <x-transcript blocks={blocks} agents={agents} todos={todoItems} pro-mode={proMode} readonly={readonlyTranscript} busy={busy} live={isLive} onopenfile={openFile} onopendoc={openDoc} onopennote={openNote} onchoose={choose}></x-transcript>
+      <template lwc:if={showComposer}>
+        <form class="card mt-6 flex items-end gap-3 p-3" onsubmit={send}>
+          <div class="flex-1"><x-form-field name="composer" type="textarea" rows="2" value={composer} placeholder="Send an instruction to the agents…" compact onchange={handleComposer}></x-form-field></div>
+          <button type="submit" class="btn-primary" disabled={cannotSend}><x-icon name="play" cls="h-4 w-4"></x-icon>Send</button>
+        </form>
+      </template>
+    </template>
+    <template lwc:elseif={isWorkspace}><x-workspace-tab session-id={sessionId} files={workspace} pro-mode={proMode} selected-path={selectedFile} running={running} onchanged={workspaceChanged}></x-workspace-tab></template>
+    <template lwc:elseif={isDeploys}><x-deploys-tab deploys={deploys}></x-deploys-tab></template>
+    <template lwc:elseif={isDocs}><x-docs-tab docs={docs} selected-id={selectedDoc}></x-docs-tab></template>
+    <template lwc:elseif={isNotes}><x-notes-panel session-id={sessionId} version={notesVersion} selected-id={selectedNote}></x-notes-panel></template>
+    <template lwc:elseif={isUsage}><x-usage-records-tab session-id={sessionId}></x-usage-records-tab></template>
+    <template lwc:elseif={isEvents}>
+      <div class="space-y-2">
+        <template for:each={rawEvents} for:item="e"><details key={e.id} class="card px-4 py-2"><summary class="flex cursor-pointer items-center gap-3 text-xs"><span class="kbd">#{e.seq}</span><span class="font-mono text-brand-600">{e.type}</span><span class="ml-auto text-content-subtle">{e.at}</span></summary><div class="py-2"><x-json-tree value={e.event} max-depth="3"></x-json-tree></div></details></template>
+      </div>
+    </template>
+  </template>
+</template>

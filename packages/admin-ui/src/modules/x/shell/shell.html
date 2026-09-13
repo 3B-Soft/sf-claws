@@ -1,0 +1,10 @@
+<template lwc:render-mode="light">
+  <div class="flex min-h-screen bg-canvas">
+    <x-sidebar user={user} route={route} collapsed={collapsed} mobile-open={mobileOpen} ontoggle={toggleCollapse} onclosemobile={closeMobile} onnavigate={handleNavigate}></x-sidebar>
+    <div class={mainCls}>
+      <x-topbar user={user} route={route} onmenu={openMobile} onlogout={logout}></x-topbar>
+      <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8"><slot></slot></main>
+      <footer class="px-6 py-3 text-center text-[11px] text-content-subtle">SF Claws · Salesforce agentic control plane</footer>
+    </div>
+  </div>
+</template>

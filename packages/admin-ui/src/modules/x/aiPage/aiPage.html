@@ -1,0 +1,26 @@
+<template lwc:render-mode="light">
+  <x-page-header title="AI providers &amp; models" subtitle="Credentials, the model catalogue with pricing, and which model each agent role runs on.">
+    <button class="btn-secondary btn-sm" onclick={reload}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon>Refresh</button>
+    <button class="btn-primary btn-sm" onclick={openAdd}><x-icon name="plus" cls="h-3.5 w-3.5"></x-icon>Add model</button>
+  </x-page-header>
+  <template lwc:if={error}><x-error-state error={error} onretry={reload}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="cards" rows="2"></x-skeleton><div class="mt-6"><x-skeleton rows="5"></x-skeleton></div></template>
+  <template lwc:else>
+    <section class="mb-6">
+      <h2 class="mb-3 text-sm font-semibold text-content-strong">Providers</h2>
+      <div class="grid gap-4 lg:grid-cols-2">
+        <template for:each={providerCards} for:item="p">
+          <x-provider-card key={p.provider} provider={p.provider} credential={p.credential} onchanged={reload}></x-provider-card>
+        </template>
+      </div>
+    </section>
+    <section class="card mb-6">
+      <div class="flex items-center justify-between border-b border-line px-5 py-3"><div><h2 class="text-sm font-semibold text-content-strong">Models</h2><p class="text-xs text-content-muted">USD per 1M tokens. Costs drive the usage reports.</p></div><button class="btn-secondary btn-sm" onclick={openAdd}><x-icon name="plus" cls="h-3.5 w-3.5"></x-icon>Add</button></div>
+      <x-data-table columns={modelColumns} rows={sortedModels} actions={modelActions} empty-title="No models yet" empty-description="Add Claude, GPT or DeepSeek models to make them available for role bindings." empty-icon="ai" onaction={handleModelAction}></x-data-table>
+    </section>
+    <x-role-bindings models={models} bindings={bindings} onsaved={reload}></x-role-bindings>
+  </template>
+  <x-modal open={modalOpen} title={modalTitle} size="lg" hide-footer onclose={closeModal}>
+    <x-model-form model={editing} busy={busy} onsubmit={submitModel} oncancel={closeModal}></x-model-form>
+  </x-modal>
+</template>

@@ -1,0 +1,32 @@
+<template lwc:render-mode="light">
+  <div class="card">
+    <div class="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
+      <template for:each={kindFilters} for:item="k"><button key={k.id} class={k.cls} data-id={k.id} onclick={setKind}>{k.label}</button></template>
+      <div class="ml-auto flex items-center gap-2"><div class="w-56"><x-form-field name="search" placeholder="Search skills…" value={search} compact onchange={handleSearch}></x-form-field></div><button class="btn-primary btn-sm" onclick={openNew}><x-icon name="plus" cls="h-3.5 w-3.5"></x-icon>New skill</button></div>
+    </div>
+    <template lwc:if={loading}><x-skeleton rows="5"></x-skeleton></template>
+    <template lwc:elseif={error}><div class="p-4"><x-error-state error={error} compact onretry={load}></x-error-state></div></template>
+    <template lwc:elseif={isEmpty}><div class="p-4"><x-empty-state icon="skills" title="No skills yet" description={emptyDescription} action-label="New skill" onaction={openNew}></x-empty-state></div></template>
+    <template lwc:elseif={hasRows}>
+      <ul class="divide-y divide-line">
+        <template for:each={rows} for:item="s">
+          <li key={s.id} class={s.rowCls} data-id={s.id} onclick={edit}>
+            <div class="flex items-start gap-4 px-4 py-3 hover:bg-surface-sunken">
+              <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-sunken text-brand-600"><x-icon name="skills" cls="h-4 w-4"></x-icon></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2"><span class="text-sm font-medium text-content-strong group-hover:text-brand-700">{s.name}</span><x-badge value={s.kind}></x-badge><x-badge value={s.scope}></x-badge><template lwc:if={s.clientLabel}><span class="text-xs text-content-muted">{s.clientLabel}</span></template><x-badge value={s.enabledLabel} dot></x-badge></div>
+                <div class="mt-1 text-xs text-content-muted">{s.excerpt}</div>
+                <div class="mt-1 flex flex-wrap gap-x-3 text-[11px] text-content-subtle"><span>{s.rolesText}</span><span>{s.versionText}</span><span>Updated {s.when}</span></div>
+              </div>
+              <div class="flex shrink-0 gap-1.5"><button class="btn-ghost btn-xs" data-id={s.id} onclick={toggle}>{s.toggleLabel}</button><button class="btn-ghost btn-xs text-rose-700" data-id={s.id} onclick={remove}><x-icon name="trash" cls="h-3.5 w-3.5"></x-icon></button></div>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </template>
+    <template lwc:else><div class="p-4"><x-empty-state icon="search" title="No skills match"></x-empty-state></div></template>
+  </div>
+  <x-modal open={modalOpen} title={modalTitle} size="xl" hide-footer onclose={closeModal}>
+    <x-skill-editor skill={editing} clients={clients} locked-client-id={clientId} busy={busy} onsubmit={submit} oncancel={closeModal}></x-skill-editor>
+  </x-modal>
+</template>

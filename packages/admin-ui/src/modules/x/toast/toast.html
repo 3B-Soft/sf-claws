@@ -1,0 +1,11 @@
+<template lwc:render-mode="light">
+  <div class="pointer-events-none fixed bottom-4 right-4 z-[60] flex flex-col gap-2" aria-live="polite">
+    <template for:each={items} for:item="t">
+      <div key={t.id} class={t.cls}>
+        <x-icon name={t.icon} cls="mt-0.5 h-4 w-4"></x-icon>
+        <div class="min-w-0 flex-1"><div class="text-sm font-semibold">{t.title}</div><template lwc:if={t.message}><div class="mt-0.5 break-words text-xs text-content">{t.message}</div></template></div>
+        <button class="-mr-1 -mt-1 rounded p-1 text-content-muted hover:text-content-strong" data-id={t.id} onclick={dismiss} aria-label="Dismiss"><x-icon name="close" cls="h-3.5 w-3.5"></x-icon></button>
+      </div>
+    </template>
+  </div>
+</template>

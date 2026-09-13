@@ -1,0 +1,14 @@
+<template lwc:render-mode="light">
+  <template lwc:if={isEmpty}><div class="py-6 text-center text-sm text-content-subtle">No data for this range</div></template>
+  <template lwc:else>
+    <div class="space-y-2.5">
+      <template for:each={bars} for:item="b">
+        <div key={b.id} class="grid grid-cols-[minmax(0,10rem)_1fr_auto] items-center gap-3 text-xs">
+          <span class="truncate text-content" title={b.label}>{b.label}</span>
+          <div class="h-2.5 w-full rounded-full bg-surface-sunken"><div class={b.cls} style={b.style}></div></div>
+          <span class="w-16 text-right font-mono tabular-nums text-content">{b.text}</span>
+        </div>
+      </template>
+    </div>
+  </template>
+</template>

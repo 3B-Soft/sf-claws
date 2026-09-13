@@ -1,0 +1,45 @@
+<template lwc:render-mode="light">
+  <div class="mx-auto max-w-xl px-5 py-8">
+    <div class="mb-6 flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-sm font-black text-white">x3</div>
+      <div><div class="text-base font-semibold text-content-strong">SF Claws — Options</div><div class="text-[12px] text-content-muted">Version {version}</div></div>
+    </div>
+
+    <section class="rounded-2xl border border-line bg-surface p-4">
+      <h2 class="text-sm font-semibold text-content-strong">Server</h2>
+      <p class="mt-1 text-[12px] text-content-muted">URL of the SF Claws control plane. Synced with your Chrome profile.</p>
+      <div class="mt-3 flex gap-2">
+        <input class="flex-1 rounded-lg border border-line-strong bg-canvas px-3 py-2 text-[13px] text-content-strong outline-none focus:border-brand-500" type="url" value={serverUrl} oninput={onUrl} placeholder="https://harness.yourcompany.com" />
+        <button class="rounded-lg bg-brand-500 px-3 py-2 text-[12px] font-semibold text-white hover:bg-brand-500 disabled:opacity-50" disabled={busy} onclick={onSave}>Save &amp; test</button>
+      </div>
+    </section>
+
+    <section class="mt-4 rounded-2xl border border-line bg-surface p-4">
+      <h2 class="text-sm font-semibold text-content-strong">Default interface</h2>
+      <p class="mt-1 text-[12px] text-content-muted">Visual mode hides XML/SOQL behind friendly views. Pro mode exposes raw metadata and queries. You can toggle at any time from the side panel avatar menu.</p>
+      <div class="mt-3 inline-flex rounded-lg border border-line-strong bg-canvas p-1">
+        <button class={visualBtn} data-mode="visual" onclick={onMode}>Visual</button>
+        <button class={proBtn} data-mode="pro" onclick={onMode}>Pro</button>
+      </div>
+    </section>
+
+    <section class="mt-4 rounded-2xl border border-line bg-surface p-4">
+      <h2 class="text-sm font-semibold text-content-strong">Notifications</h2>
+      <p class="mt-1 text-[12px] text-content-muted">When an agent is waiting for your approval and the side panel is not in view, show a system notification. The extension icon shows the number of waiting cards either way. Only works while the side panel is open somewhere: it is what listens to the session.</p>
+      <label class="mt-3 flex items-center gap-2 text-[13px] text-content"><input type="checkbox" class="accent-brand-600" checked={notifications} onchange={onNotifications} />Notify me when an approval is waiting</label>
+    </section>
+
+    <section class="mt-4 rounded-2xl border border-line bg-surface p-4">
+      <h2 class="text-sm font-semibold text-content-strong">Account</h2>
+      <p class="mt-1 text-[12px] text-content">{userLabel}</p>
+      <button class="mt-3 rounded-lg border border-rose-500/40 px-3 py-1.5 text-[12px] text-rose-700 hover:bg-rose-500/10 disabled:opacity-40" disabled={noToken} onclick={onClearLogin}>Clear login</button>
+    </section>
+
+    <template lwc:if={msg}><div class={msgCls}>{msg}</div></template>
+
+    <section class="mt-4 rounded-2xl border border-line bg-surface p-4 text-[12px] text-content-muted">
+      <h2 class="text-sm font-semibold text-content-strong">About</h2>
+      <p class="mt-1">SF Claws for Salesforce lets admins debug orgs, query records, build and validate metadata, deploy and commit to GitHub from a Chrome side panel. It only talks to the Salesforce tabs you open and to the server configured above. Console and network recording runs only on the tab a session is open on, and only leaves the page when an agent asks for it.</p>
+    </section>
+  </div>
+</template>

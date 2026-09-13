@@ -1,0 +1,26 @@
+<template lwc:render-mode="light">
+  <template lwc:if={form}>
+    <div class="grid gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="lg:col-span-2"><x-form-field label="Name" name="name" value={f.name} placeholder="Managed package: Acme Billing" required onchange={handle}></x-form-field></div>
+      <x-form-field label="Kind" name="kind" type="select" value={f.kind} options={kindOptions} onchange={handle}></x-form-field>
+      <x-form-field label="Scope" name="scope" type="select" value={f.scope} options={scopeOptions} onchange={handle}></x-form-field>
+      <template lwc:if={needsClient}><x-form-field label="Client" name="clientId" type="select" value={f.clientId} options={clientOptions} placeholder="— choose client —" disabled={clientLocked} required onchange={handle}></x-form-field></template>
+      <template lwc:if={needsOrg}><x-form-field label="Org" name="orgId" type="select" value={f.orgId} options={orgOptions} placeholder="— choose org —" required onchange={handle}></x-form-field></template>
+    </div>
+    <div class="mb-4">
+      <div class="label">Target roles</div>
+      <div class="flex flex-wrap gap-1.5"><template for:each={roleChips} for:item="r"><button key={r.id} type="button" class={r.cls} data-id={r.id} onclick={toggleRole}>{r.label}</button></template></div>
+      <p class="mt-1 text-xs text-content-subtle">{rolesHint}</p>
+    </div>
+    <div class="mb-1.5 flex items-center justify-between"><span class="label mb-0">Content (markdown)</span><div class="flex gap-1"><template for:each={views} for:item="v"><button key={v.id} type="button" class={v.cls} data-id={v.id} onclick={setView}>{v.label}</button></template></div></div>
+    <div class={gridCls}>
+      <template lwc:if={showEdit}><x-form-field name="content" type="textarea" rows="18" value={f.content} placeholder="# Title&#10;&#10;Explain the pattern, the constraints, and give examples…" mono compact onchange={handle}></x-form-field></template>
+      <template lwc:if={showPreview}><div class="max-h-[28rem] overflow-y-auto rounded-lg border border-line bg-canvas p-4"><x-markdown source={f.content} compact></x-markdown></div></template>
+    </div>
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="text-xs text-content-subtle">{wordCount}<template lwc:if={version}> · {version}</template></div>
+      <x-form-field type="toggle" label="Enabled" name="enabled" value={f.enabled} compact onchange={handle}></x-form-field>
+    </div>
+    <div class="mt-5 flex justify-end gap-2"><button class="btn-secondary" onclick={cancel}>Cancel</button><button class="btn-primary" onclick={submit} disabled={cannotSubmit}>Save skill</button></div>
+  </template>
+</template>

@@ -1,0 +1,22 @@
+<template lwc:render-mode="light">
+  <div class="overflow-hidden rounded-lg border border-line bg-canvas">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-surface px-3 py-1.5 text-xs">
+      <div class="flex min-w-0 items-center gap-2"><x-icon name="file" cls="h-3.5 w-3.5 text-content-muted"></x-icon><span class="mono truncate text-content">{path}</span></div>
+      <div class="flex items-center gap-3">
+        <span class="font-mono text-emerald-700">+{additions}</span><span class="font-mono text-rose-700">−{deletions}</span>
+        <template lwc:if={showToggle}><button class="btn-ghost btn-xs" onclick={toggle}>{toggleLabel}</button></template>
+      </div>
+    </div>
+    <template lwc:if={isEmpty}><div class="p-4 text-center text-xs text-content-subtle">Empty file</div></template>
+    <template lwc:elseif={noChanges}><div class="p-4 text-center text-xs text-content-subtle">No changes</div></template>
+    <div class="max-h-[70vh] overflow-auto py-1">
+      <template for:each={rows} for:item="r">
+        <div key={r.id} class={r.cls}>
+          <template lwc:if={r.isHunk}><span class="ln"></span><span class="ln"></span><span class="code italic">{r.text}</span></template>
+          <template lwc:else><span class="ln">{r.oldNoText}</span><span class="ln">{r.newNoText}</span><span class="code">{r.sign} {r.text}</span></template>
+        </div>
+      </template>
+    </div>
+    <template lwc:if={truncated}><div class="border-t border-line p-2 text-center text-xs text-content-muted">{hiddenCount} more lines · <button class="link" onclick={toggle}>show all</button></div></template>
+  </div>
+</template>

@@ -1,0 +1,10 @@
+<template lwc:render-mode="light">
+  <template lwc:if={hasList}>
+    <div class="space-y-4">
+      <template for:each={list} for:item="d">
+        <div key={d.id}><div class="mb-1 flex flex-wrap items-center gap-2 text-xs text-content-muted"><span class="font-medium text-content">{d.kind}</span><x-badge value={d.testLevel} color="sky" raw></x-badge><span>{d.when}</span></div><x-validation-panel data={d.panel}></x-validation-panel></div>
+      </template>
+    </div>
+  </template>
+  <template lwc:else><x-empty-state icon="rocket" title="No validations or deploys yet" description="Every checkOnly validation and real deploy of this session is listed here with its failures and coverage."></x-empty-state></template>
+</template>

@@ -1,0 +1,45 @@
+<template lwc:render-mode="light">
+  <div class="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
+    <div class="pointer-events-none absolute -top-40 left-1/2 h-[32rem] w-[48rem] -translate-x-1/2 rounded-full bg-brand-500/20 blur-3xl"></div>
+    <div class="relative w-full max-w-md">
+      <div class="mb-8 flex items-center justify-center gap-3">
+        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500 text-lg font-bold text-white shadow-lg shadow-content-strong/10">x3</span>
+        <div><div class="text-lg font-semibold text-content-strong">SF Claws</div><div class="text-xs uppercase tracking-wider text-content-subtle">Admin console</div></div>
+      </div>
+
+      <template lwc:if={serverDown}>
+        <div class="mb-4 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700"><x-icon name="warning" cls="mt-0.5 h-4 w-4"></x-icon><div><div class="font-medium">Server unreachable</div><div class="text-xs text-amber-700/80">Health check failed. You can still try to sign in; the API base URL can be set in the browser console via <span class="kbd">localStorage['sfclaws.apiBase']</span>.</div></div></div>
+      </template>
+      <template lwc:if={setupRequired}>
+        <div class="mb-4 flex items-start gap-3 rounded-xl border border-brand-500/40 bg-brand-500/10 p-3 text-sm text-brand-700"><x-icon name="bolt" cls="mt-0.5 h-4 w-4"></x-icon><div><div class="font-medium">First-time setup</div><div class="text-xs text-brand-700/80">No users exist yet. The first registered user becomes the super admin. <a href="#/register" class="underline">Register now</a>.</div></div></div>
+      </template>
+
+      <div class="card p-6 sm:p-8">
+        <template lwc:if={isPending}>
+          <div class="text-center">
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-700"><x-icon name="clock" cls="h-6 w-6"></x-icon></div>
+            <h1 class="text-lg font-semibold text-content-strong">Awaiting approval by your administrator</h1>
+            <p class="mt-2 text-sm text-content-muted">Your account <span class="text-content">{registeredEmail}</span> has been created. A super admin needs to approve it before you can sign in. You will be able to use the Chrome extension once approved.</p>
+            <div class="mt-6 flex flex-col gap-2">
+              <template lwc:if={hasToken}><button class="btn-primary" onclick={checkAgain} disabled={busy}><x-icon name="refresh" cls="h-4 w-4"></x-icon>Check again</button></template>
+              <button class="btn-secondary" onclick={backToLogin}>Back to sign in</button>
+            </div>
+          </div>
+        </template>
+        <template lwc:else>
+          <h1 class="text-xl font-semibold text-content-strong">{title}</h1>
+          <p class="mt-1 text-sm text-content-muted">{subtitle}</p>
+          <form class="mt-6" onsubmit={submit} novalidate>
+            <template lwc:if={isRegister}><x-form-field label="Display name" name="displayName" value={displayName} placeholder="Jane Doe" required onchange={handleField}></x-form-field></template>
+            <x-form-field label="Email" name="email" type="email" value={email} placeholder="you@agency.com" required onchange={handleField}></x-form-field>
+            <x-form-field label="Password" name="password" type="password" value={password} placeholder="••••••••••" hint={passwordHint} required onchange={handleField}></x-form-field>
+            <template lwc:if={error}><div class="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-700" role="alert">{errorMessage}</div></template>
+            <button type="submit" class="btn-primary w-full" disabled={busy}><template lwc:if={busy}><x-icon name="spinner" cls="h-4 w-4"></x-icon></template>{submitLabel}</button>
+          </form>
+          <div class="mt-5 text-center text-sm"><a href={switchHref} class="link">{switchLabel}</a></div>
+        </template>
+      </div>
+      <div class="mt-6 text-center text-[11px] text-content-subtle">{serverVersion}</div>
+    </div>
+  </div>
+</template>

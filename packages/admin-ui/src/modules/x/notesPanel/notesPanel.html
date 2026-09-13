@@ -1,0 +1,28 @@
+<template lwc:render-mode="light">
+  <template lwc:if={error}><x-error-state error={error} compact onretry={load}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="text" rows="5"></x-skeleton></template>
+  <template lwc:elseif={hasNotes}>
+    <div class="grid gap-4 lg:grid-cols-[18rem_1fr]">
+      <aside class="card max-h-[70vh] overflow-y-auto p-2">
+        <template for:each={list} for:item="n">
+          <button key={n.id} class={n.cls} data-id={n.id} onclick={select}>
+            <span class="flex items-center gap-2"><span class={n.chipCls}>{n.roleLabel}</span><span class="truncate text-[10px] text-content-subtle">{n.when}</span></span>
+            <span class="mt-1 block truncate text-sm font-medium">{n.title}</span>
+          </button>
+        </template>
+      </aside>
+      <section class="card card-pad min-w-0">
+        <template lwc:if={current}>
+          <div class="mb-3 flex flex-wrap items-center gap-2 border-b border-line pb-3">
+            <h3 class="text-base font-semibold text-content-strong">{current.title}</h3>
+            <span class={currentChipCls}>{currentRole}</span>
+            <template for:each={currentTags} for:item="t"><span key={t.id} class="chip border-line-strong bg-surface-sunken text-content">#{t.label}</span></template>
+            <span class="ml-auto text-[11px] text-content-subtle">{currentWhen}</span>
+          </div>
+          <x-markdown source={current.content}></x-markdown>
+        </template>
+      </section>
+    </div>
+  </template>
+  <template lwc:else><x-empty-state icon="note" title="No scratchpad notes" description="Sub-agents write working notes here (findings, decisions, org facts) for the orchestrator and later sessions."></x-empty-state></template>
+</template>

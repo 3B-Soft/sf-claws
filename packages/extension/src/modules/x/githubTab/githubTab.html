@@ -1,0 +1,89 @@
+<template lwc:render-mode="light">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <template lwc:if={repoLoading}>
+      <div class="flex items-center gap-2 px-3 py-4 text-[12px] text-content-muted"><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span>Loading repository…</div>
+    </template>
+    <template lwc:elseif={repoNone}>
+      <div class="p-4"><x-empty-state tone="amber" title="No GitHub repository configured" description="Ask your admin to link a GitHub repository to this client in the admin console. Commits and pull requests will show up here."></x-empty-state></div>
+    </template>
+    <template lwc:elseif={repoError}>
+      <div class="p-4"><x-empty-state tone="rose" title="Couldn't load the repository" description={error}><div class="mt-2"><button class="rounded-lg border border-line-strong px-3 py-1 text-[12px] hover:bg-surface-sunken" onclick={onReload}>Retry</button></div></x-empty-state></div>
+    </template>
+    <template lwc:else>
+      <div class="border-b border-line px-3 py-2">
+        <div class="flex items-center gap-2">
+          <a class="min-w-0 flex-1 truncate text-[13px] font-semibold text-content-strong hover:underline" href={repoUrl} target="_blank" rel="noopener">{repoName}</a>
+          <span class={tokenCls}>{tokenText}</span>
+        </div>
+        <div class="truncate text-[11px] text-content-subtle">{repoMeta}</div>
+        <template lwc:if={error}><div class="mt-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2 py-1 text-[11px] text-rose-700">{error}</div></template>
+        <div class="mt-2 flex items-center gap-1 text-[11px] text-content-muted">
+          <span>Compare</span>
+          <select class="min-w-0 flex-1 rounded-md border border-line-strong bg-canvas px-1.5 py-1 text-[11px] text-content-strong" onchange={onBase}>
+            <template for:each={baseOptions} for:item="b"><option key={b.value} value={b.value} selected={b.selected}>{b.label}</option></template>
+          </select>
+          <span>←</span>
+          <select class="min-w-0 flex-1 rounded-md border border-line-strong bg-canvas px-1.5 py-1 text-[11px] text-content-strong" onchange={onHead}>
+            <template for:each={branchOptions} for:item="b"><option key={b.value} value={b.value} selected={b.selected}>{b.label}</option></template>
+          </select>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 border-b border-line px-3 py-1.5">
+        <button class={compareCls} data-view="compare" onclick={onView}>Changes</button>
+        <button class={commitsCls} data-view="commits" onclick={onView}>Commits</button>
+        <template lwc:if={compareUrl}><a class="ml-auto text-[11px] text-brand-600 hover:underline" href={compareUrl} target="_blank" rel="noopener">Open on GitHub ↗</a></template>
+      </div>
+
+      <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        <template lwc:if={isCompare}>
+          <template lwc:if={compareLoading}><div class="flex items-center gap-2 text-[12px] text-content-muted"><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span>Comparing branches…</div></template>
+          <template lwc:elseif={compareError}><div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">{compareError}</div></template>
+          <template lwc:elseif={sameBranch}><x-empty-state title="Pick two different branches" description="Select the session branch on the right to see what it changes compared to the default branch."></x-empty-state></template>
+          <template lwc:elseif={hasFiles}>
+            <div class="mb-2 text-[11px] text-content-muted">{compareSummary}</div>
+            <div class="space-y-1">
+              <template for:each={files} for:item="f">
+                <div key={f.key}>
+                  <button class={f.cls} data-path={f.path} onclick={onFile} title={f.path}>
+                    <span class={f.badgeCls}>{f.status}</span>
+                    <span class="min-w-0 flex-1 truncate text-[12px] text-content-strong">{f.name}</span>
+                    <template lwc:if={f.metadataType}><span class="text-[10px] text-content-subtle">{f.metadataType}</span></template>
+                    <span class="font-mono text-[10px] text-content-subtle">{f.stats}</span>
+                  </button>
+                  <template lwc:if={f.open}>
+                    <div class="mt-1 mb-2">
+                      <div class="mb-1 truncate font-mono text-[10px] text-content-subtle">{f.path}</div>
+                      <template lwc:if={f.hasPatch}><x-file-diff patch={f.patch}></x-file-diff></template>
+                      <template lwc:else><div class="rounded-lg border border-line px-3 py-2 text-[11px] text-content-subtle">No textual diff available (binary or too large).</div></template>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template lwc:elseif={compareEmpty}><x-empty-state title="No differences" description="These branches contain the same files."></x-empty-state></template>
+          <template lwc:elseif={sessionBranchMissing}><x-empty-state title="Session branch not pushed yet" description="This session will commit to its own branch once you commit from the Changes tab."><div class="mt-2 font-mono text-[11px] text-content-muted">{sessionBranchHint}</div></x-empty-state></template>
+          <template lwc:elseif={sessionBranchHint}><x-empty-state title="No session branch yet" description="Commit from the Changes tab to create the session branch and see its diff here."></x-empty-state></template>
+        </template>
+
+        <template lwc:else>
+          <template lwc:if={commitsLoading}><div class="flex items-center gap-2 text-[12px] text-content-muted"><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span>Loading commits…</div></template>
+          <template lwc:elseif={hasCommits}>
+            <ul class="space-y-1">
+              <template for:each={commitRows} for:item="c">
+                <li key={c.key} class="rounded-lg border border-line bg-surface px-2.5 py-1.5">
+                  <div class="flex items-center gap-2">
+                    <a class="font-mono text-[11px] text-brand-600 hover:underline" href={c.url} target="_blank" rel="noopener">{c.sha}</a>
+                    <span class="min-w-0 flex-1 truncate text-[12px] text-content-strong">{c.title}</span>
+                  </div>
+                  <div class="mt-0.5 text-[10px] text-content-subtle">{c.author} · {c.when}</div>
+                </li>
+              </template>
+            </ul>
+          </template>
+          <template lwc:else><x-empty-state title="No commits" description="No commits found on this branch."></x-empty-state></template>
+        </template>
+      </div>
+    </template>
+  </div>
+</template>

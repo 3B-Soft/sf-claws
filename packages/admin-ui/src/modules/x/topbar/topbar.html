@@ -1,0 +1,27 @@
+<template lwc:render-mode="light">
+  <header class="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-canvas px-4 backdrop-blur sm:px-6">
+    <button class="rounded-lg p-2 text-content hover:bg-surface-sunken lg:hidden" onclick={openMenu} aria-label="Open menu"><x-icon name="menu" cls="h-5 w-5"></x-icon></button>
+    <div class="text-sm font-medium text-content">{title}</div>
+    <div class="ml-auto flex items-center gap-3">
+      <span class="hidden items-center gap-1.5 text-[11px] text-content-subtle md:inline-flex" title="API base URL"><x-icon name="cloud" cls="h-3.5 w-3.5"></x-icon>{apiBase}</span>
+      <x-badge value={uiMode} label={uiMode}></x-badge>
+      <div class="relative" data-user-menu>
+        <button class="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 hover:bg-surface-sunken" onclick={toggleMenu}>
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-500 text-xs font-semibold text-white">{initials}</span>
+          <span class="hidden text-left sm:block"><span class="block text-sm leading-tight text-content-strong">{name}</span><span class="block text-[11px] capitalize leading-tight text-content-subtle">{role}</span></span>
+          <x-icon name="chevronDown" cls="h-3.5 w-3.5 text-content-subtle"></x-icon>
+        </button>
+        <template lwc:if={menuOpen}>
+          <div class="card absolute right-0 mt-2 w-56 overflow-hidden bg-surface p-1 shadow-xl">
+            <div class="px-3 py-2"><div class="truncate text-sm font-medium text-content-strong">{name}</div><div class="truncate text-xs text-content-muted">{user.email}</div></div>
+            <div class="divider my-1"></div>
+            <a href="#/settings" class="nav-item" onclick={closeMenu}><x-icon name="settings"></x-icon>Settings</a>
+            <a href="#/pair" class="nav-item" onclick={closeMenu}><x-icon name="pair"></x-icon>Pair extension</a>
+            <div class="divider my-1"></div>
+            <button class="nav-item w-full text-rose-700 hover:text-rose-700" onclick={logout}><x-icon name="logout"></x-icon>Sign out</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </header>
+</template>

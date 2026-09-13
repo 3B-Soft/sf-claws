@@ -1,0 +1,4 @@
+<template lwc:render-mode="light">
+  <template lwc:if={hasRecords}><div class="card card-pad mb-4"><div class="mb-3 flex items-center justify-between text-sm"><span class="font-semibold text-content-strong">Cost by role</span><span class="text-xs text-content-muted">{totalTokens} · <span class="text-emerald-700">{total}</span></span></div><x-usage-chart rows={byRole} metric="costUsd"></x-usage-chart></div></template>
+  <div class="card"><x-data-table columns={columns} rows={records} loading={loading} error={error} dense empty-title="No usage records" empty-description="Each model call made by an agent is recorded with tokens and cost." empty-icon="usage" onretry={load}></x-data-table></div>
+</template>

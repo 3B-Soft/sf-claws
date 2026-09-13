@@ -1,0 +1,24 @@
+<template lwc:render-mode="light">
+  <template lwc:if={hasItems}>
+    <div class="rounded-xl border border-brand-500/30 bg-surface shadow-lg shadow-content-strong/10 backdrop-blur">
+      <button class="flex w-full items-center gap-2 px-3 py-2 text-left" onclick={onToggle}>
+        <span class="rounded bg-brand-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-700">Plan</span>
+        <span class="min-w-0 flex-1 truncate text-[12px] text-content">{summary}</span>
+        <span class="font-mono text-[11px] text-content-muted">{counter}</span>
+        <span class="text-[11px] text-content-subtle">{toggle}</span>
+      </button>
+      <div class="mx-3 h-1 overflow-hidden rounded bg-surface-sunken"><div class={barCls} style={barStyle}></div></div>
+      <template lwc:if={collapsed}><div class="h-2"></div></template>
+      <template lwc:else>
+        <ul class="space-y-0.5 px-3 pb-2 pt-2">
+          <template for:each={rows} for:item="t">
+            <li key={t.key} class="flex items-start gap-2">
+              <span class={t.glyphCls}>{t.glyph}</span>
+              <span class={t.textCls}>{t.text}</span>
+            </li>
+          </template>
+        </ul>
+      </template>
+    </div>
+  </template>
+</template>

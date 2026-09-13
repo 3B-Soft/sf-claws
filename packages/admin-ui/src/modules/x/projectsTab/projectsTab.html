@@ -1,0 +1,62 @@
+<template lwc:render-mode="light">
+  <template lwc:if={error}><x-error-state error={error} onretry={load}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="cards" rows="4"></x-skeleton></template>
+  <template lwc:elseif={hasProjects}>
+    <div class="grid gap-6 lg:grid-cols-[16rem_1fr]">
+      <aside class="card p-2">
+        <div class="flex items-center justify-between px-2 py-1.5"><span class="text-xs font-semibold uppercase tracking-wider text-content-subtle">Projects</span><button class="btn-ghost btn-xs" onclick={openProject}><x-icon name="plus" cls="h-3.5 w-3.5"></x-icon></button></div>
+        <div class="space-y-0.5">
+          <template for:each={projectItems} for:item="p">
+            <button key={p.id} class={p.cls} data-id={p.id} onclick={selectProject}><x-icon name="folder" cls="h-4 w-4 text-content-subtle"></x-icon><span class="min-w-0 flex-1 truncate">{p.name}</span><template lwc:if={p.archived}><x-badge value="archived"></x-badge></template></button>
+          </template>
+        </div>
+      </aside>
+      <section>
+        <template lwc:if={selected}>
+          <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div><h3 class="text-base font-semibold text-content-strong">{selected.name}</h3><template lwc:if={selected.description}><p class="text-sm text-content-muted">{selected.description}</p></template></div>
+            <div class="flex gap-2"><button class="btn-ghost btn-sm" onclick={toggleArchive}>{archiveLabel}</button><button class="btn-primary btn-sm" onclick={openTask}><x-icon name="plus" cls="h-3.5 w-3.5"></x-icon>New task</button></div>
+          </div>
+          <template lwc:if={tasksError}><x-error-state error={tasksError} compact onretry={loadTasks}></x-error-state></template>
+          <template lwc:elseif={tasksLoading}><x-skeleton variant="cards" rows="5"></x-skeleton></template>
+          <template lwc:else>
+            <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+              <template for:each={columns} for:item="col">
+                <div key={col.id} class={col.cls}>
+                  <div class="flex items-center justify-between px-3 py-2"><span class="text-xs font-semibold text-content">{col.label}</span><span class="rounded-full bg-surface-sunken px-1.5 text-[10px] text-content-muted">{col.count}</span></div>
+                  <div class="flex-1 space-y-2 px-2 pb-2">
+                    <template for:each={col.items} for:item="t">
+                      <button key={t.id} class="w-full rounded-lg border border-line bg-canvas p-2.5 text-left transition-colors hover:border-brand-500/40" data-id={t.id} onclick={editTask}>
+                        <div class="text-sm text-content-strong">{t.title}</div>
+                        <template lwc:if={t.description}><div class="mt-1 line-clamp-2 text-xs text-content-subtle">{t.description}</div></template>
+                        <div class="mt-2 flex flex-wrap gap-1.5 text-[11px]"><template lwc:if={t.assignee}><span class="chip border-line-strong bg-surface-sunken text-content"><x-icon name="user" cls="h-3 w-3"></x-icon>{t.assignee}</span></template><template lwc:if={t.org}><span class="chip border-sky-500/30 bg-sky-500/10 text-sky-700"><x-icon name="cloud" cls="h-3 w-3"></x-icon>{t.org}</span></template></div>
+                      </button>
+                    </template>
+                    <template lwc:if={col.hasItems}></template><template lwc:else><div class="rounded-lg border border-dashed border-line p-3 text-center text-[11px] text-content-subtle">Empty</div></template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </template>
+      </section>
+    </div>
+  </template>
+  <template lwc:else><x-empty-state icon="kanban" title="No projects yet" description="Projects group tasks; sessions from the extension can be linked to a task." action-label="New project" onaction={openProject}></x-empty-state></template>
+
+  <x-modal open={projectModal} title="New project" size="sm" onclose={closeProject}>
+    <x-form-field label="Name" name="name" value={projectForm.name} required onchange={handleProjectField}></x-form-field>
+    <x-form-field label="Description" name="description" type="textarea" rows="3" value={projectForm.description} onchange={handleProjectField}></x-form-field>
+    <div slot="footer"><button class="btn-secondary" onclick={closeProject}>Cancel</button><button class="btn-primary" onclick={createProject} disabled={cannotSaveProject}>Create</button></div>
+  </x-modal>
+  <x-modal open={taskModal} title={taskModalTitle} onclose={closeTask}>
+    <x-form-field label="Title" name="title" value={tf.title} required onchange={handleTaskField}></x-form-field>
+    <x-form-field label="Description" name="description" type="textarea" rows="4" value={tf.description} placeholder="Business context, acceptance criteria…" onchange={handleTaskField}></x-form-field>
+    <div class="grid gap-x-4 sm:grid-cols-3">
+      <x-form-field label="Status" name="status" type="select" value={tf.status} options={statusOptions} onchange={handleTaskField}></x-form-field>
+      <x-form-field label="Assignee" name="assigneeId" type="select" value={tf.assigneeId} options={userOptions} placeholder="Unassigned" onchange={handleTaskField}></x-form-field>
+      <x-form-field label="Salesforce org" name="orgId" type="select" value={tf.orgId} options={orgOptions} placeholder="Any org" onchange={handleTaskField}></x-form-field>
+    </div>
+    <div slot="footer"><template lwc:if={isEditingTask}><button class="btn-ghost text-rose-700 mr-auto" onclick={deleteTask}>Delete</button></template><button class="btn-secondary" onclick={closeTask}>Cancel</button><button class="btn-primary" onclick={saveTask} disabled={cannotSaveTask}>Save task</button></div>
+  </x-modal>
+</template>

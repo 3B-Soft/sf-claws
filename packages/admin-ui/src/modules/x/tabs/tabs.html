@@ -1,0 +1,7 @@
+<template lwc:render-mode="light">
+  <div class="flex overflow-x-auto border-b border-line" role="tablist">
+    <template for:each={items} for:item="t">
+      <button key={t.id} type="button" role="tab" class={t.cls} data-id={t.id} onclick={select}>{t.label}<template lwc:if={t.hasCount}><span class="rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] text-content">{t.count}</span></template></button>
+    </template>
+  </div>
+</template>

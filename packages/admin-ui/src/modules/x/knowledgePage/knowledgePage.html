@@ -1,0 +1,173 @@
+<template lwc:render-mode="light">
+  <x-page-header title="Knowledge" subtitle="What the agents know about your products, beyond Salesforce itself"></x-page-header>
+
+  <div class="mb-4 flex gap-2">
+    <button class={sourcesTabCls} data-tab="sources" onclick={onTab}>Sources</button>
+    <button class={agentsTabCls} data-tab="agents" onclick={onTab}>Specialists</button>
+  </div>
+
+  <template lwc:if={loading}><x-skeleton rows="4"></x-skeleton></template>
+  <template lwc:elseif={error}><x-error-state error={error} onretry={load}></x-error-state></template>
+
+  <template lwc:else>
+    <!-- ---------------------------------------------------------------- sources -->
+    <template lwc:if={isSources}>
+      <div class="mb-4 rounded-xl border border-line bg-surface p-3 text-sm leading-relaxed text-content-muted">
+        Point the agents at your own documentation and product repositories. They search documentation first and treat code as ground truth when the two
+        disagree. Each source uses its own read-only access token — never a client's GitHub token, which belongs to a different trust boundary.
+      </div>
+      <div class="mb-3 flex justify-end">
+        <button class="btn-primary" onclick={onNewSource}><x-icon name="plus" cls="h-4 w-4"></x-icon> Add source</button>
+      </div>
+
+      <template lwc:if={hasSources}>
+        <div class="grid gap-3">
+          <template for:each={sourceRows} for:item="s">
+            <div key={s.id} class="rounded-xl border border-line bg-surface p-4">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium text-content-strong">{s.name}</span>
+                    <span class="rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-content-muted">{s.kindLabel}</span>
+                    <span class={s.statusCls}>{s.statusLabel}</span>
+                  </div>
+                  <div class="mt-1 font-mono text-xs text-content-muted">{s.repoRef}</div>
+                  <template lwc:if={s.guidance}><div class="mt-1.5 text-sm text-content-muted">{s.guidance}</div></template>
+                  <div class="mt-1.5 flex flex-wrap items-center gap-3">
+                    <span class="text-xs text-content-subtle">Available to: {s.scopeLabel}</span>
+                    <span class={s.tokenCls}>{s.tokenLabel}</span>
+                  </div>
+                </div>
+                <div class="flex shrink-0 gap-2">
+                  <button class="btn-secondary" data-id={s.id} onclick={onTestSource}>Test</button>
+                  <button class="btn-secondary" data-id={s.id} onclick={onEditSource}>Edit</button>
+                  <button class="btn-ghost text-rose-700 hover:bg-rose-500/10 hover:text-rose-700" data-id={s.id} onclick={onDeleteSource}>Remove</button>
+                </div>
+              </div>
+              <template lwc:if={s.hasTest}><div class={s.testCls}>{s.testMessage}</div></template>
+            </div>
+          </template>
+        </div>
+      </template>
+      <template lwc:else>
+        <x-empty-state
+          icon="docs"
+          title="No knowledge sources yet"
+          description="Add your product documentation repository so the agents answer from how your products actually work, not from generic Salesforce knowledge."
+        ></x-empty-state>
+      </template>
+    </template>
+
+    <!-- ------------------------------------------------------------ specialists -->
+    <template lwc:else>
+      <div class="mb-4 rounded-xl border border-line bg-surface p-3 text-sm leading-relaxed text-content-muted">
+        A specialist is a named set of instructions layered on one of the built-in agent roles — your CPQ conventions, a particular client's naming rules.
+        The base role fixes which tools it can use, so a specialist can never do more than that role already could. Instructions are added to the role's
+        prompt, not substituted for it: the safety rules and policy always still apply.
+      </div>
+      <div class="mb-3 flex justify-end">
+        <button class="btn-primary" onclick={onNewAgent}><x-icon name="plus" cls="h-4 w-4"></x-icon> Add specialist</button>
+      </div>
+
+      <template lwc:if={hasAgents}>
+        <div class="grid gap-3">
+          <template for:each={agentRows} for:item="a">
+            <div key={a.id} class="rounded-xl border border-line bg-surface p-4">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium text-content-strong">{a.name}</span>
+                    <span class="rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-content-muted">{a.roleLabel}</span>
+                    <span class={a.statusCls}>{a.statusLabel}</span>
+                  </div>
+                  <div class="mt-1 text-sm text-content-muted">{a.whenToUse}</div>
+                  <div class="mt-1.5 text-xs text-content-subtle">Available to: {a.scopeLabel}</div>
+                </div>
+                <div class="flex shrink-0 gap-2">
+                  <button class="btn-secondary" data-id={a.id} onclick={onEditAgent}>Edit</button>
+                  <button class="btn-ghost text-rose-700 hover:bg-rose-500/10 hover:text-rose-700" data-id={a.id} onclick={onDeleteAgent}>Remove</button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+      <template lwc:else>
+        <x-empty-state
+          icon="skills"
+          title="No specialists yet"
+          description="Define one when a kind of work needs instructions the general roles do not carry — a product area, a client's conventions, a review standard."
+        ></x-empty-state>
+      </template>
+    </template>
+  </template>
+
+  <!-- ------------------------------------------------------------------- editor -->
+  <x-modal open={modalOpen} title={modalTitle} size="lg" onclose={onCloseModal}>
+    <template lwc:if={isSourceForm}>
+      <div class="grid gap-4">
+        <x-form-field label="Name" name="name" value={form.name} required hint="How the agents refer to it, e.g. “Product docs”." onchange={onField}></x-form-field>
+        <x-form-field label="Kind" name="kind" type="select" value={form.kind} options={kindOptions} onchange={onField}></x-form-field>
+        <x-form-field label="Repository" name="repoRef" value={form.repoRef} required mono hint={repoRefHint} placeholder="acme/product-docs#main" onchange={onField}></x-form-field>
+        <x-form-field
+          label="Guidance for the agents"
+          name="guidance"
+          type="textarea"
+          rows="3"
+          value={form.guidance}
+          hint="One or two lines on what this source covers and when to reach for it."
+          onchange={onField}
+        ></x-form-field>
+        <x-form-field label="Access token" name="token" type="password" value={form.token} hint={tokenHint} onchange={onField}></x-form-field>
+        <x-form-field label="Available to" name="scope" type="select" value={form.scope} options={scopeOptions} onchange={onField}></x-form-field>
+        <template lwc:if={isClientScoped}>
+          <x-form-field label="Client" name="clientId" type="select" value={form.clientId} options={clientOptions} placeholder="Choose a client" onchange={onField}></x-form-field>
+        </template>
+        <x-form-field label="Enabled" name="enabled" type="toggle" value={form.enabled} hint="Disabled sources stay configured but are invisible to the agents." onchange={onField}></x-form-field>
+      </div>
+    </template>
+
+    <template lwc:elseif={isAgentForm}>
+      <div class="grid gap-4">
+        <x-form-field label="Name" name="name" value={form.name} required hint="What the lead agent calls it, e.g. “CPQ specialist”." onchange={onField}></x-form-field>
+        <x-form-field
+          label="When to use it"
+          name="whenToUse"
+          value={form.whenToUse}
+          required
+          hint="Shown to the lead agent so it knows when to consult this specialist rather than handling the work itself."
+          onchange={onField}
+        ></x-form-field>
+        <x-form-field
+          label="Base role"
+          name="baseRole"
+          type="select"
+          value={form.baseRole}
+          options={baseRoleOptions}
+          hint="Fixes the tools it can use. A specialist can never reach beyond its base role."
+          onchange={onField}
+        ></x-form-field>
+        <x-form-field
+          label="Instructions"
+          name="instructions"
+          type="textarea"
+          rows="8"
+          value={form.instructions}
+          required
+          hint="Added to the base role's prompt. Write what someone joining this work would need to know that the general role does not cover."
+          onchange={onField}
+        ></x-form-field>
+        <x-form-field label="Available to" name="scope" type="select" value={form.scope} options={scopeOptions} onchange={onField}></x-form-field>
+        <template lwc:if={isClientScoped}>
+          <x-form-field label="Client" name="clientId" type="select" value={form.clientId} options={clientOptions} placeholder="Choose a client" onchange={onField}></x-form-field>
+        </template>
+        <x-form-field label="Enabled" name="enabled" type="toggle" value={form.enabled} onchange={onField}></x-form-field>
+      </div>
+    </template>
+
+    <div slot="footer" class="flex justify-end gap-2">
+      <button class="btn-secondary" onclick={onCloseModal}>Cancel</button>
+      <button class="btn-primary" disabled={busy} onclick={onSave}>Save</button>
+    </div>
+  </x-modal>
+</template>

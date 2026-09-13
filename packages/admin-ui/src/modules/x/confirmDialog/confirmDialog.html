@@ -1,0 +1,7 @@
+<template lwc:render-mode="light">
+  <x-modal open={open} title={title} size="sm" onclose={no}>
+    <div class={iconCls}><x-icon name={iconName} cls="h-5 w-5"></x-icon></div>
+    <p class="text-sm text-content whitespace-pre-line">{message}</p>
+    <div slot="footer"><button class="btn-secondary" onclick={no}>{cancelLabel}</button><button class={confirmCls} onclick={yes} autofocus>{confirmLabel}</button></div>
+  </x-modal>
+</template>

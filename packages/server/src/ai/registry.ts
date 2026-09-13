@@ -1,0 +1,242 @@
+import type { AgentRole, AiModel, AiProvider, RoleModelBinding } from '@sf-claws/shared';
+import type { Repos } from '../db/repos/index.js';
+import type { SecretBox } from '../lib/crypto.js';
+import type { Logger } from '../logger.js';
+import type { LlmProvider, LlmUsage } from './types.js';
+import { AnthropicProvider } from './anthropic.js';
+import { OpenAiProvider } from './openai.js';
+import { DeepseekProvider } from './deepseek.js';
+import { DeepinfraProvider } from './deepinfra.js';
+import { HttpError } from '../lib/errors.js';
+
+/** Default catalogue seeded on first boot (prices in USD per 1M tokens; OpenAI and DeepSeek values are placeholders admins should verify). */
+export const DEFAULT_MODELS: Omit<AiModel, 'id' | 'createdAt'>[] = [
+  {
+    provider: 'anthropic',
+    modelId: 'claude-opus-5',
+    label: 'Claude Opus 5',
+    enabled: true,
+    inputCostPerM: 5,
+    outputCostPerM: 25,
+    cachedInputCostPerM: 0.5,
+    maxOutputTokens: 32000,
+    contextWindow: 1_000_000,
+    supportsThinking: true,
+  },
+  {
+    provider: 'anthropic',
+    modelId: 'claude-sonnet-5',
+    label: 'Claude Sonnet 5',
+    enabled: true,
+    inputCostPerM: 2,
+    outputCostPerM: 10,
+    cachedInputCostPerM: 0.2,
+    maxOutputTokens: 32000,
+    contextWindow: 1_000_000,
+    supportsThinking: true,
+  },
+  {
+    provider: 'anthropic',
+    modelId: 'claude-haiku-4-5',
+    label: 'Claude Haiku 4.5',
+    enabled: true,
+    inputCostPerM: 1,
+    outputCostPerM: 5,
+    cachedInputCostPerM: 0.1,
+    maxOutputTokens: 16000,
+    contextWindow: 200_000,
+    supportsThinking: false,
+  },
+  {
+    provider: 'openai',
+    modelId: 'gpt-5',
+    label: 'GPT-5',
+    enabled: false,
+    inputCostPerM: 1.25,
+    outputCostPerM: 10,
+    cachedInputCostPerM: 0.125,
+    maxOutputTokens: 32000,
+    contextWindow: 400_000,
+    supportsThinking: true,
+  },
+  {
+    provider: 'openai',
+    modelId: 'gpt-5-mini',
+    label: 'GPT-5 mini',
+    enabled: false,
+    inputCostPerM: 0.25,
+    outputCostPerM: 2,
+    cachedInputCostPerM: 0.025,
+    maxOutputTokens: 32000,
+    contextWindow: 400_000,
+    supportsThinking: true,
+  },
+  {
+    provider: 'deepseek',
+    modelId: 'deepseek-chat',
+    label: 'DeepSeek Chat',
+    enabled: false,
+    inputCostPerM: 0.28,
+    outputCostPerM: 0.42,
+    cachedInputCostPerM: 0.028,
+    maxOutputTokens: 8000,
+    contextWindow: 128_000,
+    supportsThinking: false,
+  },
+  {
+    provider: 'deepseek',
+    modelId: 'deepseek-reasoner',
+    label: 'DeepSeek Reasoner',
+    enabled: false,
+    inputCostPerM: 0.28,
+    outputCostPerM: 0.42,
+    cachedInputCostPerM: 0.028,
+    maxOutputTokens: 64000,
+    contextWindow: 128_000,
+    supportsThinking: true,
+  },
+];
+
+/** Default role bindings by provider model id (resolved to db ids on seed). */
+export const DEFAULT_BINDINGS: { role: AgentRole; modelId: string; effort: RoleModelBinding['effort']; maxIterations: number }[] = [
+  { role: 'orchestrator', modelId: 'claude-opus-5', effort: 'high', maxIterations: 60 },
+  { role: 'analyst', modelId: 'claude-sonnet-5', effort: 'medium', maxIterations: 40 },
+  { role: 'metadata_builder', modelId: 'claude-opus-5', effort: 'high', maxIterations: 40 },
+  { role: 'flow_builder', modelId: 'claude-opus-5', effort: 'high', maxIterations: 40 },
+  { role: 'apex_builder', modelId: 'claude-opus-5', effort: 'xhigh', maxIterations: 40 },
+  { role: 'reviewer', modelId: 'claude-sonnet-5', effort: 'medium', maxIterations: 20 },
+  { role: 'doc_writer', modelId: 'claude-sonnet-5', effort: 'low', maxIterations: 10 },
+  { role: 'researcher', modelId: 'claude-sonnet-5', effort: 'medium', maxIterations: 30 },
+  { role: 'summarizer', modelId: 'claude-haiku-4-5', effort: 'low', maxIterations: 5 },
+];
+
+/** One place that knows which client class serves a provider id. */
+function makeProvider(p: AiProvider, key: string, baseUrl: string | null | undefined): LlmProvider {
+  switch (p) {
+    case 'anthropic':
+      return new AnthropicProvider(key, baseUrl);
+    case 'deepseek':
+      return new DeepseekProvider(key, baseUrl);
+    case 'deepinfra':
+      return new DeepinfraProvider(key, baseUrl);
+    default:
+      return new OpenAiProvider(key, baseUrl);
+  }
+}
+
+export class AiRegistry {
+  /**
+   * Provider clients, keyed by `userId|provider` — NOT by provider alone. A user may hold their own
+   * API key, and keying on the provider would hand one user's client (and key) to everyone.
+   */
+  private providers = new Map<string, LlmProvider>();
+  constructor(
+    private repos: Repos,
+    private secrets: SecretBox,
+    private log: Logger,
+  ) {}
+
+  /** Drop cached clients. Pass a user id to rotate only that user's key. */
+  invalidate(userId?: string): void {
+    if (!userId) {
+      this.providers.clear();
+      return;
+    }
+    for (const key of [...this.providers.keys()]) if (key.startsWith(`${userId}|`)) this.providers.delete(key);
+  }
+
+  seedDefaults(): void {
+    if (this.repos.models.list().length === 0) {
+      for (const m of DEFAULT_MODELS) this.repos.models.create(m);
+      this.log.info('Seeded default AI model catalogue');
+    }
+    if (this.repos.bindings.list().length === 0) {
+      const bindings: RoleModelBinding[] = [];
+      for (const b of DEFAULT_BINDINGS) {
+        const m = this.repos.models.byProviderModel('anthropic', b.modelId) ?? this.repos.models.list()[0];
+        if (m) bindings.push({ role: b.role, modelId: m.id, effort: b.effort, maxIterations: b.maxIterations });
+      }
+      if (bindings.length) this.repos.bindings.setAll(bindings);
+    }
+  }
+
+  /**
+   * A client for one provider, using this user's own key when they have one and the platform key
+   * otherwise. Per-user keys let a deployment give each consultant their own provider account, so
+   * spend and rate limits are attributed to them instead of competing on one shared key.
+   */
+  provider(p: AiProvider, userId?: string): LlmProvider {
+    const cred = (userId ? this.repos.providers.get(p, userId) : undefined) ?? this.repos.providers.get(p);
+    if (!cred) throw new HttpError(503, 'PROVIDER_NOT_CONFIGURED', `No API key configured for ${p}. A super admin must add one in the admin console.`);
+    const cacheKey = `${cred.userId ?? 'global'}|${p}`;
+    const cached = this.providers.get(cacheKey);
+    if (cached) return cached;
+    const key = this.secrets.decrypt(cred.apiKeyEnc);
+    const inst = makeProvider(p, key, cred.baseUrl);
+    this.providers.set(cacheKey, inst);
+    return inst;
+  }
+
+  async testProvider(p: AiProvider): Promise<{ ok: boolean; message: string }> {
+    try {
+      const model = this.repos.models.list().find((m) => m.provider === p && m.enabled);
+      return await this.provider(p).test(model?.modelId);
+    } catch (e) {
+      return { ok: false, message: (e as Error).message };
+    }
+  }
+
+  /**
+   * Resolve the model, provider client, effort and iteration cap for a role. Falls back to the
+   * orchestrator binding, then any enabled model with a usable key. `userId` selects that user's
+   * own provider key when they have one.
+   */
+  resolve(
+    role: AgentRole,
+    userId?: string,
+  ): {
+    model: AiModel;
+    provider: LlmProvider;
+    effort: RoleModelBinding['effort'];
+    maxIterations: number;
+    fallback: { model: AiModel; provider: LlmProvider } | null;
+  } {
+    const binding = this.repos.bindings.get(role) ?? this.repos.bindings.get('orchestrator');
+    let model = binding ? this.repos.models.byId(binding.modelId) : undefined;
+    if (!model?.enabled) {
+      model = this.repos.models.list().find((m) => m.enabled && this.hasKey(m.provider, userId));
+      if (!model) throw new HttpError(503, 'NO_MODEL', 'No enabled AI model with a configured provider. Ask a super admin to configure models.');
+    }
+    return {
+      model,
+      provider: this.provider(model.provider, userId),
+      effort: binding?.effort ?? 'high',
+      maxIterations: binding?.maxIterations ?? 40,
+      fallback: this.resolveFallback(model, userId),
+    };
+  }
+
+  /**
+   * A second model to try when the primary is overloaded or rate limited: prefer another enabled
+   * model from the same provider (same key, same shapes), otherwise any other enabled model.
+   */
+  private resolveFallback(primary: AiModel, userId?: string): { model: AiModel; provider: LlmProvider } | null {
+    const candidates = this.repos.models.list().filter((m) => m.enabled && m.id !== primary.id && this.hasKey(m.provider, userId));
+    const model = candidates.find((m) => m.provider === primary.provider) ?? candidates[0];
+    if (!model) return null;
+    try {
+      return { model, provider: this.provider(model.provider, userId) };
+    } catch {
+      return null;
+    }
+  }
+
+  private hasKey(p: AiProvider, userId?: string): boolean {
+    return !!((userId && this.repos.providers.get(p, userId)) || this.repos.providers.get(p));
+  }
+
+  cost(model: AiModel, u: LlmUsage): number {
+    const cachedRate = model.cachedInputCostPerM ?? model.inputCostPerM * 0.1;
+    return (u.inputTokens * model.inputCostPerM + u.cachedInputTokens * cachedRate + u.outputTokens * model.outputCostPerM) / 1_000_000;
+  }
+}

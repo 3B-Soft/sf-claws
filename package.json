@@ -1,0 +1,47 @@
+{
+  "name": "sf-claws",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Salesforce-focused agentic harness for implementation admins: Chrome side-panel plugin + Node.js control plane.",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/shared",
+    "packages/server",
+    "packages/admin-ui",
+    "packages/extension"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "npm run build -w @sf-claws/shared && npm run build -w @sf-claws/server && npm run build -w @sf-claws/admin-ui && npm run build -w @sf-claws/extension",
+    "dev:server": "npm run dev -w @sf-claws/server",
+    "dev:admin": "npm run dev -w @sf-claws/admin-ui",
+    "dev:extension": "npm run dev -w @sf-claws/extension",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "demo": "node tools/demo-server.mjs",
+    "screenshots": "node tools/screenshots.mjs",
+    "contrast": "node tools/contrast-audit.mjs",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write",
+    "format": "biome format . --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "playwright": "^1.63.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "dependencies": {
+    "@salesforce/source-deploy-retrieve": "^13.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/3B-Soft/sf-claws.git"
+  },
+  "homepage": "https://github.com/3B-Soft/sf-claws#readme",
+  "bugs": {
+    "url": "https://github.com/3B-Soft/sf-claws/issues"
+  }
+}

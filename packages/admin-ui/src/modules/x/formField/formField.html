@@ -1,0 +1,33 @@
+<template lwc:render-mode="light">
+  <div class={wrapCls}>
+    <template lwc:if={isToggle}>
+      <div class="flex items-start justify-between gap-4 py-1">
+        <div><div class="text-sm font-medium text-content">{label}</div><template lwc:if={hint}><div class="mt-0.5 text-xs text-content-subtle">{hint}</div></template></div>
+        <button type="button" role="switch" aria-checked={checked} class={toggleCls} onclick={toggle} disabled={disabled}><span class={knobCls}></span></button>
+      </div>
+    </template>
+    <template lwc:elseif={isCheckbox}>
+      <label class="flex cursor-pointer items-start gap-2.5 text-sm text-content">
+        <input type="checkbox" class="mt-0.5 h-4 w-4 rounded border-line-strong bg-surface" checked={checked} disabled={disabled} onchange={handleCheck} />
+        <span><span class="font-medium">{label}</span><template lwc:if={hint}><span class="block text-xs text-content-subtle">{hint}</span></template></span>
+      </label>
+    </template>
+    <template lwc:else>
+      <template lwc:if={label}><label class="label" for={inputId}>{label}<template lwc:if={required}><span class="ml-0.5 text-rose-700">*</span></template></label></template>
+      <template lwc:if={isSelect}>
+        <select id={inputId} class="select" disabled={disabled} required={required} onchange={handleInput}>
+          <template lwc:if={placeholder}><option value="">{placeholder}</option></template>
+          <template for:each={selectOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+        </select>
+      </template>
+      <template lwc:elseif={isTextarea}>
+        <textarea id={inputId} class={textareaCls} rows={rows} placeholder={placeholder} disabled={disabled} readonly={readonly} required={required} data-field-textarea oninput={handleInput} onchange={swallow}></textarea>
+      </template>
+      <template lwc:else>
+        <input id={inputId} class={inputCls} type={type} placeholder={placeholder} disabled={disabled} readonly={readonly} required={required} value={displayValue} min={min} max={max} step={step} oninput={handleInput} onchange={swallow} autocomplete="off" />
+      </template>
+      <template lwc:if={error}><p class="mt-1 text-xs text-rose-700">{error}</p></template>
+      <template lwc:elseif={hint}><p class="mt-1 text-xs text-content-subtle">{hint}</p></template>
+    </template>
+  </div>
+</template>

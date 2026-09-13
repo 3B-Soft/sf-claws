@@ -1,0 +1,31 @@
+<template lwc:render-mode="light">
+  <template lwc:if={hasRows}>
+    <div class="flex items-center justify-between px-0.5 pb-1 text-[11px] text-content-subtle">
+      <span>{countText}<template lwc:if={truncated}> (showing first {maxRows})</template></span>
+      <button class={copyCls} title="Copy the results as CSV to your clipboard" onclick={onExport}>{copyLabel}</button>
+    </div>
+    <div class="max-h-96 overflow-auto rounded-lg border border-line">
+      <table class="min-w-full border-collapse text-left">
+        <thead class="sticky top-0 bg-surface text-[10px] uppercase tracking-wide text-content-muted">
+          <tr><template for:each={cols} for:item="c"><th key={c.name} class="whitespace-nowrap border-b border-line px-2 py-1.5 font-medium">{c.name}</th></template></tr>
+        </thead>
+        <tbody class="divide-y divide-line">
+          <template for:each={viewRows} for:item="r">
+            <tr key={r.key} class="hover:bg-surface-sunken">
+              <template for:each={r.cells} for:item="cell">
+                <td key={cell.key} class={cellCls}>
+                  <template lwc:if={cell.link}><a class="font-mono text-brand-600 hover:underline" href={cell.link} target="_blank" rel="noopener">{cell.text}</a></template>
+                  <template lwc:elseif={cell.isEmpty}><span class="text-content-subtle">—</span></template>
+                  <template lwc:else><span class="block max-w-[260px] truncate text-content" title={cell.text}>{cell.text}</span></template>
+                </td>
+              </template>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </template>
+  <template lwc:else>
+    <div class="rounded-lg border border-dashed border-line px-3 py-3 text-center text-[11px] text-content-subtle">No rows</div>
+  </template>
+</template>

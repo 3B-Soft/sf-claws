@@ -1,0 +1,77 @@
+<template lwc:render-mode="light">
+  <div class={cardCls}>
+    <button class="flex w-full items-center gap-2 px-2.5 py-1.5 text-left" onclick={onToggle}>
+      <span class={glyphCls}>{glyph}</span>
+      <span class="min-w-0 flex-1">
+        <span class="block truncate text-[12px] text-content">{label}</span>
+        <template lwc:if={resultLabel}><span class="block truncate text-[11px] text-content-subtle">{resultLabel}</span></template>
+      </span>
+      <template lwc:if={showRole}><span class={roleCls}>{roleText}</span></template>
+      <template lwc:if={done}>
+        <template lwc:if={failed}><span class="text-[11px] text-rose-700">failed</span></template>
+        <template lwc:else><span class="text-[11px] text-emerald-700">✓</span></template>
+        <span class="text-[10px] text-content-subtle">{duration}</span>
+      </template>
+      <template lwc:else><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
+      <span class="text-[11px] text-content-subtle">{toggle}</span>
+    </button>
+
+    <template lwc:if={open}>
+      <div class="space-y-2 border-t border-line px-2.5 py-2">
+        <template lwc:if={soqlText}><pre class="whitespace-pre-wrap rounded-lg bg-canvas p-2 font-mono text-[11px] text-sky-700">{soqlText}</pre></template>
+
+        <template lwc:if={renderSoqlTable}>
+          <div class="text-[11px] text-content-muted">{soqlCount}</div>
+          <x-data-table columns={soqlColumns} rows={soqlRows} compact></x-data-table>
+        </template>
+
+        <template lwc:if={renderDescribe}>
+          <div class="text-[11px] text-content-muted">{describeTitle}</div>
+          <ul class="max-h-64 divide-y divide-line overflow-y-auto rounded-lg border border-line">
+            <template for:each={describeFields} for:item="f">
+              <li key={f.name} class="flex items-center gap-2 px-2 py-1 text-[11px]">
+                <span class="min-w-0 flex-1 truncate text-content">{f.label} <span class="font-mono text-content-subtle">{f.name}</span></span>
+                <span class="rounded bg-surface-sunken px-1 text-[10px] text-content">{f.type}</span>
+                <template lwc:if={f.extra}><span class="text-[10px] text-content-subtle">{f.extra}</span></template>
+              </li>
+            </template>
+          </ul>
+        </template>
+
+        <template lwc:if={renderMetadataList}>
+          <div class="text-[11px] text-content-muted">{metaCount}</div>
+          <ul class="flex max-h-64 flex-wrap gap-1 overflow-y-auto">
+            <template for:each={metadataList} for:item="m">
+              <li key={m.key} class="rounded-md border border-line bg-canvas px-1.5 py-0.5 font-mono text-[10px] text-content">{m.name}</li>
+            </template>
+          </ul>
+        </template>
+
+        <template lwc:if={renderMetadataXml}>
+          <template lwc:if={pro}><x-xml-view xml={metadataXml} max-height="280px"></x-xml-view></template>
+          <template lwc:else><x-metadata-visual xml={metadataXml}></x-metadata-visual></template>
+        </template>
+
+        <template lwc:if={renderWrite}>
+          <button class="flex w-full items-center gap-2 rounded-lg border border-brand-500/30 bg-brand-500/10 px-2 py-1.5 text-left hover:bg-brand-500/20" onclick={onOpenChanges} title={writePath}>
+            <span class="rounded bg-brand-500/30 px-1.5 text-[10px] font-semibold text-brand-700">FILE</span>
+            <span class="min-w-0 flex-1 truncate text-[12px] text-content-strong">{writeName}</span>
+            <span class="text-[11px] text-brand-600">view diff →</span>
+          </button>
+        </template>
+
+        <template lwc:if={renderGeneric}>
+          <template lwc:if={pro}><x-xml-view json={outputJson} max-height="280px"></x-xml-view></template>
+          <template lwc:else><div class="whitespace-pre-wrap break-words text-[11px] text-content">{genericText}</div></template>
+        </template>
+
+        <template lwc:if={pro}>
+          <template lwc:if={hasInput}>
+            <div class="text-[10px] uppercase tracking-wide text-content-subtle">input</div>
+            <x-xml-view json={inputJson} max-height="200px"></x-xml-view>
+          </template>
+        </template>
+      </div>
+    </template>
+  </div>
+</template>

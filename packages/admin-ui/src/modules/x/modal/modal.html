@@ -1,0 +1,14 @@
+<template lwc:render-mode="light">
+  <template lwc:if={open}>
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-canvas p-4 backdrop-blur-sm" onclick={close} role="dialog" aria-modal="true">
+      <div class={panelCls} onclick={stop}>
+        <div class="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+          <div><h2 class="text-base font-semibold text-content-strong">{title}</h2><template lwc:if={subtitle}><p class="mt-0.5 text-sm text-content-muted">{subtitle}</p></template></div>
+          <button type="button" class="btn-ghost -mr-2 -mt-1 p-1.5" onclick={close} aria-label="Close"><x-icon name="close" cls="h-4 w-4"></x-icon></button>
+        </div>
+        <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4"><slot></slot></div>
+        <div class={footerCls}><div class="flex flex-wrap items-center justify-end gap-2"><slot name="footer"></slot></div></div>
+      </div>
+    </div>
+  </template>
+</template>

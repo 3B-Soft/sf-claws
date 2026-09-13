@@ -1,0 +1,10 @@
+<template lwc:render-mode="light">
+  <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div class="min-w-0">
+      <template lwc:if={backHref}><a href={backHref} class="mb-1 inline-flex items-center gap-1 text-xs text-content-muted hover:text-content"><x-icon name="chevronRight" cls="h-3 w-3 rotate-180"></x-icon>{backLabel}</a></template>
+      <h1 class="truncate text-xl font-semibold tracking-tight text-content-strong sm:text-2xl">{title}</h1>
+      <template lwc:if={subtitle}><p class="mt-1 text-sm text-content-muted">{subtitle}</p></template>
+    </div>
+    <div class="flex flex-wrap items-center gap-2"><slot></slot></div>
+  </div>
+</template>

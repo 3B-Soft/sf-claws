@@ -1,0 +1,76 @@
+<template lwc:render-mode="light">
+  <div class="flex h-screen min-h-0 flex-col bg-canvas text-content-strong">
+    <template lwc:if={networkError}>
+      <div class="flex items-center gap-2 border-b border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">
+        <span class="inline-block h-2 w-2 rounded-full bg-rose-400"></span>
+        <span class="flex-1 truncate" title={networkError}>{networkError}</span>
+        <button class="rounded-md border border-rose-400/40 px-2 py-0.5 text-[11px] font-medium hover:bg-rose-500/20" onclick={onRetry}>Retry</button>
+      </div>
+    </template>
+
+    <template lwc:if={isLoading}>
+      <div class="flex flex-1 items-center justify-center text-content-muted">
+        <div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span><span class="text-sm">Loading SF Claws…</span></div>
+      </div>
+    </template>
+
+    <template lwc:elseif={isSetup}><x-setup-screen></x-setup-screen></template>
+    <template lwc:elseif={isLogin}><x-login-screen></x-login-screen></template>
+    <template lwc:elseif={isPending}><x-login-screen pending></x-login-screen></template>
+
+    <template lwc:elseif={isMain}>
+      <x-app-header></x-app-header>
+
+      <template lwc:if={orgReady}>
+        <nav class="flex gap-1 border-b border-line bg-canvas px-2 py-1.5">
+          <template for:each={tabs} for:item="t">
+            <button key={t.id} class={t.cls} data-id={t.id} onclick={onTab}>
+              <span class="truncate">{t.label}</span>
+              <template lwc:if={t.badge}><span class={t.badgeCls}>{t.badge}</span></template>
+            </button>
+          </template>
+        </nav>
+        <main class="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <template lwc:if={isChat}><x-chat-tab></x-chat-tab></template>
+          <template lwc:elseif={isChanges}><x-changes-tab></x-changes-tab></template>
+          <template lwc:elseif={isExplore}><x-explore-tab></x-explore-tab></template>
+          <template lwc:elseif={isNotes}><x-notes-tab></x-notes-tab></template>
+          <template lwc:elseif={isGithub}><x-github-tab></x-github-tab></template>
+        </main>
+      </template>
+
+      <template lwc:elseif={orgResolving}>
+        <div class="flex flex-1 items-center justify-center p-6 text-content-muted">
+          <div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span><span class="text-sm">Resolving org for {hostName}…</span></div>
+        </div>
+      </template>
+
+      <template lwc:elseif={orgUnregistered}>
+        <div class="flex flex-1 flex-col items-center justify-center p-6">
+          <x-empty-state tone="amber" title="This tab isn't a registered org" description="Ask your admin to register this Salesforce org in the SF Claws admin console, then reload this tab.">
+            <div class="mt-3 inline-flex max-w-full items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-1.5 font-mono text-[11px] text-content">
+              <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span><span class="truncate">{hostName}</span>
+            </div>
+            <div class="mt-3"><button class="rounded-lg border border-line-strong px-3 py-1.5 text-[12px] text-content hover:bg-surface-sunken" onclick={onRetryOrg}>Check again</button></div>
+          </x-empty-state>
+        </div>
+      </template>
+
+      <template lwc:elseif={orgError}>
+        <div class="flex flex-1 flex-col items-center justify-center p-6">
+          <x-empty-state tone="rose" title="Couldn't resolve this org" description={orgErrorMessage}>
+            <div class="mt-3"><button class="rounded-lg border border-line-strong px-3 py-1.5 text-[12px] text-content hover:bg-surface-sunken" onclick={onRetryOrg}>Try again</button></div>
+          </x-empty-state>
+        </div>
+      </template>
+
+      <template lwc:else>
+        <div class="flex flex-1 flex-col items-center justify-center p-6">
+          <x-empty-state tone="brand" title="Open a Salesforce tab" description="SF Claws follows your active tab. Navigate to a Salesforce org (Lightning, Setup, Flow Builder…) and the panel will connect to that org automatically.">
+            <div class="mt-3"><button class="rounded-lg border border-line-strong px-3 py-1.5 text-[12px] text-content hover:bg-surface-sunken" onclick={onRetryOrg}>Refresh</button></div>
+          </x-empty-state>
+        </div>
+      </template>
+    </template>
+  </div>
+</template>

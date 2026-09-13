@@ -1,0 +1,44 @@
+<template lwc:render-mode="light">
+  <div class={cardCls}>
+    <div class="flex items-center gap-2">
+      <template lwc:if={pending}><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span></template>
+      <span class={titleCls}>{title}</span>
+      <template lwc:if={attempt}><span class="text-[11px] text-content-muted">{attempt}</span></template>
+      <span class="ml-auto text-[10px] text-content-subtle">{when}</span>
+    </div>
+    <div class="mt-2 grid grid-cols-3 gap-2 text-center">
+      <div class="rounded-lg bg-canvas px-2 py-1.5">
+        <div class="text-[10px] uppercase tracking-wide text-content-subtle">Components</div>
+        <div class="text-[12px]"><span class="font-semibold text-emerald-700">{componentsOk}</span><span class="text-content-subtle"> / {componentsTotal}</span><template lwc:if={componentsFailed}><span class="ml-1 text-rose-700">({componentsFailed} failed)</span></template></div>
+        <div class="mt-1 h-1 overflow-hidden rounded bg-surface-sunken"><div class="h-full bg-emerald-500" style={compBarOk}></div></div>
+      </div>
+      <div class="rounded-lg bg-canvas px-2 py-1.5">
+        <div class="text-[10px] uppercase tracking-wide text-content-subtle">Tests</div>
+        <template lwc:if={hasTests}><div class="text-[12px]"><span class="font-semibold text-emerald-700">{testsOk}</span><template lwc:if={testsFailed}><span class="ml-1 text-rose-700">{testsFailed} failed</span></template></div></template>
+        <template lwc:else><div class="text-[12px] text-content-subtle">none</div></template>
+        <template lwc:if={testLevel}><div class="mt-0.5 truncate text-[9px] text-content-subtle">{testLevel}</div></template>
+      </div>
+      <div class="rounded-lg bg-canvas px-2 py-1.5">
+        <div class="text-[10px] uppercase tracking-wide text-content-subtle">Coverage</div>
+        <template lwc:if={coverage}><div class={coverageCls}>{coverage}</div></template>
+        <template lwc:else><div class="text-[12px] text-content-subtle">—</div></template>
+      </div>
+    </div>
+    <template lwc:if={hasFailures}>
+      <div class="mt-2 overflow-x-auto rounded-lg border border-rose-500/30">
+        <table class="min-w-full text-left text-[11px]">
+          <thead class="bg-rose-500/10 text-[10px] uppercase tracking-wide text-rose-700"><tr><th class="px-2 py-1 font-medium">Component</th><th class="px-2 py-1 font-medium">Problem</th></tr></thead>
+          <tbody class="divide-y divide-rose-500/20">
+            <template for:each={failures} for:item="f">
+              <tr key={f.key} class="align-top">
+                <td class="px-2 py-1 whitespace-nowrap"><div class="text-content">{f.name}</div><div class="text-[10px] text-content-subtle">{f.type} {f.where}</div></td>
+                <td class="px-2 py-1 text-rose-700">{f.problem}</td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+      <template lwc:if={showMore}><button class="mt-1 text-[11px] text-rose-700 underline" onclick={onMore}>Show {moreCount} more</button></template>
+    </template>
+  </div>
+</template>

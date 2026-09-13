@@ -1,0 +1,162 @@
+<template lwc:render-mode="light">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="flex items-center gap-2 border-b border-line px-3 py-2">
+      <button class="rounded-md px-1.5 py-1 text-[12px] text-content-muted hover:bg-surface-sunken hover:text-content-strong" onclick={onShowList} title="All sessions">☰</button>
+      <div class="min-w-0 flex-1">
+        <div class="truncate text-[13px] font-semibold text-content-strong" title={title}>{title}</div>
+        <div class="flex items-center gap-2 text-[11px] text-content-subtle">
+          <span class={statusCls}><template lwc:if={isBusy}><span class="h-1.5 w-1.5 rounded-full bg-current pulse-dot"></span></template>{statusText}</span>
+          <template lwc:if={hasUsage}><span class="truncate">{usageText}</span></template>
+        </div>
+      </div>
+      <template lwc:if={isBusy}><button class="rounded-lg border border-rose-500/40 px-2.5 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-500/10 disabled:opacity-50" disabled={cancelBusy} onclick={onCancel}>{cancelLabel}</button></template>
+      <button class="rounded-lg border border-line-strong px-2.5 py-1 text-[11px] text-content hover:bg-surface-sunken" onclick={onNew}>New</button>
+    </div>
+
+    <template lwc:if={offline}>
+      <div class="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-700">
+        <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+        <span class="flex-1 truncate">Offline — last synced {lastSynced}. Showing your local copy.</span>
+        <button class="rounded border border-amber-400/40 px-2 py-0.5 hover:bg-amber-500/20" onclick={onResync}>Retry</button>
+      </div>
+    </template>
+    <template lwc:elseif={connectionLost}>
+      <div class="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-700">
+        <span class="h-1.5 w-1.5 rounded-full bg-amber-400 pulse-dot"></span><span class="flex-1">Live updates interrupted — reconnecting…</span>
+        <button class="rounded border border-amber-400/40 px-2 py-0.5 hover:bg-amber-500/20" onclick={onReconnect}>Reconnect now</button>
+      </div>
+    </template>
+    <template lwc:elseif={fromCache}>
+      <div class="flex items-center gap-2 border-b border-line bg-surface px-3 py-1 text-[11px] text-content-muted">
+        <span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span><span class="flex-1">Loaded from local cache · syncing with the server…</span>
+      </div>
+    </template>
+    <template lwc:if={error}>
+      <div class="flex items-center gap-2 border-b border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-[11px] text-rose-700">
+        <span class="flex-1 truncate" title={error}>{error}</span>
+        <button class="rounded px-1.5 hover:bg-rose-500/20" onclick={onDismissError}>✕</button>
+      </div>
+    </template>
+
+    <template lwc:if={showContextPressure}>
+      <div class="px-3 pt-2">
+        <div class={contextBannerCls}>
+          <div class="flex items-start gap-2">
+            <div class="min-w-0 flex-1">
+              <div class={contextTitleCls}>{contextTitle}</div>
+              <div class={contextTextCls}>{contextMessage}</div>
+              <template lwc:if={contextPercentText}><div class={contextTextCls}>{contextPercentText}</div></template>
+            </div>
+            <button class="rounded px-1.5 text-[11px] text-content-muted hover:text-content" title="Dismiss" onclick={onDismissContext}>✕</button>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button class={contextBtnCls} onclick={onNew}>Start a new session</button>
+            <button class={contextBtnCls} disabled={compactBusy} onclick={onCompact}>{compactLabel}</button>
+          </div>
+          <template lwc:if={compactNote}><div class="mt-1.5 text-[11px] text-content-muted">{compactNote}</div></template>
+        </div>
+      </div>
+    </template>
+
+    <template lwc:if={hasAgents}>
+      <div class="border-b border-line bg-surface">
+        <button class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-content hover:bg-surface-sunken" onclick={onToggleSwarm}>
+          <span class="font-medium">Agent swarm</span><span class="text-content-subtle">{swarmLabel}</span>
+          <span class="ml-auto text-content-subtle">{swarmToggle}</span>
+        </button>
+        <template lwc:if={swarmOpen}>
+          <ul class="space-y-1 px-3 pb-2">
+            <template for:each={agents} for:item="a">
+              <li key={a.agentId} class="rounded-lg border border-line bg-canvas px-2 py-1.5">
+                <div class="flex items-center gap-2">
+                  <span class={a.roleCls}>{a.roleText}</span>
+                  <span class="truncate font-mono text-[10px] text-content-subtle">{a.modelId}</span>
+                  <span class="ml-auto">
+                    <template lwc:if={a.running}><span class="inline-block h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span></template>
+                    <template lwc:if={a.done}><span class="text-[11px] text-emerald-700">✓</span></template>
+                    <template lwc:if={a.failed}><span class="text-[11px] text-rose-700">✕</span></template>
+                  </span>
+                </div>
+                <template lwc:if={a.objectiveShort}><div class="mt-1 text-[11px] text-content">{a.objectiveShort}</div></template>
+                <template lwc:if={a.summary}><div class="mt-0.5 text-[11px] text-content-subtle">{a.summary}</div></template>
+              </li>
+            </template>
+          </ul>
+        </template>
+      </div>
+    </template>
+
+    <template lwc:if={hasPermissions}>
+      <div class="flex flex-wrap items-center gap-1.5 border-b border-line bg-surface px-3 py-1.5">
+        <span class="text-[10px] uppercase tracking-wide text-content-subtle">Allowed this session</span>
+        <template for:each={permissions} for:item="p">
+          <span key={p.key} class="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-700">
+            <span>{p.label}</span>
+            <button class="rounded px-0.5 text-emerald-700/70 hover:bg-emerald-500/15 hover:text-emerald-800 disabled:opacity-50" title="Revoke" data-command={p.command} disabled={p.busy} onclick={onRevoke}>✕</button>
+          </span>
+        </template>
+      </div>
+    </template>
+
+    <template lwc:if={hasTodos}>
+      <div class="sticky top-0 z-10 px-3 pt-2"><x-todo-panel items={todos}></x-todo-panel></div>
+    </template>
+
+    <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3" data-scroll onscroll={onScroll}>
+      <template lwc:if={loading}>
+        <div class="flex items-center gap-2 py-6 text-[12px] text-content-muted"><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span>Loading session…</div>
+      </template>
+      <template lwc:elseif={hasItems}>
+        <div class="space-y-2.5">
+          <template for:each={items} for:item="it">
+            <x-transcript-item key={it.key} item={it} pro={isPro} onconfirm={onConfirm} onopenchanges={onOpenChanges} onopendocs={onOpenDocs} onopennotes={onOpenNotes}></x-transcript-item>
+          </template>
+        </div>
+        <template lwc:if={isRunning}>
+          <div class="mt-3 flex items-center gap-2 text-[11px] text-content-muted"><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span>{statusMessage}<template lwc:if={noStatusMessage}>Working…</template></div>
+        </template>
+        <template lwc:if={resumable}>
+          <div class="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
+            <div class="text-[12px] font-semibold text-amber-700">Session interrupted</div>
+            <div class="mt-0.5 text-[11px] text-amber-700/80">{resumeHint}</div>
+            <button class="mt-2 rounded-lg bg-amber-500 px-3 py-1.5 text-[12px] font-semibold text-content-strong hover:bg-amber-400 disabled:opacity-50" disabled={session.resuming} onclick={onResume}>{resumeLabel}</button>
+          </div>
+        </template>
+        <template lwc:if={showFeedback}>
+          <div class="mt-4 rounded-xl border border-line bg-surface p-3">
+            <div class="text-[12px] font-medium text-content">Was this session helpful?</div>
+            <div class="mt-2 flex gap-2">
+              <button class={upCls} data-v="1" onclick={onThumb}>👍 Helpful</button>
+              <button class={downCls} data-v="0" onclick={onThumb}>👎 Not helpful</button>
+            </div>
+            <template lwc:if={feedbackPicked}>
+              <textarea class="mt-2 w-full rounded-lg border border-line-strong bg-canvas px-2 py-1.5 text-[12px] text-content-strong outline-none focus:border-brand-500" rows="2" placeholder="Optional note for your admins…" data-note oninput={onNote}></textarea>
+              <button class="mt-2 rounded-lg bg-brand-500 px-3 py-1 text-[12px] font-semibold text-white hover:bg-brand-500 disabled:opacity-50" disabled={feedbackBusy} onclick={onSendFeedback}>Send feedback</button>
+            </template>
+          </div>
+        </template>
+        <template lwc:if={feedbackThanks}><div class="mt-3 text-center text-[11px] text-content-subtle">Thanks for your feedback.</div></template>
+      </template>
+      <template lwc:else>
+        <div class="py-6 text-center">
+          <div class="text-sm font-medium text-content">What do you want to do?</div>
+          <div class="mt-1 text-[12px] text-content-subtle">Ask a question or describe a change. Deploys always ask for your confirmation.</div>
+        </div>
+      </template>
+    </div>
+
+    <div class="border-t border-line bg-surface px-3 py-2">
+      <template lwc:if={showQuick}>
+        <div class="mb-2 flex flex-wrap gap-1.5">
+          <template for:each={quickActions} for:item="q">
+            <button key={q.id} class="rounded-full border border-brand-500/30 bg-brand-500/10 px-2.5 py-1 text-[11px] text-brand-700 hover:bg-brand-500/20" data-id={q.id} onclick={onQuick}>{q.label}</button>
+          </template>
+        </div>
+      </template>
+      <div class="flex items-end gap-2">
+        <textarea class="max-h-40 min-h-[38px] flex-1 resize-y rounded-xl border border-line-strong bg-canvas px-3 py-2 text-[13px] text-content-strong placeholder-content-subtle outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30" rows="2" placeholder={composerPlaceholder} data-draft oninput={onDraft} onkeydown={onKey}></textarea>
+        <button class="rounded-xl bg-brand-500 px-3 py-2 text-[12px] font-semibold text-white shadow hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-40" disabled={sendDisabled} onclick={onSend}>{sendLabel}</button>
+      </div>
+    </div>
+  </div>
+</template>

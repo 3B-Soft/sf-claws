@@ -1,0 +1,19 @@
+<template lwc:render-mode="light">
+  <div class="overflow-auto rounded-lg border border-line bg-canvas py-1 font-mono text-[12px] leading-5">
+    <template for:each={rows} for:item="r">
+      <div key={r.id} style={r.pad} class="flex items-center gap-1 whitespace-pre">
+        <template lwc:if={r.isClose}><span class={r.valCls}>{r.text}</span></template>
+        <template lwc:else>
+          <template lwc:if={r.toggle}><button class="w-3 text-content-subtle hover:text-content-strong" data-id={r.id} onclick={toggle}><template lwc:if={r.collapsed}>▸</template><template lwc:else>▾</template></button></template>
+          <template lwc:else><span class="w-3"></span></template>
+          <template lwc:if={r.hasKey}><span class="text-brand-600">"{r.key}"</span><span class="text-content-subtle">: </span></template>
+          <template lwc:if={r.isObj}>
+            <span class="text-content-muted">{r.bracketOpen}</span>
+            <template lwc:if={r.collapsed}><span class="text-content-subtle italic"> {r.summary} </span><span class="text-content-muted">{r.bracketClose}</span><template lwc:if={r.comma}><span class="text-content-subtle">,</span></template></template>
+          </template>
+          <template lwc:else><span class={r.valCls}>{r.text}</span><template lwc:if={r.comma}><span class="text-content-subtle">,</span></template></template>
+        </template>
+      </div>
+    </template>
+  </div>
+</template>

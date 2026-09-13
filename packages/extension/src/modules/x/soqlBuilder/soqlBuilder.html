@@ -1,0 +1,110 @@
+<template lwc:render-mode="light">
+  <div class="space-y-3 px-3 py-3">
+    <template lwc:if={error}><div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">{error}</div></template>
+
+    <div class="rounded-xl border border-line bg-surface p-3">
+      <div class="flex items-center gap-2">
+        <label class="text-[11px] font-medium uppercase tracking-wide text-content-muted">Object</label>
+        <template lwc:if={loadingObjects}><span class="text-[11px] text-content-subtle">loading…</span></template>
+        <template lwc:elseif={hasObjects}><span class="text-[11px] text-content-subtle">{objectCount} available</span></template>
+      </div>
+      <input class="mt-1 w-full rounded-lg border border-line-strong bg-canvas px-2 py-1.5 text-[12px] text-content-strong outline-none focus:border-brand-500" placeholder="Filter objects…" value={objectFilter} oninput={onObjectFilter} />
+      <select class="mt-1 w-full rounded-lg border border-line-strong bg-canvas px-2 py-1.5 text-[12px] text-content-strong outline-none focus:border-brand-500" onchange={onPickObject} size="1">
+        <option value="">Choose an object…</option>
+        <template for:each={filteredObjects} for:item="o"><option key={o.name} value={o.name} selected={o.selected}>{o.label} ({o.name})</option></template>
+      </select>
+    </div>
+
+    <template lwc:if={sobject}>
+      <div class="rounded-xl border border-line bg-surface p-3">
+        <button class="flex w-full items-center gap-2 text-left" onclick={onToggleFields}>
+          <span class="text-[11px] font-medium uppercase tracking-wide text-content-muted">Fields</span>
+          <span class="text-[11px] text-content-subtle">{selectedCount} selected</span>
+          <template lwc:if={loadingFields}><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
+          <span class="ml-auto text-[11px] text-content-subtle">{fieldsToggle}</span>
+        </button>
+        <template lwc:if={showFields}>
+          <div class="mt-2 flex items-center gap-2">
+            <input class="flex-1 rounded-lg border border-line-strong bg-canvas px-2 py-1 text-[12px] text-content-strong outline-none focus:border-brand-500" placeholder="Filter fields…" value={fieldFilter} oninput={onFieldFilter} />
+            <button class="text-[10px] text-content-muted hover:text-content" onclick={onSelectAll}>all</button>
+            <button class="text-[10px] text-content-muted hover:text-content" onclick={onSelectNone}>none</button>
+          </div>
+          <ul class="mt-2 max-h-48 space-y-0.5 overflow-y-auto">
+            <template for:each={fieldRows} for:item="f">
+              <li key={f.name}>
+                <label class={f.cls}>
+                  <input type="checkbox" class="accent-brand-600" checked={f.checked} data-name={f.name} onchange={onToggleField} />
+                  <span class="min-w-0 flex-1 truncate text-content">{f.label}</span>
+                  <span class="truncate font-mono text-[10px] text-content-subtle">{f.name}</span>
+                  <span class="rounded bg-surface-sunken px-1 text-[9px] text-content-muted">{f.type}</span>
+                </label>
+              </li>
+            </template>
+          </ul>
+        </template>
+      </div>
+
+      <div class="rounded-xl border border-line bg-surface p-3">
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] font-medium uppercase tracking-wide text-content-muted">Filters</span>
+          <button class="ml-auto rounded-md border border-line-strong px-2 py-0.5 text-[10px] text-content hover:bg-surface-sunken" onclick={onAddFilter}>+ Add filter</button>
+        </div>
+        <template lwc:if={hasFilters}>
+          <div class="mt-2 space-y-1.5">
+            <template for:each={filterRows} for:item="f">
+              <div key={f.id} class="flex flex-wrap items-center gap-1">
+                <select class="min-w-0 flex-1 rounded-md border border-line-strong bg-canvas px-1.5 py-1 text-[11px] text-content-strong" data-id={f.id} onchange={onFilterField}>
+                  <template for:each={f.fieldOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                </select>
+                <select class="rounded-md border border-line-strong bg-canvas px-1.5 py-1 text-[11px] text-content-strong" data-id={f.id} onchange={onFilterOp}>
+                  <template for:each={f.opOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                </select>
+                <template lwc:if={f.needsValue}><input class="min-w-0 flex-1 rounded-md border border-line-strong bg-canvas px-1.5 py-1 text-[11px] text-content-strong" placeholder="value" value={f.value} data-id={f.id} oninput={onFilterValue} /></template>
+                <button class="rounded px-1.5 text-[11px] text-content-subtle hover:text-rose-700" data-id={f.id} onclick={onRemoveFilter}>✕</button>
+              </div>
+            </template>
+          </div>
+        </template>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-content-muted">
+          <span>Order by</span>
+          <select class="rounded-md border border-line-strong bg-canvas px-1.5 py-1 text-[11px] text-content-strong" onchange={onOrderBy}>
+            <template for:each={orderOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+          </select>
+          <button class={ascCls} data-dir="ASC" onclick={onDir}>asc</button><button class={descCls} data-dir="DESC" onclick={onDir}>desc</button>
+          <span class="ml-auto">Limit</span><input type="number" min="1" max="2000" class="w-16 rounded-md border border-line-strong bg-canvas px-1.5 py-1 text-[11px] text-content-strong" value={limit} oninput={onLimit} />
+        </div>
+      </div>
+    </template>
+
+    <template lwc:if={hasSoql}>
+      <div class="rounded-xl border border-line bg-canvas p-2">
+        <div class="flex items-center gap-1 px-1 pb-1">
+          <span class="text-[10px] uppercase tracking-wide text-content-subtle">SOQL</span>
+          <template lwc:if={isPro}>
+            <span class="ml-auto flex gap-1"><button class={builderCls} onclick={onUseBuilder}>builder</button><button class={customCls} onclick={onUseCustom}>edit</button></span>
+          </template>
+        </div>
+        <template lwc:if={useCustom}>
+          <textarea class="h-28 w-full resize-y rounded-lg border border-line-strong bg-canvas p-2 font-mono text-[11px] text-sky-700 outline-none focus:border-brand-500" spellcheck="false" data-soql oninput={onCustom}></textarea>
+        </template>
+        <template lwc:else>
+          <pre class="whitespace-pre-wrap rounded-lg bg-surface px-2 py-1.5 font-mono text-[11px] text-sky-700">{soql}</pre>
+        </template>
+        <div class="mt-2 flex items-center gap-2">
+          <template lwc:if={isPro}><label class="flex items-center gap-1 text-[11px] text-content-muted"><input type="checkbox" class="accent-brand-600" checked={tooling} onchange={onTooling} />Tooling API</label></template>
+          <button class="ml-auto rounded-lg bg-brand-500 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-500 disabled:opacity-50" disabled={runDisabled} onclick={onRun}>{runLabel}</button>
+        </div>
+      </div>
+    </template>
+
+    <template lwc:if={hasResult}>
+      <div>
+        <div class="mb-1 text-[11px] text-content-muted">{resultCount}</div>
+        <x-data-table columns={columns} rows={rows} instance-url={instanceUrl} export-name={exportName}></x-data-table>
+      </div>
+    </template>
+    <template lwc:elseif={noObjectHint}>
+      <x-empty-state title="Query records visually" description="Pick an object, tick the fields you want, add filters — the SOQL is generated for you. Results link to the records in your org."></x-empty-state>
+    </template>
+  </div>
+</template>

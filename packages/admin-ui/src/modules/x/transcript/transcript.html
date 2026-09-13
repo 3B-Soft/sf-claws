@@ -1,0 +1,11 @@
+<template lwc:render-mode="light">
+  <template lwc:if={hasAgents}><x-agent-swarm agents={agents}></x-agent-swarm></template>
+  <template lwc:if={hasTodos}><x-todo-panel items={todos} agents={agents}></x-todo-panel></template>
+  <template lwc:if={hasBlocks}>
+    <div class="space-y-3">
+      <template for:each={items} for:item="b"><div key={b.id}><x-event-card block={b} pro-mode={proMode} readonly={readonly} busy={busy}></x-event-card></div></template>
+      <template lwc:if={live}><div class="ml-10 flex items-center gap-2 text-xs text-brand-600"><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon>Agents are working…</div></template>
+    </div>
+  </template>
+  <template lwc:else><x-empty-state icon="message" title="No events yet" description="The transcript fills in as the session runs."></x-empty-state></template>
+</template>

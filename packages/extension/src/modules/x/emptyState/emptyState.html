@@ -1,0 +1,7 @@
+<template lwc:render-mode="light">
+  <div class={wrapClass}>
+    <template lwc:if={title}><div class={titleClass}>{title}</div></template>
+    <template lwc:if={description}><div class="mt-1 text-[12px] text-content-muted leading-relaxed">{description}</div></template>
+    <slot></slot>
+  </div>
+</template>

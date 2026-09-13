@@ -1,0 +1,66 @@
+<template lwc:render-mode="light">
+  <template lwc:if={error}><x-error-state error={error} onretry={load}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="text" rows="6"></x-skeleton></template>
+  <template lwc:else>
+    <div class="mb-4 flex items-start gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-xs text-content-muted">
+      <x-icon name="ai" cls="mt-0.5 h-4 w-4 shrink-0 text-brand-600"></x-icon>
+      <span>
+        Every agent reads these at the start of every session, the way a developer reads a project's
+        <span class="kbd">CLAUDE.md</span>. Write what the agents would otherwise have to rediscover: naming conventions, which managed
+        packages are installed, what "the renewal process" means here, who to ask. They cannot authorise skipping validation, deploying
+        without confirmation or touching a protected component — the policy still decides that.
+      </span>
+    </div>
+    <div class="grid gap-6">
+      <div class="card card-pad">
+        <div class="mb-1 flex items-baseline justify-between gap-3">
+          <h3 class="text-sm font-semibold text-content-strong">All work for {clientCard.label}</h3>
+          <span class={clientCard.countCls}>{clientCard.count}</span>
+        </div>
+        <p class="mb-3 text-xs text-content-muted">Read on every session for this client, whichever org it runs against.</p>
+        <x-form-field
+          name="clientInstructions"
+          data-key="client"
+          type="textarea"
+          rows="12"
+          value={clientCard.value}
+          error={clientCard.error}
+          placeholder="# Conventions&#10;- Custom fields are prefixed ACME_&#10;- Flows are named &lt;Object&gt;_&lt;Trigger&gt;_&lt;Purpose&gt;&#10;&#10;# What we run&#10;- nCino for lending; never modify its managed components"
+          mono
+          compact
+          onchange={handleChange}
+        ></x-form-field>
+        <div class="mt-2 flex justify-end gap-2">
+          <button class="btn-ghost btn-sm" data-key="client" onclick={revert} disabled={clientCard.cannotSave}>Revert</button>
+          <button class="btn-primary btn-sm" data-key="client" onclick={save} disabled={clientCard.cannotSave}>{clientCard.saveLabel}</button>
+        </div>
+      </div>
+
+      <template for:each={orgCards} for:item="o">
+        <div key={o.key} class="card card-pad">
+          <div class="mb-1 flex items-baseline justify-between gap-3">
+            <h3 class="text-sm font-semibold text-content-strong">{o.label}</h3>
+            <span class={o.countCls}>{o.count}</span>
+          </div>
+          <p class="mb-3 text-xs text-content-muted">Read after the client instructions above, so anything here wins for this org.</p>
+          <x-form-field
+            name="orgInstructions"
+            data-key={o.key}
+            type="textarea"
+            rows="8"
+            value={o.value}
+            error={o.error}
+            placeholder="Facts true only of this org, e.g. Person Accounts are not enabled; the sandbox is refreshed every Friday."
+            mono
+            compact
+            onchange={handleChange}
+          ></x-form-field>
+          <div class="mt-2 flex justify-end gap-2">
+            <button class="btn-ghost btn-sm" data-key={o.key} onclick={revert} disabled={o.cannotSave}>Revert</button>
+            <button class="btn-primary btn-sm" data-key={o.key} onclick={save} disabled={o.cannotSave}>{o.saveLabel}</button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
+</template>

@@ -1,0 +1,24 @@
+<template lwc:render-mode="light">
+  <template lwc:if={error}><x-error-state error={error} onretry={load}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="text" rows="3"></x-skeleton></template>
+  <template lwc:else>
+    <x-page-header title={title} subtitle={subtitle} back-href="#/clients" back-label="All clients">
+      <a href={sessionsHref} class="btn-secondary btn-sm"><x-icon name="sessions" cls="h-3.5 w-3.5"></x-icon>Sessions</a>
+      <button class="btn-secondary btn-sm" onclick={openEdit}><x-icon name="edit" cls="h-3.5 w-3.5"></x-icon>Edit</button>
+      <button class="btn-ghost btn-sm text-rose-700" onclick={remove}><x-icon name="trash" cls="h-3.5 w-3.5"></x-icon></button>
+    </x-page-header>
+    <div class="mb-6"><x-tabs tabs={tabs} active={tab} onselect={selectTab}></x-tabs></div>
+    <template lwc:if={isOrgs}><x-orgs-tab client-id={clientId}></x-orgs-tab></template>
+    <template lwc:elseif={isMembers}><x-members-tab client-id={clientId}></x-members-tab></template>
+    <template lwc:elseif={isGithub}><x-github-tab client-id={clientId}></x-github-tab></template>
+    <template lwc:elseif={isSkills}><x-skills-list client-id={clientId} client-name={title}></x-skills-list></template>
+    <template lwc:elseif={isInstructions}><x-instructions-tab client-id={clientId}></x-instructions-tab></template>
+    <template lwc:elseif={isPolicy}><x-policy-tab client-id={clientId}></x-policy-tab></template>
+    <template lwc:elseif={isProjects}><x-projects-tab client-id={clientId}></x-projects-tab></template>
+  </template>
+  <x-modal open={editOpen} title="Edit client" size="sm" onclose={closeEdit}>
+    <x-form-field label="Name" name="name" value={form.name} required onchange={handleField}></x-form-field>
+    <x-form-field label="Description" name="description" type="textarea" rows="3" value={form.description} onchange={handleField}></x-form-field>
+    <div slot="footer"><button class="btn-secondary" onclick={closeEdit}>Cancel</button><button class="btn-primary" onclick={saveEdit} disabled={busy}>Save</button></div>
+  </x-modal>
+</template>

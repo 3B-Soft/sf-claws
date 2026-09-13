@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* -------------------------------------------------------------------------
+     Palette. Semantic names, not hues: `bg-surface` and `text-content-muted`
+     survive a theme change, `bg-slate-900` does not — and this codebase already
+     changed theme once. The values follow the Salesforce Lightning palette, so
+     the console does not look like a foreign object beside the org it manages.
+
+       canvas / surface / surface-sunken   the page, the cards, the wells
+       line / line-strong                  hairlines, then borders that must read
+       content-{strong,,muted,subtle}      headings → body → secondary → hints
+       brand-*                             the blue that means "this is an action"
+
+     Use these. A raw `slate-*` or `indigo-*` class is a bug waiting for the
+     next theme change.
+     ------------------------------------------------------------------------- */
+  --color-canvas: #f3f3f3;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f3f3f3;
+  --color-surface-hover: #ecebea;
+  --color-line: #e5e5e5;
+  --color-line-strong: #c9c9c9;
+  --color-content-strong: #181818;
+  --color-content: #3e3e3c;
+  --color-content-muted: #5c5c5c;
+  --color-content-subtle: #656565;
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #d8e6fe;
+  --color-brand-200: #aacbff;
+  --color-brand-300: #78b0fd;
+  --color-brand-400: #1b96ff;
+  --color-brand-500: #0176d3;
+  --color-brand-600: #0b5cab;
+  --color-brand-700: #014486;
+}
+
+/* Tailwind v4 only emits utilities it sees in source files. Component templates are `.html` in
+   src/modules, which are scanned automatically; class strings built in JS getters are also scanned. */
+@source "./modules/**/*.js";
+
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50; }
+@utility input { @apply w-full rounded-md border border-line-strong bg-surface px-3 py-2 text-sm text-content-strong placeholder:text-content-subtle focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25 disabled:bg-surface-sunken disabled:opacity-70; }
+
+@layer base {
+  html { color-scheme: light; }
+  body { @apply bg-canvas text-content; }
+  ::selection { @apply bg-brand-100; }
+  * { scrollbar-width: thin; scrollbar-color: #c9c9c9 transparent; }
+  input[type="checkbox"] { accent-color: #0176d3; }
+}
+
+@layer components {
+  .card { @apply rounded-lg border border-line bg-surface shadow-sm; }
+  .card-pad { @apply p-5; }
+  .btn-primary { @apply btn bg-brand-500 text-white hover:bg-brand-600; }
+  .btn-secondary { @apply btn border border-line-strong bg-surface text-content-strong hover:bg-surface-sunken; }
+  .btn-ghost { @apply btn text-content-muted hover:bg-surface-sunken hover:text-content-strong; }
+  .btn-danger { @apply btn bg-rose-600 text-white hover:bg-rose-700; }
+  .btn-sm { @apply px-2.5 py-1.5 text-xs; }
+  .btn-xs { @apply px-2 py-1 text-[11px]; }
+  .select { @apply input appearance-none bg-no-repeat pr-8; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%235c5c5c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E"); background-position: right 0.6rem center; background-size: 1.1rem; }
+  .textarea { @apply input min-h-28 font-mono text-[13px] leading-relaxed; }
+  .label { @apply mb-1.5 block text-xs font-medium uppercase tracking-wide text-content-muted; }
+  .table { @apply w-full text-sm; }
+  .table thead th { @apply border-b border-line px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-content-muted; }
+  .table tbody td { @apply border-b border-line px-3 py-2.5 align-middle text-content; }
+  .table tbody tr:last-child td { @apply border-b-0; }
+  .table-hover tbody tr { @apply transition-colors hover:bg-surface-sunken; }
+  .chip { @apply inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium; }
+  .kbd { @apply rounded border border-line-strong bg-surface-sunken px-1.5 py-0.5 font-mono text-[11px] text-content-muted; }
+  .link { @apply text-brand-500 hover:text-brand-700 hover:underline; }
+  .divider { @apply border-t border-line; }
+  .muted { @apply text-content-muted; }
+  .mono { @apply font-mono text-[12.5px]; }
+  .skeleton { @apply animate-pulse rounded-md bg-surface-sunken; }
+  .nav-item { @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm text-content transition-colors hover:bg-surface-sunken hover:text-content-strong; }
+  .nav-item-active { @apply bg-brand-50 font-medium text-brand-700 ring-1 ring-inset ring-brand-200; }
+}
+
+/* Markdown rendering (marked output) */
+.prose-x { @apply text-sm leading-relaxed text-content; }
+.prose-x h1 { @apply mb-3 mt-5 text-xl font-semibold text-content-strong; }
+.prose-x h2 { @apply mb-2 mt-5 text-lg font-semibold text-content-strong; }
+.prose-x h3 { @apply mb-2 mt-4 text-base font-semibold text-content-strong; }
+.prose-x h4 { @apply mb-1 mt-3 text-sm font-semibold text-content-strong; }
+.prose-x p { @apply my-2; }
+.prose-x ul { @apply my-2 list-disc pl-5; }
+.prose-x ol { @apply my-2 list-decimal pl-5; }
+.prose-x li { @apply my-0.5; }
+.prose-x a { @apply text-brand-500 underline; }
+.prose-x code { @apply rounded bg-surface-sunken px-1 py-0.5 font-mono text-[12px] text-brand-700; }
+.prose-x pre { @apply my-3 overflow-x-auto rounded-md border border-line bg-surface-sunken p-3; }
+.prose-x pre code { @apply bg-transparent p-0 text-content-strong; }
+.prose-x blockquote { @apply my-2 border-l-2 border-brand-300 pl-3 text-content-muted italic; }
+.prose-x table { @apply my-3 w-full text-xs; }
+.prose-x th { @apply border-b border-line-strong px-2 py-1 text-left font-semibold; }
+.prose-x td { @apply border-b border-line px-2 py-1; }
+.prose-x hr { @apply my-4 border-line; }
+.prose-x strong { @apply text-content-strong; }
+
+/* Diff viewer */
+.diff-line { @apply grid grid-cols-[3rem_3rem_1fr] font-mono text-[12px] leading-5; }
+.diff-line .ln { @apply select-none border-r border-line pr-2 text-right text-content-subtle; }
+.diff-line .code { @apply whitespace-pre-wrap break-all pl-3; }
+.diff-add { @apply bg-emerald-500/12 text-emerald-800; }
+.diff-add .ln { @apply text-emerald-700; }
+.diff-del { @apply bg-rose-500/12 text-rose-800; }
+.diff-del .ln { @apply text-rose-700; }
+.diff-hunk { @apply bg-brand-50 text-brand-700; }
+
+/* Blinking cursor for streaming assistant text */
+.caret::after { content: "▍"; @apply ml-0.5 animate-pulse text-brand-500; }

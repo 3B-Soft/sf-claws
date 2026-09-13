@@ -1,0 +1,49 @@
+<template lwc:render-mode="light">
+  <x-page-header title="Users" subtitle="Approve registrations, assign roles and control who can use the harness. Which clients a user sees is set on each client's Members tab.">
+    <button class="btn-secondary btn-sm" onclick={load}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon>Refresh</button>
+  </x-page-header>
+
+  <template lwc:if={hasPending}>
+    <div class="mb-4 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700"><x-icon name="warning" cls="h-4 w-4 text-amber-700"></x-icon>{pendingBanner}. Pending users are highlighted below.</div>
+  </template>
+
+  <div class="card">
+    <div class="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
+      <template for:each={filters} for:item="f"><button key={f.id} class={f.cls} data-id={f.id} onclick={setFilter}>{f.label}<span class="ml-1 rounded-full bg-black/20 px-1.5 text-[10px]">{f.count}</span></button></template>
+      <div class="ml-auto w-full sm:w-64"><x-form-field name="search" placeholder="Search name or email…" value={search} compact onchange={handleSearch}></x-form-field></div>
+    </div>
+    <x-data-table columns={columns} rows={rows} actions={actions} loading={loading} error={error} row-class={rowClass} empty-title="No users match" empty-icon="users" onaction={handleAction} onretry={load}></x-data-table>
+  </div>
+
+  <x-modal open={approveOpen} title={approveTitle} subtitle="Choose the role this user gets. Admins can see all sessions and usage; super admins manage everything." size="sm" onclose={closeApprove}>
+    <x-form-field label="Role" name="role" type="select" value={approveRole} options={roleOptions} onchange={handleApproveRole}></x-form-field>
+    <div slot="footer"><button class="btn-secondary" onclick={closeApprove}>Cancel</button><button class="btn-primary" onclick={submitApprove} disabled={busy}>Approve</button></div>
+  </x-modal>
+
+  <x-modal open={editOpen} title={editTitle} size="sm" onclose={closeEdit}>
+    <x-form-field label="Display name" name="displayName" value={editForm.displayName} onchange={handleEditField}></x-form-field>
+    <x-form-field label="Role" name="role" type="select" value={editForm.role} options={roleOptions} disabled={editIsSelf} hint="You cannot change your own role." onchange={handleEditField}></x-form-field>
+    <x-form-field label="UI mode" name="uiMode" type="select" value={editForm.uiMode} options={uiModeOptions} onchange={handleEditField}></x-form-field>
+
+    <div class="mt-4 border-t border-line pt-4">
+      <div class="label">Client access</div>
+      <template lwc:if={editSeesAllClients}>
+        <p class="text-xs text-content-subtle">A super admin belongs to every client; there is nothing to assign.</p>
+      </template>
+      <template lwc:else>
+        <p class="mb-2 text-xs text-content-subtle">This user only sees the clients and orgs ticked here. Client admin level is set on the client's Members tab; only a super admin can change membership.</p>
+        <template lwc:if={clientAccessLoading}><p class="text-xs text-content-subtle">Loading clients…</p></template>
+        <template lwc:elseif={noClients}><p class="text-xs text-content-subtle">No clients exist yet.</p></template>
+        <template lwc:else>
+          <div class="max-h-48 space-y-1.5 overflow-y-auto">
+            <template for:each={clientAccessOptions} for:item="c">
+              <x-form-field key={c.id} type="checkbox" name={c.id} label={c.name} value={c.checked} onchange={handleClientAccess}></x-form-field>
+            </template>
+          </div>
+        </template>
+      </template>
+    </div>
+
+    <div slot="footer"><button class="btn-secondary" onclick={closeEdit}>Cancel</button><button class="btn-primary" onclick={submitEdit} disabled={busy}>Save</button></div>
+  </x-modal>
+</template>

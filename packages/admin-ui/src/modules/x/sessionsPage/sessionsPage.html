@@ -1,0 +1,23 @@
+<template lwc:render-mode="light">
+  <x-page-header title="Sessions" subtitle={subtitle}>
+    <button class="btn-secondary btn-sm" onclick={load}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon>Refresh</button>
+  </x-page-header>
+  <div class="card mb-4 flex flex-wrap items-end gap-3 p-4">
+    <template lwc:if={admin}>
+      <div class="w-44"><x-form-field label="User" name="userId" type="select" value={filters.userId} options={userOptions} placeholder="All users" compact onchange={handleFilter}></x-form-field></div>
+      <div class="w-44"><x-form-field label="Client" name="clientId" type="select" value={filters.clientId} options={clientOptions} placeholder="All clients" compact onchange={handleFilter}></x-form-field></div>
+    </template>
+    <div class="w-44"><x-form-field label="Status" name="status" type="select" value={filters.status} options={statusOptions} placeholder="Any status" compact onchange={handleFilter}></x-form-field></div>
+    <div class="w-40"><x-form-field label="Feedback" name="helpful" type="select" value={filters.helpful} options={helpfulOptions} placeholder="Any" compact onchange={handleFilter}></x-form-field></div>
+    <template lwc:if={admin}>
+      <div class="w-40"><x-form-field label="From" name="from" type="date" value={filters.from} compact onchange={handleFilter}></x-form-field></div>
+      <div class="w-40"><x-form-field label="To" name="to" type="date" value={filters.to} compact onchange={handleFilter}></x-form-field></div>
+    </template>
+    <template lwc:if={taskFilterActive}><button class="btn-secondary btn-sm" onclick={clearTask}>Task filter <x-icon name="close" cls="h-3 w-3"></x-icon></button></template>
+    <button class="btn-ghost btn-sm" onclick={reset}>Reset</button>
+    <span class="ml-auto text-xs text-content-subtle">{total} sessions · ${totalCost}</span>
+  </div>
+  <div class="card">
+    <x-data-table columns={columns} rows={rows} loading={loading} error={error} clickable empty-title="No sessions found" empty-description="Sessions are created from the Chrome side panel. Adjust the filters or check back later." empty-icon="sessions" onrowclick={open} onretry={load}></x-data-table>
+  </div>
+</template>

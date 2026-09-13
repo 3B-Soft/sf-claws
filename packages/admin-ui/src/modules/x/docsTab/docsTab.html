@@ -1,0 +1,17 @@
+<template lwc:render-mode="light">
+  <template lwc:if={hasDocs}>
+    <div class="grid gap-4 lg:grid-cols-[18rem_1fr]">
+      <aside class="card max-h-[70vh] overflow-y-auto p-2">
+        <template for:each={list} for:item="d"><button key={d.id} class={d.cls} data-id={d.id} onclick={select}><span class="truncate text-sm font-medium">{d.title}</span><span class="truncate text-[10px] text-content-subtle">{d.when}<template lwc:if={d.sha}> · {d.sha}</template></span></button></template>
+      </aside>
+      <section class="card card-pad min-w-0">
+        <template lwc:if={current}>
+          <div class="mb-3 flex flex-wrap items-center gap-2 border-b border-line pb-3 text-xs text-content-muted"><span class="mono">{current.path}</span><span>·</span><span>{currentSha}</span></div>
+          <template lwc:if={current.summary}><div class="mb-4 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 text-sm text-content"><span class="mr-1 text-[10px] font-semibold uppercase tracking-wider text-brand-600">Memory summary</span>{current.summary}</div></template>
+          <x-markdown source={current.markdown}></x-markdown>
+        </template>
+      </section>
+    </div>
+  </template>
+  <template lwc:else><x-empty-state icon="skills" title="No documentation yet" description="The doc writer agent records technical and end-user documentation for each change, committed to the client repo."></x-empty-state></template>
+</template>

@@ -1,0 +1,71 @@
+<template lwc:render-mode="light">
+  <header class="relative border-b border-line bg-surface px-3 py-2 backdrop-blur">
+    <div class="flex items-start gap-2">
+      <div class="min-w-0 flex-1">
+        <template lwc:if={hasOrg}>
+          <div class="flex items-center gap-1.5">
+            <span class="truncate text-[11px] font-medium uppercase tracking-wide text-content-muted">{clientName}</span>
+            <span class={kindCls}>{orgKind}</span>
+            <template lwc:if={isProtected}><span class="inline-flex items-center rounded-md border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-700" title="Protected org: every deploy requires confirmation">protected</span></template>
+          </div>
+          <div class="mt-0.5 flex items-center gap-2">
+            <button class="truncate text-left text-sm font-semibold text-content-strong hover:underline" title={hostName} onclick={onOpenOrg}>{orgLabel}</button>
+            <span class={orgStatusCls}><span class="h-1.5 w-1.5 rounded-full bg-current opacity-70"></span>{orgStatusLabel}</span>
+          </div>
+        </template>
+        <template lwc:else>
+          <div class="text-sm font-semibold text-content-strong">SF Claws</div>
+          <div class="truncate text-[11px] text-content-muted">{hostName}</div>
+        </template>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <template lwc:if={hasSession}><span class={connectionCls} title={connectionTitle}></span></template>
+        <button class="relative flex h-8 w-8 items-center justify-center rounded-full bg-brand-500 text-[11px] font-bold text-white shadow ring-2 ring-line hover:ring-brand-500/50" title={userEmail} onclick={onToggleMenu}>
+          {userInitials}
+          <template lwc:if={isPro}><span class="absolute -bottom-1 -right-1 rounded bg-amber-400 px-1 text-[8px] font-black text-content-strong">PRO</span></template>
+        </button>
+      </div>
+    </div>
+
+    <template lwc:if={showContextRow}>
+      <div class="mt-2 flex flex-wrap items-center gap-1.5">
+        <template lwc:if={hasContext}>
+          <div class="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-line-strong bg-canvas px-2.5 py-1 text-[11px] text-content" title={contextTitle}>
+            <span class={contextDotCls}></span><span class="truncate">{contextLabel}</span>
+          </div>
+        </template>
+        <template lwc:if={hasOrg}><x-limits-gauge class="contents"></x-limits-gauge></template>
+      </div>
+    </template>
+
+    <template lwc:if={menuOpen}>
+      <div class="absolute right-2 top-12 z-30 w-64 rounded-xl border border-line-strong bg-surface p-2 shadow-2xl">
+        <div class="px-2 py-1.5">
+          <div class="truncate text-[13px] font-semibold text-content-strong">{userName}</div>
+          <div class="truncate text-[11px] text-content-muted">{userEmail} · {userRole}</div>
+        </div>
+        <div class="mt-1 rounded-lg border border-line bg-canvas p-1">
+          <div class="px-1 pb-1 text-[10px] font-medium uppercase tracking-wide text-content-subtle">Interface</div>
+          <div class="flex gap-1">
+            <button class={visualCls} onclick={onVisual}>Visual</button>
+            <button class={proCls} onclick={onPro}>Pro</button>
+          </div>
+          <div class="px-1 pt-1 text-[10px] text-content-subtle">Pro shows raw XML, JSON and SOQL.</div>
+        </div>
+        <template lwc:if={hasSession}>
+          <div class="mt-1 px-2 py-1 text-[11px] text-content-muted">Session usage: <span class="text-content">{usageText}</span></div>
+          <template lwc:if={hasCostLimit}>
+            <div class="mx-2 mt-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] leading-relaxed text-amber-700">{costLimitText}</div>
+          </template>
+        </template>
+        <div class="mt-1 border-t border-line pt-1">
+          <button class="w-full rounded-md px-2 py-1.5 text-left text-[12px] text-content hover:bg-surface-sunken" onclick={onAdmin}>Open admin console</button>
+          <button class="w-full rounded-md px-2 py-1.5 text-left text-[12px] text-content hover:bg-surface-sunken" onclick={onRefreshOrg}>Re-detect org</button>
+          <button class="w-full rounded-md px-2 py-1.5 text-left text-[12px] text-content hover:bg-surface-sunken" onclick={onOptions}>Options</button>
+          <button class="w-full rounded-md px-2 py-1.5 text-left text-[12px] text-rose-700 hover:bg-rose-500/10" onclick={onLogout}>Sign out</button>
+        </div>
+      </div>
+    </template>
+  </header>
+</template>

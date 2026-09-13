@@ -1,0 +1,157 @@
+<template lwc:render-mode="light">
+  <template lwc:if={isUser}>
+    <div class="flex justify-end">
+      <div class="max-w-[88%] rounded-2xl rounded-br-md bg-brand-500 px-3 py-2 text-[13px] text-white shadow whitespace-pre-wrap break-words">{text}</div>
+    </div>
+  </template>
+
+  <template lwc:elseif={isAssistant}>
+    <template lwc:if={isOrchestrator}>
+      <div class="flex justify-start">
+        <div class="max-w-[94%] rounded-2xl rounded-bl-md border border-line bg-surface px-3 py-2 shadow">
+          <x-markdown-view text={text}></x-markdown-view>
+          <template lwc:if={streaming}><span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
+        </div>
+      </div>
+    </template>
+    <template lwc:else>
+      <div class="rounded-xl border border-line bg-surface">
+        <button class="flex w-full items-center gap-2 px-2.5 py-1.5 text-left" onclick={onToggle}>
+          <span class={roleCls}>{roleText}</span>
+          <template lwc:if={subOpen}><span class="text-[11px] text-content-subtle">agent message</span></template>
+          <template lwc:else><span class="min-w-0 flex-1 truncate text-[11px] text-content-muted">{subPreview}</span></template>
+          <template lwc:if={streaming}><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
+          <span class="ml-auto text-[11px] text-content-subtle">{toggleGlyph}</span>
+        </button>
+        <template lwc:if={subOpen}><div class="border-t border-line px-3 py-2"><x-markdown-view text={text} compact></x-markdown-view></div></template>
+      </div>
+    </template>
+  </template>
+
+  <template lwc:elseif={isThinking}>
+    <div class="rounded-lg border border-line bg-surface px-2.5 py-1.5">
+      <button class="flex w-full items-center gap-2 text-left text-[11px] text-content-subtle" onclick={onToggle}>
+        <span class="italic">thinking</span><span class={roleCls}>{roleText}</span>
+        <template lwc:if={subOpen}><span class="ml-auto">{toggleGlyph}</span></template>
+        <template lwc:else><span class="min-w-0 flex-1 truncate italic">{thinkingPreview}</span><span>{toggleGlyph}</span></template>
+      </button>
+      <template lwc:if={subOpen}><div class="mt-1 whitespace-pre-wrap text-[11px] italic text-content-muted">{text}</div></template>
+    </div>
+  </template>
+
+  <template lwc:elseif={isTool}>
+    <x-tool-step item={item} pro={pro} onopenchanges={onOpenChanges}></x-tool-step>
+  </template>
+
+  <template lwc:elseif={isAgent}>
+    <div class="flex items-start gap-2 px-1 text-[11px] text-content-muted">
+      <span class="mt-1.5"><span class={agentDotCls}></span></span>
+      <div class="min-w-0"><span class="text-content">{agentLine}</span><template lwc:if={agentDetail}><span class="text-content-subtle"> — {agentDetail}</span></template></div>
+    </div>
+  </template>
+
+  <template lwc:elseif={isWorkspace}>
+    <button class="flex w-full items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-left hover:border-brand-500/40" onclick={onOpenChanges} title={wsPath}>
+      <span class={wsActionCls}>{wsAction}</span>
+      <span class="min-w-0 flex-1 truncate text-[12px] text-content">{wsName}</span>
+      <span class="text-[10px] text-content-subtle">{wsType}</span>
+      <span class="text-[11px] text-brand-600">diff →</span>
+    </button>
+  </template>
+
+  <template lwc:elseif={isValidation}>
+    <x-validation-panel run={item} onopenchanges={onOpenChanges}></x-validation-panel>
+  </template>
+
+  <template lwc:elseif={isConfirmation}>
+    <x-confirmation-card item={item} pro={pro} onconfirm={onConfirm}></x-confirmation-card>
+  </template>
+
+  <template lwc:elseif={isDeploy}>
+    <div class={deployCls}>
+      <div class="flex items-center gap-2 text-[12px] font-semibold text-content-strong"><span>{deployTitle}</span></div>
+      <template lwc:if={deployMsg}><div class="mt-1 text-[12px] text-content">{deployMsg}</div></template>
+      <template lwc:if={sfDeployId}><div class="mt-1 font-mono text-[10px] text-content-muted">Salesforce deploy id {sfDeployId}</div></template>
+    </div>
+  </template>
+
+  <template lwc:elseif={isVerified}>
+    <div class={verifiedCls}>
+      <div class={verifiedTitleCls}>{verifiedTitle}</div>
+      <template lwc:if={verifiedSummary}><div class="mt-0.5 text-[12px] text-content">{verifiedSummary}</div></template>
+      <template lwc:if={hasMissing}><div class="mt-1 text-[11px] font-semibold text-rose-700">{missingText}</div></template>
+      <template lwc:if={hasVerifiedComponents}>
+        <ul class="mt-2 divide-y divide-line overflow-hidden rounded-lg border border-line bg-canvas">
+          <template for:each={verifiedComponents} for:item="c">
+            <li key={c.key} class={c.rowCls}>
+              <span class={c.markerCls}>{c.marker}</span>
+              <span class={c.nameCls} title={c.note}>{c.fullName}</span>
+              <span class="shrink-0 text-[10px] text-content-subtle">{c.metadataType}</span>
+              <span class={c.statusCls}>{c.statusText}</span>
+            </li>
+          </template>
+        </ul>
+      </template>
+    </div>
+  </template>
+
+  <template lwc:elseif={isCommit}>
+    <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+      <div class="text-[12px] font-semibold text-content-strong">{commitTitle}</div>
+      <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-content">
+        <span class="rounded bg-surface-sunken px-1.5 font-mono">{commitBranch}</span>
+        <a class="font-mono text-brand-600 hover:underline" href={commitUrl} target="_blank" rel="noopener">{commitSha}</a>
+        <span class="text-content-subtle">{commitFiles}</span>
+        <template lwc:if={prUrl}><a class="ml-auto rounded-md border border-emerald-500/40 px-2 py-0.5 text-emerald-700 hover:bg-emerald-500/10" href={prUrl} target="_blank" rel="noopener">Open pull request</a></template>
+      </div>
+      <template lwc:if={commitMessage}><div class="mt-1.5 whitespace-pre-wrap text-[12px] text-content">{commitMessage}</div></template>
+    </div>
+  </template>
+
+  <template lwc:elseif={isDoc}>
+    <button class="flex w-full items-center gap-2 rounded-lg border border-teal-500/30 bg-teal-500/5 px-2.5 py-1.5 text-left hover:bg-teal-500/10" onclick={onOpenDocs}>
+      <span class="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-teal-700">DOC</span>
+      <span class="min-w-0 flex-1 truncate text-[12px] text-content">{docTitle}</span>
+      <span class="truncate text-[10px] text-content-subtle">{docPath}</span>
+      <span class="text-[11px] text-teal-700">open →</span>
+    </button>
+  </template>
+
+  <template lwc:elseif={isStatus}>
+    <div class="flex items-center justify-center gap-2 py-1 text-[11px] text-content-subtle">
+      <span class={statusCls}>{statusText}</span><template lwc:if={statusMessage}><span class="truncate">{statusMessage}</span></template><span>{at}</span>
+    </div>
+  </template>
+
+  <template lwc:elseif={isError}>
+    <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">
+      <div class="font-semibold">Error</div>
+      <div class="mt-0.5 whitespace-pre-wrap">{errorMessage}</div>
+      <template lwc:if={errorRecoverable}><div class="mt-1 text-[11px] text-rose-700/70">The agent will try to recover.</div></template>
+    </div>
+  </template>
+
+  <template lwc:elseif={isNote}>
+    <button class="flex w-full items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-2.5 py-1.5 text-left hover:bg-violet-500/10" onclick={onOpenNotes}>
+      <span class="rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700">NOTE</span>
+      <span class={roleCls}>{roleText}</span>
+      <span class="min-w-0 flex-1 truncate text-[12px] text-content">{noteTitle}</span>
+      <template lwc:if={hasNoteTags}><span class="hidden truncate text-[10px] text-content-subtle sm:inline"><template for:each={noteTags} for:item="t"><span key={t.key} class="mr-1">#{t.text}</span></template></span></template>
+      <span class="text-[11px] text-violet-700">open →</span>
+    </button>
+  </template>
+
+  <template lwc:elseif={isBlocked}>
+    <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">
+      <div class="flex items-center gap-2"><span class="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-rose-700">blocked by policy</span><span class="font-mono text-[11px] text-rose-700">{blockedTool}</span></div>
+      <div class="mt-1 whitespace-pre-wrap">{blockedMessage}</div>
+      <template lwc:if={blockedRule}><div class="mt-1 text-[10px] text-rose-700/70">Rule: {blockedRule}</div></template>
+    </div>
+  </template>
+
+  <template lwc:elseif={isUnknown}>
+    <template lwc:if={pro}><x-xml-view json={item}></x-xml-view></template>
+    <template lwc:else><div class="text-[11px] text-content-subtle">event: {unknownType}</div></template>
+  </template>
+
+</template>

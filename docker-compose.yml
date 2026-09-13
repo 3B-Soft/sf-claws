@@ -1,0 +1,15 @@
+# Default shared multi-tenant deployment: one instance serving all of an agency's clients.
+# For a client that requires isolated infrastructure, run a second service with its own MASTER_KEY
+# and its own volume — never a shared one. See docs/TENANCY.md.
+services:
+  sf-claws:
+    build: .
+    restart: unless-stopped
+    ports: ['8787:8787']
+    env_file: packages/server/.env
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - sf-claws-data:/data
+volumes:
+  sf-claws-data:

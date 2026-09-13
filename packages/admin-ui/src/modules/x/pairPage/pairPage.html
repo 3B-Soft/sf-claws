@@ -1,0 +1,33 @@
+<template lwc:render-mode="light">
+  <x-page-header title="Pair the Chrome extension" subtitle="The side-panel extension shows a short code. Approve it here to sign the extension in as you."></x-page-header>
+  <div class="mx-auto max-w-lg">
+    <div class="card p-6 text-center">
+      <template lwc:if={done}>
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-700"><x-icon name="check" cls="h-6 w-6"></x-icon></div>
+        <h2 class="text-lg font-semibold text-content-strong">Extension paired</h2>
+        <p class="mt-2 text-sm text-content-muted">The extension is now signed in as <span class="text-content">{userName}</span>. You can close this tab.</p>
+        <button class="btn-secondary mt-6" onclick={reset}>Pair another device</button>
+      </template>
+      <template lwc:elseif={hasCode}>
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/15 text-brand-600"><x-icon name="pair" cls="h-6 w-6"></x-icon></div>
+        <div class="text-xs uppercase tracking-wider text-content-subtle">Pairing code</div>
+        <div class="mt-2 font-mono text-4xl font-semibold tracking-[0.3em] text-content-strong">{displayCode}</div>
+        <p class="mt-4 text-sm text-content-muted">Approve this code to sign the extension in as <span class="text-content">{userName}</span>. Only approve codes shown on your own screen.</p>
+        <template lwc:if={error}><div class="mt-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-700">{errorMessage}</div></template>
+        <div class="mt-6 flex justify-center gap-2">
+          <button class="btn-secondary" onclick={reset}>Cancel</button>
+          <button class="btn-primary" onclick={approve} disabled={busy}><template lwc:if={busy}><x-icon name="spinner" cls="h-4 w-4"></x-icon></template>Approve &amp; sign in extension</button>
+        </div>
+      </template>
+      <template lwc:else>
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/15 text-brand-600"><x-icon name="pair" cls="h-6 w-6"></x-icon></div>
+        <h2 class="text-lg font-semibold text-content-strong">Enter the code from the extension</h2>
+        <p class="mt-2 text-sm text-content-muted">Open the SF Claws side panel in Chrome, click “Sign in”, and type the code it shows.</p>
+        <form class="mx-auto mt-6 max-w-xs" onsubmit={submitCode}>
+          <x-form-field name="code" value={codeInput} placeholder="e.g. 7KQ2-M9XA" mono onchange={handleCode}></x-form-field>
+          <button type="submit" class="btn-primary w-full" disabled={cannotContinue}>Continue</button>
+        </form>
+      </template>
+    </div>
+  </div>
+</template>

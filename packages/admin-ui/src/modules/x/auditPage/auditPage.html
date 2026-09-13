@@ -1,0 +1,15 @@
+<template lwc:render-mode="light">
+  <x-page-header title="Audit log" subtitle="Who did what, when. Security-relevant actions across the control plane.">
+    <div class="w-36"><x-form-field name="limit" type="select" value={limit} options={limitOptions} compact onchange={handleLimit}></x-form-field></div>
+    <button class="btn-secondary btn-sm" onclick={load}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon>Refresh</button>
+  </x-page-header>
+  <div class="card">
+    <div class="border-b border-line px-4 py-3"><div class="w-full sm:w-80"><x-form-field name="search" placeholder="Filter by action, target, user, IP…" value={search} compact onchange={handleSearch}></x-form-field></div></div>
+    <x-data-table columns={columns} rows={rows} loading={loading} error={error} clickable dense empty-title="No audit entries" empty-icon="audit" onrowclick={openRow} onretry={load}></x-data-table>
+  </div>
+  <x-modal open={detailOpen} title={detailTitle} subtitle="Audit entry details" onclose={closeRow}>
+    <template lwc:if={hasDetails}><x-json-tree value={selectedDetails} max-depth="3"></x-json-tree></template>
+    <template lwc:else><p class="text-sm text-content-muted">No structured details for this entry.</p></template>
+    <div slot="footer"><button class="btn-secondary" onclick={closeRow}>Close</button></div>
+  </x-modal>
+</template>

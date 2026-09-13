@@ -1,0 +1,155 @@
+<template lwc:render-mode="light">
+  <template lwc:if={isError}><div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">Could not parse metadata: {errorText}</div></template>
+
+  <template lwc:if={isFlow}>
+    <div class="rounded-xl border border-line bg-surface p-3">
+      <div class="text-[13px] font-semibold text-content-strong">{flowLabel}</div>
+      <div class="text-[11px] text-content-muted">{flowHeader}</div>
+      <template lwc:if={flowDescription}><div class="mt-1 text-[11px] text-content-muted">{flowDescription}</div></template>
+      <div class="mt-2 flex flex-wrap gap-1">
+        <template for:each={flowCounts} for:item="c"><span key={c.key} class="rounded-md bg-surface-sunken px-1.5 py-0.5 text-[10px] text-content">{c.n} × {c.kind}</span></template>
+      </div>
+    </div>
+    <ol class="relative mt-3 space-y-2 border-l border-line pl-4">
+      <template for:each={flowElements} for:item="e">
+        <li key={e.key} class="relative">
+          <span class="absolute -left-[21px] top-2 h-2.5 w-2.5 rounded-full border-2 border-line-strong bg-brand-400"></span>
+          <div class="rounded-lg border border-line bg-surface px-2.5 py-2">
+            <div class="flex items-center gap-2">
+              <span class={e.badgeCls}>{e.kind}</span>
+              <span class="min-w-0 flex-1 truncate text-[12px] font-medium text-content-strong">{e.label}</span>
+              <template lwc:if={e.isStart}></template>
+              <template lwc:else><span class="truncate font-mono text-[10px] text-content-subtle">{e.name}</span></template>
+            </div>
+            <template lwc:if={e.detail}><div class="mt-1 text-[11px] text-content">{e.detail}</div></template>
+            <template lwc:if={e.hasFilters}><ul class="mt-1 space-y-0.5 text-[11px] text-content-muted"><template for:each={e.filtersView} for:item="f"><li key={f.key} class="font-mono">where {f.text}</li></template></ul></template>
+            <template lwc:if={e.hasRules}>
+              <ul class="mt-1 space-y-0.5">
+                <template for:each={e.rulesView} for:item="r"><li key={r.key} class="text-[11px]"><span class="text-amber-700">{r.label}</span><span class="text-content-subtle"> when </span><span class="font-mono text-content">{r.cond}</span></li></template>
+              </ul>
+            </template>
+            <template lwc:if={e.hasAssign}><ul class="mt-1 space-y-0.5"><template for:each={e.assignView} for:item="a"><li key={a.key} class="font-mono text-[11px] text-violet-700">{a.text}</li></template></ul></template>
+            <template lwc:if={e.hasInputs}><ul class="mt-1 space-y-0.5"><template for:each={e.inputsView} for:item="a"><li key={a.key} class="font-mono text-[11px] text-emerald-700">{a.text}</li></template></ul></template>
+            <template lwc:if={e.hasFields}><ul class="mt-1 flex flex-wrap gap-1"><template for:each={e.fieldsView} for:item="a"><li key={a.key} class="rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] text-sky-700">{a.text}</li></template></ul></template>
+            <template lwc:if={e.hasConn}><ul class="mt-1 space-y-0.5"><template for:each={e.connView} for:item="c"><li key={c.key} class="text-[10px] text-content-subtle">{c.text}</li></template></ul></template>
+          </div>
+        </li>
+      </template>
+    </ol>
+    <template lwc:if={hasVariables}>
+      <div class="mt-3 rounded-xl border border-line p-2">
+        <div class="text-[10px] uppercase tracking-wide text-content-subtle">Variables</div>
+        <ul class="mt-1 flex flex-wrap gap-1"><template for:each={flowVariables} for:item="v"><li key={v.key} class="rounded bg-surface-sunken px-1.5 py-0.5 font-mono text-[10px] text-content">{v.text}</li></template></ul>
+      </div>
+    </template>
+  </template>
+
+  <template lwc:if={isObject}>
+    <div class="rounded-xl border border-line bg-surface p-3">
+      <div class="text-[13px] font-semibold text-content-strong">{objLabel}</div>
+      <div class="text-[11px] text-content-muted">{objMeta}</div>
+    </div>
+    <template lwc:if={hasFields}>
+      <div class="mt-3 text-[10px] uppercase tracking-wide text-content-subtle">Fields · {fieldCount}</div>
+      <ul class="mt-1 divide-y divide-line rounded-xl border border-line">
+        <template for:each={fields} for:item="f">
+          <li key={f.key} class="px-2.5 py-1.5">
+            <div class="flex items-center gap-2">
+              <span class="min-w-0 flex-1 truncate text-[12px] text-content-strong">{f.label}</span>
+              <span class="rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] text-content">{f.type}</span>
+              <template lwc:if={f.required}><span class="rounded bg-rose-500/15 px-1 text-[10px] text-rose-700">required</span></template>
+              <template lwc:if={f.unique}><span class="rounded bg-sky-500/15 px-1 text-[10px] text-sky-700">unique</span></template>
+              <template lwc:if={f.externalId}><span class="rounded bg-amber-500/15 px-1 text-[10px] text-amber-700">ext id</span></template>
+            </div>
+            <div class="flex items-center gap-2 text-[10px] text-content-subtle"><span class="font-mono">{f.fullName}</span><template lwc:if={f.extra}><span>{f.extra}</span></template></div>
+            <template lwc:if={f.hasPicklist}><div class="mt-0.5 text-[10px] text-content-muted">Values: {f.picklistText}</div></template>
+            <template lwc:if={f.description}><div class="mt-0.5 text-[11px] text-content-muted">{f.description}</div></template>
+          </li>
+        </template>
+      </ul>
+    </template>
+    <template lwc:if={hasRules}>
+      <div class="mt-3 text-[10px] uppercase tracking-wide text-content-subtle">Validation rules</div>
+      <ul class="mt-1 space-y-1">
+        <template for:each={rules} for:item="r">
+          <li key={r.key} class="rounded-lg border border-line px-2.5 py-1.5">
+            <div class="flex items-center gap-2 text-[12px] text-content-strong"><span class="flex-1 truncate">{r.fullName}</span><template lwc:if={r.active}><span class="text-[10px] text-emerald-700">active</span></template><template lwc:else><span class="text-[10px] text-content-subtle">inactive</span></template></div>
+            <div class="mt-0.5 font-mono text-[10px] text-content-muted">{r.formula}</div>
+            <div class="mt-0.5 text-[11px] text-rose-700">{r.message}</div>
+          </li>
+        </template>
+      </ul>
+    </template>
+    <template lwc:if={hasRecordTypes}>
+      <div class="mt-3 text-[10px] uppercase tracking-wide text-content-subtle">Record types</div>
+      <ul class="mt-1 flex flex-wrap gap-1"><template for:each={recordTypes} for:item="r"><li key={r.key} class="rounded bg-surface-sunken px-1.5 py-0.5 text-[11px] text-content">{r.label}</li></template></ul>
+    </template>
+  </template>
+
+  <template lwc:if={isLayout}>
+    <div class="space-y-2">
+      <template for:each={sections} for:item="s">
+        <div key={s.key} class="rounded-xl border border-line bg-surface">
+          <div class="flex items-center gap-2 border-b border-line px-2.5 py-1.5"><span class="text-[12px] font-semibold text-content-strong">{s.label}</span><span class="text-[10px] text-content-subtle">{s.fieldCount} items</span></div>
+          <div class="grid grid-cols-1 gap-2 p-2 sm:grid-cols-2">
+            <template for:each={s.columns} for:item="c">
+              <ul key={c.key} class="space-y-1">
+                <template for:each={c.items} for:item="it">
+                  <li key={it.key} class="flex items-center gap-2 rounded-md bg-canvas px-2 py-1 text-[11px]">
+                    <span class="min-w-0 flex-1 truncate font-mono text-content">{it.field}</span>
+                    <template lwc:if={it.required}><span class="text-[10px] text-rose-700">required</span></template>
+                    <template lwc:if={it.readonly}><span class="text-[10px] text-content-subtle">read-only</span></template>
+                  </li>
+                </template>
+              </ul>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+    <template lwc:if={hasRelated}>
+      <div class="mt-3 text-[10px] uppercase tracking-wide text-content-subtle">Related lists</div>
+      <ul class="mt-1 space-y-1"><template for:each={relatedLists} for:item="r"><li key={r.key} class="rounded-lg border border-line px-2.5 py-1.5 text-[11px]"><span class="text-content-strong">{r.name}</span><span class="text-content-subtle"> · {r.fieldsText}</span></li></template></ul>
+    </template>
+    <template lwc:if={hasQuick}>
+      <div class="mt-3 text-[10px] uppercase tracking-wide text-content-subtle">Quick actions</div>
+      <ul class="mt-1 flex flex-wrap gap-1"><template for:each={quickActions} for:item="q"><li key={q.key} class="rounded bg-surface-sunken px-1.5 py-0.5 text-[11px] text-content">{q.name}</li></template></ul>
+    </template>
+  </template>
+
+  <template lwc:if={isFlexi}>
+    <div class="rounded-xl border border-line bg-surface p-3">
+      <div class="text-[13px] font-semibold text-content-strong">{flexiLabel}</div>
+      <div class="text-[11px] text-content-muted">{flexiHeader}</div>
+    </div>
+    <div class="mt-2 space-y-2">
+      <template for:each={regions} for:item="r">
+        <div key={r.key} class="rounded-xl border border-dashed border-brand-500/30 bg-brand-500/5 p-2">
+          <div class="flex items-center gap-2 px-1 text-[11px] font-medium text-brand-700"><span>{r.title}</span><span class="text-content-subtle">{r.count}</span></div>
+          <ul class="mt-1 space-y-1">
+            <template for:each={r.components} for:item="c">
+              <li key={c.key} class="rounded-lg border border-line bg-canvas px-2 py-1.5">
+                <div class="flex items-center gap-2 text-[11px]">
+                  <template lwc:if={c.isField}><span class="rounded bg-sky-500/15 px-1 text-[10px] text-sky-700">field</span></template>
+                  <template lwc:else><span class="rounded bg-violet-500/15 px-1 text-[10px] text-violet-700">component</span></template>
+                  <span class="min-w-0 flex-1 truncate font-mono text-content-strong">{c.name}</span>
+                </div>
+                <template lwc:if={c.hasProps}><div class="mt-0.5 truncate text-[10px] text-content-subtle">{c.propsText}</div></template>
+                <template lwc:if={c.visibility}><div class="mt-0.5 text-[10px] text-amber-700">visible when {c.visibility}</div></template>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <template lwc:if={isGeneric}>
+    <div class="rounded-xl border border-line bg-surface p-3">
+      <div class="text-[11px] uppercase tracking-wide text-content-subtle">{genericType}</div>
+      <dl class="mt-2 divide-y divide-line text-[11px]">
+        <template for:each={props} for:item="r"><div key={r.key} class="flex gap-2 py-1"><dt class="w-32 shrink-0 truncate text-content-subtle">{r.name}</dt><dd class="min-w-0 flex-1 break-words text-content">{r.value}</dd></div></template>
+      </dl>
+    </div>
+  </template>
+</template>

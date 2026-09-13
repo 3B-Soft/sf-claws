@@ -1,0 +1,46 @@
+<template lwc:render-mode="light">
+  <x-page-header title="Settings" subtitle="Your profile, password and how the harness presents information to you."></x-page-header>
+  <div class="grid gap-6 lg:grid-cols-3">
+    <div class="space-y-6 lg:col-span-2">
+      <div class="card card-pad">
+        <h2 class="mb-4 text-sm font-semibold text-content-strong">Profile</h2>
+        <div class="grid gap-x-6 sm:grid-cols-2">
+          <x-form-field label="Display name" name="displayName" value={displayName} onchange={handleName}></x-form-field>
+          <x-form-field label="Email" name="email" value={email} readonly disabled hint="Email cannot be changed."></x-form-field>
+        </div>
+        <div class="divider my-2"></div>
+        <x-form-field type="toggle" label="Pro mode" name="pro" value={isPro} hint={proHint} onchange={toggleMode}></x-form-field>
+        <div class="mt-4 flex justify-end"><button class="btn-primary" onclick={save} disabled={cannotSave}><template lwc:if={busy}><x-icon name="spinner" cls="h-4 w-4"></x-icon></template>Save changes</button></div>
+      </div>
+      <div class="card card-pad">
+        <h2 class="mb-1 text-sm font-semibold text-content-strong">Change password</h2>
+        <p class="mb-4 text-xs text-content-muted">Changing your password signs out every other device, including the Chrome extension.</p>
+        <form onsubmit={changePassword} novalidate>
+          <div class="grid gap-x-6 sm:grid-cols-3">
+            <x-form-field label="Current password" name="currentPassword" type="password" value={pw.currentPassword} required onchange={handlePw}></x-form-field>
+            <x-form-field label="New password" name="newPassword" type="password" value={pw.newPassword} hint="At least 10 characters." required onchange={handlePw}></x-form-field>
+            <x-form-field label="Confirm new password" name="confirm" type="password" value={pw.confirm} error={pwError} required onchange={handlePw}></x-form-field>
+          </div>
+          <div class="flex justify-end"><button type="submit" class="btn-secondary" disabled={cannotChangePw}><x-icon name="key" cls="h-4 w-4"></x-icon>Update password</button></div>
+        </form>
+      </div>
+    </div>
+    <div class="space-y-6">
+      <div class="card card-pad">
+        <h2 class="mb-3 text-sm font-semibold text-content-strong">Account</h2>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between gap-3"><dt class="muted">Role</dt><dd><x-badge value={role}></x-badge></dd></div>
+          <div class="flex justify-between gap-3"><dt class="muted">Status</dt><dd><x-badge value={status}></x-badge></dd></div>
+          <div class="flex justify-between gap-3"><dt class="muted">Registered</dt><dd class="text-content">{createdAt}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="muted">Approved</dt><dd class="text-content">{approvedAt}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="muted">Last seen</dt><dd class="text-content">{lastSeenAt}</dd></div>
+        </dl>
+      </div>
+      <div class="card card-pad">
+        <h2 class="mb-3 text-sm font-semibold text-content-strong">Connection</h2>
+        <x-form-field label="API base URL" name="apiBase" value={apiBase} placeholder="https://harness.example.com" hint={apiBaseHint} mono onchange={handleApiBase}></x-form-field>
+        <div class="flex gap-2"><button class="btn-secondary btn-sm" onclick={saveApiBase}>Save</button><button class="btn-ghost btn-sm" onclick={reload}>Reload</button></div>
+      </div>
+    </div>
+  </div>
+</template>

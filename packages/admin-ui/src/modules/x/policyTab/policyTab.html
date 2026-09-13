@@ -1,0 +1,83 @@
+<template lwc:render-mode="light">
+  <template lwc:if={error}><x-error-state error={error} onretry={load}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="text" rows="8"></x-skeleton></template>
+  <template lwc:elseif={form}>
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2 text-sm text-content-muted"><x-icon name="shield" cls="h-4 w-4 text-brand-600"></x-icon>{scopeLabel}. The runtime enforces these programmatically, in addition to policy skills (prose).</div>
+      <div class="flex gap-2"><button class="btn-ghost btn-sm" onclick={reset} disabled={cannotSave}>Reset</button><button class="btn-primary btn-sm" onclick={save} disabled={cannotSave}><template lwc:if={busy}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template>Save policy</button></div>
+    </div>
+    <template lwc:if={isClient}>
+      <div class="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-xs text-content-muted">
+        <span>Overridden here:</span>
+        <template lwc:if={hasOverrides}><template for:each={overrideChips} for:item="o"><span key={o.id} class="chip border-violet-500/30 bg-violet-500/10 text-violet-700">{o.label}</span></template></template>
+        <template lwc:else><span class="text-content-subtle">none — everything comes from the global policy</span></template>
+        <span class="ml-auto text-content-subtle">Saving writes every field as a client override.</span>
+      </div>
+    </template>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="card card-pad lg:col-span-2">
+        <h3 class="mb-1 text-sm font-semibold text-content-strong">Impact commands</h3>
+        <p class="mb-3 text-xs text-content-muted">Commands that change (or heavily load) the org. A command not on the <span class="text-content">allow list</span> is refused outright; allowed commands always show the user the AI's reason and the exact command before running. <span class="text-content">Limit to</span> narrows a command to what it may act on — leave it empty and the command is allowed for everything. <span class="text-content">Session-allowable</span> commands can be approved once for the whole session (deploys and commits never qualify).</p>
+        <div class="overflow-x-auto"><table class="table">
+          <thead><tr><th>Command</th><th class="w-32 text-center">Allowed</th><th class="w-72">Limit to</th><th class="w-44 text-center">Session-allowable</th></tr></thead>
+          <tbody>
+            <template for:each={commandRows} for:item="c">
+              <tr key={c.id} class={c.rowCls}>
+                <td><div class="flex items-center gap-2"><span class="mono text-content-strong">{c.id}</span><span class="text-xs text-content-muted">{c.label}</span></div><div class="text-[11px] text-content-subtle">{c.desc}</div></td>
+                <td class="text-center"><button type="button" class={c.allowCls} data-id={c.id} data-list="impactAllowList" onclick={toggleList}>{c.allowLabel}</button></td>
+                <td>
+                  <input type="text" class="input mono py-1 text-[13px]" data-id={c.id} value={c.scope} placeholder={c.scopePlaceholder} disabled={c.scopeDisabled} onchange={editScope} />
+                  <div class="mt-1 text-[11px] text-content-subtle">Matches {c.scopeHint}. Comma-separate, <span class="kbd">*</span> is a wildcard.</div>
+                </td>
+                <td class="text-center"><button type="button" class={c.sessionCls} data-id={c.id} data-list="sessionAllowable" onclick={toggleList} disabled={c.sessionDisabled} title={c.sessionTitle}>{c.sessionLabel}</button></td>
+              </tr>
+            </template>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="card card-pad lg:col-span-2">
+        <h3 class="mb-1 text-sm font-semibold text-content-strong">Denied outright</h3>
+        <p class="mb-3 text-xs text-content-muted">Checked before anything else and absolute: a match here refuses the command however broadly the allow list is written, and an "allow for this session" approval does not override it. One rule per line, e.g. <span class="kbd">delete_record</span> or <span class="kbd">deploy(ApexClass:*)</span>.</p>
+        <x-form-field name="impactDenyList" type="textarea" rows="4" value={f.impactDenyList} placeholder="delete_record&#10;deploy(Profile:*)&#10;github_commit(*#main)" error={denyError} mono compact onchange={handle}></x-form-field>
+      </div>
+      <div class="card card-pad">
+        <h3 class="mb-3 text-sm font-semibold text-content-strong">Deploy guardrails</h3>
+        <x-form-field type="toggle" label="Always confirm deploys" name="alwaysConfirmDeploy" value={f.alwaysConfirmDeploy} hint="Ask for confirmation before every real deploy, even in sandboxes." onchange={handle}></x-form-field>
+        <x-form-field type="toggle" label="Production requires pro mode" name="productionRequiresProMode" value={f.productionRequiresProMode} hint="Only sessions started in pro mode may deploy to production." onchange={handle}></x-form-field>
+        <x-form-field type="toggle" label="Allow data modification" name="allowDataModification" value={f.allowDataModification} hint="Let agents insert/update/delete records (DML) in the org." onchange={handle}></x-form-field>
+        <div class="divider my-3"></div>
+        <div class="grid gap-x-4 sm:grid-cols-2">
+          <x-form-field label="Max components per deploy" name="maxComponentsPerDeploy" type="number" min="1" step="1" value={f.maxComponentsPerDeploy} onchange={handle}></x-form-field>
+          <x-form-field label="API limit warning (%)" name="apiLimitWarnPercent" type="number" min="1" max="100" step="1" value={f.apiLimitWarnPercent} hint="Warn when an org limit (e.g. DailyApiRequests) crosses this usage." error={warnError} onchange={handle}></x-form-field>
+        </div>
+      </div>
+      <div class="card card-pad">
+        <h3 class="mb-1 text-sm font-semibold text-content-strong">Spend ceilings and planning</h3>
+        <p class="mb-3 text-xs text-content-muted">Ceilings are checked before every model call; 0 means no limit. A run that would cross one stops and stays resumable once the limit is raised.</p>
+        <div class="grid gap-x-4 sm:grid-cols-2">
+          <x-form-field label="Max $ per session" name="maxSessionCostUsd" type="number" min="0" step="0.5" value={f.maxSessionCostUsd} hint="0 = unlimited" onchange={handle}></x-form-field>
+          <x-form-field label="Max $ per turn" name="maxTurnCostUsd" type="number" min="0" step="0.5" value={f.maxTurnCostUsd} hint="0 = unlimited" onchange={handle}></x-form-field>
+          <x-form-field label="Max $ per client per month" name="maxClientMonthlyCostUsd" type="number" min="0" step="10" value={f.maxClientMonthlyCostUsd} hint="0 = unlimited" onchange={handle}></x-form-field>
+          <x-form-field label="Documentation reserve $" name="costCeilingDocReserveUsd" type="number" min="0" step="0.05" value={f.costCeilingDocReserveUsd} hint="Kept back so hitting a ceiling never leaves work undocumented." onchange={handle}></x-form-field>
+        </div>
+        <div class="divider my-3"></div>
+        <x-form-field label="Require an approved plan" name="requirePlanApproval" type="select" value={f.requirePlanApproval} options={planOptions} hint="The plan is where a non-technical admin sees the change described in business terms before anything is staged." onchange={handle}></x-form-field>
+      </div>
+      <div class="card card-pad">
+        <h3 class="mb-3 text-sm font-semibold text-content-strong">Apex quality</h3>
+        <x-form-field type="toggle" label="Require tests for Apex" name="requireTestsForApex" value={f.requireTestsForApex} hint="Apex classes/triggers must ship with test classes." onchange={handle}></x-form-field>
+        <x-form-field label="Minimum code coverage (%)" name="minCodeCoverage" type="number" min="0" max="100" step="1" value={f.minCodeCoverage} error={coverageError} onchange={handle}></x-form-field>
+      </div>
+      <div class="card card-pad">
+        <h3 class="mb-1 text-sm font-semibold text-content-strong">Forbidden metadata types</h3>
+        <p class="mb-3 text-xs text-content-muted">Agents may never create or modify these types. One per line, e.g. <span class="kbd">Profile</span>, <span class="kbd">SharingRules</span>.</p>
+        <x-form-field name="forbiddenMetadataTypes" type="textarea" rows="6" value={f.forbiddenMetadataTypes} placeholder="Profile&#10;SharingRules&#10;NamedCredential" mono compact onchange={handle}></x-form-field>
+      </div>
+      <div class="card card-pad">
+        <h3 class="mb-1 text-sm font-semibold text-content-strong">Protected components</h3>
+        <p class="mb-3 text-xs text-content-muted">Glob-like fullName patterns that must never be modified, e.g. <span class="kbd">yourns__*</span> for managed package components.</p>
+        <x-form-field name="protectedComponents" type="textarea" rows="6" value={f.protectedComponents} placeholder="yourns__*&#10;Account.Legacy_*" mono compact onchange={handle}></x-form-field>
+      </div>
+    </div>
+  </template>
+</template>

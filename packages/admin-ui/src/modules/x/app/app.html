@@ -1,0 +1,44 @@
+<template lwc:render-mode="light">
+  <x-toast></x-toast>
+  <x-confirm-dialog></x-confirm-dialog>
+
+  <template lwc:if={isBooting}>
+    <div class="flex h-full min-h-screen items-center justify-center">
+      <div class="flex flex-col items-center gap-3 text-content-muted"><x-icon name="spinner" cls="h-6 w-6 text-brand-600"></x-icon><span class="text-sm">Loading SF Claws…</span></div>
+    </div>
+  </template>
+
+  <template lwc:elseif={isOffline}>
+    <div class="flex h-full min-h-screen items-center justify-center p-6">
+      <div class="w-full max-w-md"><x-error-state title="Server unreachable" error={healthError} onretry={retryBoot}></x-error-state></div>
+    </div>
+  </template>
+
+  <template lwc:elseif={showLogin}>
+    <x-login-page mode={loginMode} health={auth.health} pending={isPending} onauthenticated={handleAuthenticated}></x-login-page>
+  </template>
+
+  <template lwc:else>
+    <x-shell user={user} route={route} onlogout={handleLogout}>
+      <template lwc:if={isDashboard}><x-dashboard-page user={user}></x-dashboard-page></template>
+      <template lwc:elseif={isUsers}><x-users-page user={user}></x-users-page></template>
+      <template lwc:elseif={isAi}><x-ai-page></x-ai-page></template>
+      <template lwc:elseif={isClients}><x-clients-page></x-clients-page></template>
+      <template lwc:elseif={isClient}><x-client-detail-page client-id={params.id} query={query}></x-client-detail-page></template>
+      <template lwc:elseif={isKnowledge}><x-knowledge-page></x-knowledge-page></template>
+      <template lwc:elseif={isSkills}><x-skills-page></x-skills-page></template>
+      <template lwc:elseif={isSkill}><x-skills-page skill-id={params.id}></x-skills-page></template>
+      <template lwc:elseif={isSessions}><x-sessions-page user={user} query={query}></x-sessions-page></template>
+      <template lwc:elseif={isSession}><x-session-detail-page session-id={params.id} user={user} query={query}></x-session-detail-page></template>
+      <template lwc:elseif={isUsage}><x-usage-page query={query}></x-usage-page></template>
+      <template lwc:elseif={isAudit}><x-audit-page></x-audit-page></template>
+      <template lwc:elseif={isPolicy}><x-policy-page></x-policy-page></template>
+      <template lwc:elseif={isSettings}><x-settings-page user={user} onuserupdated={handleUserUpdated} onsignedout={handleSignedOut}></x-settings-page></template>
+      <template lwc:elseif={isPair}><x-pair-page user={user} query={query}></x-pair-page></template>
+      <template lwc:elseif={isOauthResult}><x-oauth-result-page query={query}></x-oauth-result-page></template>
+      <template lwc:elseif={isAuthRouteWhileAuthed}><x-dashboard-page user={user}></x-dashboard-page></template>
+      <template lwc:elseif={isForbidden}><x-empty-state icon="shield" title="You don't have access to this page" description="Ask a super admin to change your role if you believe this is a mistake."></x-empty-state></template>
+      <template lwc:else><x-empty-state icon="search" title="Page not found" description="The link may be outdated. Use the navigation on the left."></x-empty-state></template>
+    </x-shell>
+  </template>
+</template>

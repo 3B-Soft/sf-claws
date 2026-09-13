@@ -1,0 +1,51 @@
+<template lwc:render-mode="light">
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <p class="text-sm text-content-muted">Connected via Salesforce OAuth (web-server flow with PKCE). Production and protected orgs require explicit confirmation for every deploy.</p>
+    <button class="btn-primary btn-sm shrink-0" onclick={openCreate}><x-icon name="plus" cls="h-3.5 w-3.5"></x-icon>Add org</button>
+  </div>
+  <template lwc:if={error}><x-error-state error={error} onretry={load}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="cards" rows="3"></x-skeleton></template>
+  <template lwc:elseif={isEmpty}><x-empty-state icon="cloud" title="No Salesforce orgs yet" description="Add a sandbox or production org, then connect it with an integration user." action-label="Add org" onaction={openCreate}></x-empty-state></template>
+  <template lwc:elseif={hasRows}>
+    <div class="grid gap-4 md:grid-cols-2">
+      <template for:each={rows} for:item="o">
+        <div key={o.id} class={o.cardCls}>
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><h3 class="truncate text-sm font-semibold text-content-strong">{o.label}</h3><x-badge value={o.kind}></x-badge><x-badge value={o.protectedLabel} color={o.protectedColor}></x-badge></div><div class="mono mt-1 truncate text-content-muted">{o.instance}</div></div>
+            <x-badge value={o.status} dot></x-badge>
+          </div>
+          <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            <dt class="muted">User</dt><dd class="truncate text-content">{o.user}</dd>
+            <dt class="muted">API version</dt><dd class="text-content">{o.apiVersion}</dd>
+            <dt class="muted">Org id</dt><dd class="mono truncate text-content">{o.sfOrgId}</dd>
+            <dt class="muted">Last</dt><dd class="text-content">{o.last}</dd>
+          </dl>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <template lwc:if={o.connected}>
+              <button class="btn-secondary btn-sm" data-id={o.id} onclick={refreshStatus} disabled={o.busy}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon>Check status</button>
+              <button class="btn-secondary btn-sm" data-id={o.id} onclick={connect} disabled={o.busy}>Reconnect</button>
+              <button class="btn-ghost btn-sm text-rose-700" data-id={o.id} onclick={disconnect} disabled={o.busy}>Disconnect</button>
+            </template>
+            <template lwc:else>
+              <button class="btn-primary btn-sm" data-id={o.id} onclick={connect} disabled={o.busy}><template lwc:if={o.busy}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template><template lwc:else><x-icon name="external" cls="h-3.5 w-3.5"></x-icon></template>Connect to Salesforce</button>
+            </template>
+            <button class={o.toggleCls} data-id={o.id} onclick={toggleProtected} disabled={o.busy} title="Protected orgs require confirmation + policies for every deploy"><x-icon name="shield" cls="h-3.5 w-3.5"></x-icon>{o.toggleLabel}</button>
+            <template lwc:if={o.connected}><button class={o.limitsCls} data-id={o.id} onclick={toggleLimits}><x-icon name="gauge" cls="h-3.5 w-3.5"></x-icon>{o.limitsLabel}</button></template>
+            <template lwc:if={superadmin}><button class="btn-ghost btn-xs ml-auto text-content-subtle hover:text-rose-700" data-id={o.id} onclick={remove} title="Delete org"><x-icon name="trash" cls="h-3.5 w-3.5"></x-icon></button></template>
+          </div>
+          <template lwc:if={o.lastError}><div class="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-700 break-words">{o.lastError}</div></template>
+          <template lwc:if={o.showLimits}><div class="mt-4"><x-limits-gauge org-id={o.id} compact></x-limits-gauge></div></template>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <x-modal open={modalOpen} title="Add Salesforce org" subtitle="After saving you will be taken to the Salesforce login to authorize the harness." size="sm" onclose={closeCreate}>
+    <x-form-field label="Label" name="label" value={form.label} placeholder="UAT sandbox" required onchange={handleField}></x-form-field>
+    <x-form-field label="Kind" name="kind" type="select" value={form.kind} options={kindOptions} onchange={handleField}></x-form-field>
+    <x-form-field label="Login URL" name="loginUrl" type="url" value={form.loginUrl} hint="login.salesforce.com, test.salesforce.com or a MyDomain URL." mono onchange={handleField}></x-form-field>
+    <x-form-field label="API version" name="apiVersion" value={form.apiVersion} mono onchange={handleField}></x-form-field>
+    <x-form-field type="toggle" label="Protected" name="protected" value={form.protected} hint="Require explicit confirmation and policy checks for every deploy (always on for production)." onchange={handleField}></x-form-field>
+    <div slot="footer"><button class="btn-secondary" onclick={closeCreate}>Cancel</button><button class="btn-primary" onclick={create} disabled={cannotCreate}>Add &amp; connect</button></div>
+  </x-modal>
+</template>

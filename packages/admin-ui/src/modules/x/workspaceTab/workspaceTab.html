@@ -1,0 +1,20 @@
+<template lwc:render-mode="light">
+  <template lwc:if={hasFiles}>
+    <div class="grid gap-4 lg:grid-cols-[18rem_1fr]">
+      <aside class="card max-h-[70vh] overflow-y-auto p-2">
+        <template for:each={list} for:item="f">
+          <button key={f.id} class={f.cls} data-path={f.path} onclick={select}><x-badge value={f.action} color={f.actionColor}></x-badge><span class="min-w-0 flex-1"><span class="block truncate font-medium">{f.name}</span><span class="block truncate text-[10px] text-content-subtle">{f.dir}</span></span></button>
+        </template>
+      </aside>
+      <section class="min-w-0">
+        <template lwc:if={current}>
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2"><div class="text-xs text-content-muted">{currentLabel}<template lwc:if={noOriginal}><span class="ml-2 text-content-subtle">(new file — no original in org)</span></template></div><template lwc:if={runningNote}><span class="text-xs text-amber-700">{runningNote}</span></template><template lwc:if={canEdit}><div class="flex gap-2"><button class="btn-ghost btn-xs text-rose-700" onclick={remove} disabled={busy}>Remove</button><button class="btn-secondary btn-xs" onclick={toggleEdit}>{editLabel}</button><template lwc:if={editing}><button class="btn-primary btn-xs" onclick={save} disabled={busy}>Save to workspace</button></template></div></template></div>
+          <template lwc:if={editing}><x-form-field name="content" type="textarea" rows="24" value={draft} mono compact onchange={handleDraft}></x-form-field></template>
+          <template lwc:elseif={isDeleted}><x-diff-viewer original={original} content="" path={current.path}></x-diff-viewer></template>
+          <template lwc:else><x-diff-viewer original={original} content={content} path={current.path}></x-diff-viewer></template>
+        </template>
+      </section>
+    </div>
+  </template>
+  <template lwc:else><x-empty-state icon="file" title="No workspace files" description="Metadata the agents create or modify appears here, staged for validation and deploy."></x-empty-state></template>
+</template>

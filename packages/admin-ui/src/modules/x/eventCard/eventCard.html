@@ -1,0 +1,83 @@
+<template lwc:render-mode="light">
+  <template lwc:if={isUser}>
+    <div class="flex justify-end"><div class="max-w-[85%] rounded-2xl rounded-tr-md bg-brand-500 px-4 py-2.5 text-sm text-white shadow-md shadow-content-strong/10"><div class="whitespace-pre-wrap">{b.text}</div><div class="mt-1 text-right text-[10px] text-white">{time}</div></div></div>
+  </template>
+
+  <template lwc:elseif={isMessage}>
+    <template lwc:if={isOrchestrator}>
+      <div class="flex gap-3">
+        <div class="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500/30 text-brand-700"><x-icon name="ai" cls="h-4 w-4"></x-icon></div>
+        <div class="min-w-0 max-w-[90%] flex-1"><div class={bubbleCls}><div class={textCls}><x-markdown source={b.text} compact></x-markdown></div></div><div class="mt-1 text-[10px] text-content-subtle">{time}</div></div>
+      </div>
+    </template>
+    <template lwc:else>
+      <div class="ml-10">
+        <button class="flex w-full items-center gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-left text-xs hover:bg-surface-sunken" onclick={toggleExpand}>
+          <span class={roleChipCls}>{roleLabel}</span>
+          <template lwc:if={subAgentCollapsed}><span class="min-w-0 flex-1 truncate text-content-muted">{messagePreview}</span></template>
+          <template lwc:else><span class="flex-1 text-content-subtle">agent message</span></template>
+          <template lwc:if={streaming}><x-icon name="spinner" cls="h-3 w-3 text-brand-600"></x-icon></template>
+          <span class="text-[10px] text-content-subtle">{time}</span>
+        </button>
+        <template lwc:if={subAgentCollapsed}></template>
+        <template lwc:else><div class="mt-1 rounded-xl border border-line bg-surface px-4 py-3"><div class={textCls}><x-markdown source={b.text} compact></x-markdown></div></div></template>
+      </div>
+    </template>
+  </template>
+
+  <template lwc:elseif={isThinking}>
+    <div class="ml-10"><details class="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs"><summary class="flex cursor-pointer items-center gap-2 text-content-subtle hover:text-content"><x-icon name="brain" cls="h-3.5 w-3.5"></x-icon><span class={roleChipCls}>{roleLabel}</span>thinking</summary><div class="mt-2 whitespace-pre-wrap text-content-muted italic">{thinkingText}</div></details></div>
+  </template>
+
+  <template lwc:elseif={isTool}>
+    <div class="ml-10 flex items-start gap-2"><template lwc:if={isOrchestrator}></template><template lwc:else><span class={roleChipCls}>{roleLabel}</span></template><div class="min-w-0 flex-1"><x-tool-card block={b} pro-mode={proMode}></x-tool-card></div></div>
+  </template>
+
+  <template lwc:elseif={isValidation}><div class="ml-10"><x-validation-panel data={b.validation}></x-validation-panel></div></template>
+
+  <template lwc:elseif={isConfirmation}><div class="ml-10"><x-confirmation-card confirmation={b.confirmation} resolved={b.resolved} option-id={b.optionId} readonly={readonly} busy={busy}></x-confirmation-card></div></template>
+
+  <template lwc:elseif={isDeploy}>
+    <div class="ml-10"><div class={deployCls}><x-icon name={deployIcon} cls={deployIconCls}></x-icon><div class="min-w-0"><div class="text-sm font-semibold text-content-strong">{deployTitle}</div><div class="text-xs text-content">{deploy.message}</div><template lwc:if={deploy.sfDeployId}><div class="mono mt-1 text-content-subtle">{deploy.sfDeployId}</div></template></div></div></div>
+  </template>
+
+  <template lwc:elseif={isCommit}>
+    <div class="ml-10"><div class="flex flex-wrap items-center gap-3 rounded-xl border border-brand-500/30 bg-brand-500/5 p-3"><x-icon name="git" cls="h-5 w-5 text-brand-600"></x-icon><div class="min-w-0 flex-1"><div class="text-sm font-semibold text-content-strong">Committed to {commitRepo}</div><div class="truncate text-xs text-content">{commit.message}</div><div class="mt-1 flex flex-wrap gap-x-3 text-[11px] text-content-subtle"><span class="mono">{commit.branch}</span><span>{commitFiles}</span></div></div><a href={commit.url} target="_blank" rel="noopener" class="kbd hover:text-brand-600">{commitSha}</a><template lwc:if={hasPr}><a href={commit.pullRequestUrl} target="_blank" rel="noopener" class="btn-secondary btn-xs"><x-icon name="external" cls="h-3 w-3"></x-icon>Pull request</a></template></div></div>
+  </template>
+
+  <template lwc:elseif={isDoc}>
+    <div class="ml-10"><button class="flex w-full items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-left hover:bg-emerald-500/10" onclick={openDoc}><x-icon name="skills" cls="h-5 w-5 text-emerald-700"></x-icon><div class="min-w-0 flex-1"><div class="text-sm font-semibold text-content-strong">Documentation written · {doc.title}</div><div class="mono truncate text-content-muted">{doc.path}</div></div><span class="link text-xs">Open</span></button></div>
+  </template>
+
+  <template lwc:elseif={isWorkspace}>
+    <div class="ml-10"><button class="flex w-full items-center gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-left text-xs hover:bg-surface-sunken" onclick={openWs}><x-icon name="file" cls="h-3.5 w-3.5 text-content-muted"></x-icon><x-badge value={wsAction}></x-badge><span class="mono min-w-0 flex-1 truncate text-content">{b.path}</span><template lwc:if={wsLabel}><span class="hidden text-content-subtle sm:inline">{wsLabel}</span></template></button></div>
+  </template>
+
+  <template lwc:elseif={isAgent}>
+    <div class="ml-10 flex items-center gap-2 text-xs text-content-subtle"><x-icon name={agentIcon} cls={agentIconCls}></x-icon><span class={roleChipCls}>{roleLabel}</span><span class="truncate">{agentText}</span></div>
+  </template>
+
+  <template lwc:elseif={isStatus}>
+    <div class="flex items-center justify-center gap-2 py-1 text-[11px] text-content-subtle"><span class="h-px w-8 bg-surface-sunken"></span><x-badge value={b.status} dot></x-badge><template lwc:if={statusMessage}><span>{statusMessage}</span></template><span>{time}</span><span class="h-px w-8 bg-surface-sunken"></span></div>
+  </template>
+
+  <template lwc:elseif={isError}>
+    <div class="ml-10 flex items-start gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3"><x-icon name="error" cls="h-5 w-5 text-rose-700"></x-icon><div class="min-w-0"><div class="text-sm font-semibold text-rose-700">Error</div><div class="text-sm text-rose-700/90">{b.message}</div><template lwc:if={b.recoverable}><div class="mt-1 text-[11px] text-rose-700/70">Recoverable — the agent will retry.</div></template></div></div>
+  </template>
+
+  <template lwc:elseif={isNote}>
+    <div class="ml-10"><button class="flex w-full items-center gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-left text-xs hover:bg-surface-sunken" onclick={openNote}><x-icon name="note" cls="h-3.5 w-3.5 text-content-muted"></x-icon><span class={roleChipCls}>{roleLabel}</span><span class="min-w-0 flex-1 truncate text-content">wrote note · <span class="font-medium text-content-strong">{b.title}</span></span><template for:each={noteTags} for:item="t"><span key={t.id} class="hidden text-content-subtle sm:inline">#{t.label}</span></template><span class="link">Open</span></button></div>
+  </template>
+
+  <template lwc:elseif={isBlocked}>
+    <div class="ml-10 flex items-start gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3"><x-icon name="ban" cls="h-5 w-5 text-rose-700"></x-icon><div class="min-w-0"><div class="text-sm font-semibold text-rose-700">Blocked by policy · <span class="mono">{b.tool}</span></div><div class="text-sm text-rose-700/90">{b.message}</div><div class="mt-1 text-[11px] text-rose-700/70">Rule: {b.rule}. A super admin can change the allow list in the client policy.</div></div></div>
+  </template>
+
+  <template lwc:elseif={isLimits}>
+    <div class="ml-10"><x-limits-gauge limits={b.limits} top="5" compact></x-limits-gauge></div>
+  </template>
+
+  <template lwc:elseif={isRaw}>
+    <template lwc:if={proMode}><div class="ml-10"><details class="text-xs"><summary class="cursor-pointer text-content-subtle">{rawType}</summary><x-json-tree value={rawEvent}></x-json-tree></details></div></template>
+  </template>
+</template>

@@ -1,0 +1,26 @@
+<template lwc:render-mode="light">
+  <div class="card">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3">
+      <div><h2 class="text-sm font-semibold text-content-strong">Role → model bindings</h2><p class="text-xs text-content-muted">Which model each agent in the swarm uses, its reasoning effort and iteration budget.</p></div>
+      <div class="flex gap-2"><button class="btn-ghost btn-sm" onclick={reset} disabled={cannotSave}>Reset</button><button class="btn-primary btn-sm" onclick={save} disabled={cannotSave}>Save bindings</button></div>
+    </div>
+    <template lwc:if={hasModels}>
+      <template lwc:if={missingCount}><div class="border-b border-line bg-amber-500/5 px-5 py-2 text-xs text-amber-700">{missingCount} role(s) have no model yet — the runtime cannot spawn them.</div></template>
+      <div class="overflow-x-auto"><table class="table">
+        <thead><tr><th>Role</th><th class="w-72">Model</th><th class="w-32">Effort</th><th class="w-28">Max iterations</th><th>Pricing</th></tr></thead>
+        <tbody>
+          <template for:each={rows} for:item="r">
+            <tr key={r.role} data-role={r.role}>
+              <td><div class="flex items-center gap-2"><x-badge value={r.role} label={r.label} color={r.color}></x-badge><template lwc:if={r.missing}><span class="h-1.5 w-1.5 rounded-full bg-amber-400" title="No model bound"></span></template></div><div class="mt-0.5 text-[11px] text-content-subtle">{r.desc}</div></td>
+              <td><x-form-field name="modelId" type="select" value={r.modelId} options={modelOptions} placeholder="— choose model —" compact onchange={update}></x-form-field></td>
+              <td><x-form-field name="effort" type="select" value={r.effort} options={effortOptions} compact onchange={update}></x-form-field></td>
+              <td><x-form-field name="maxIterations" type="number" min="1" step="1" value={r.maxIterations} compact onchange={update}></x-form-field></td>
+              <td class="text-xs text-content-muted"><span class="font-mono">{r.cost}</span><template lwc:if={r.thinking}><span class="ml-2 text-brand-600">thinking</span></template></td>
+            </tr>
+          </template>
+        </tbody>
+      </table></div>
+    </template>
+    <template lwc:else><div class="p-4"><x-empty-state icon="ai" title="Add a model first" description="Role bindings need at least one enabled model."></x-empty-state></div></template>
+  </div>
+</template>

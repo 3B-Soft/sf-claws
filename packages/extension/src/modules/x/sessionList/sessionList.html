@@ -1,0 +1,57 @@
+<template lwc:render-mode="light">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="flex items-center gap-2 border-b border-line px-3 py-2">
+      <template lwc:if={canback}><button class="rounded-md px-1.5 py-1 text-[12px] text-content-muted hover:bg-surface-sunken hover:text-content-strong" onclick={onBack} title="Back to current session">←</button></template>
+      <div class="min-w-0 flex-1">
+        <div class="text-[13px] font-semibold text-content-strong">Sessions</div>
+        <div class="truncate text-[11px] text-content-muted">{orgLabel}</div>
+      </div>
+      <button class="rounded-md px-2 py-1 text-[11px] text-content-muted hover:bg-surface-sunken hover:text-content" onclick={onReload}>Refresh</button>
+      <button class="rounded-lg bg-brand-500 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-500 disabled:opacity-50" disabled={creating} onclick={onNew}>{creatingLabel}</button>
+    </div>
+
+    <template lwc:if={error}><div class="mx-3 mt-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">{error}</div></template>
+    <template lwc:if={cacheNote}><div class="mx-3 mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-700">{cacheNote}</div></template>
+
+    <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+      <template lwc:if={contextHint}>
+        <div class="mb-3 rounded-xl border border-brand-500/20 bg-brand-500/5 p-3">
+          <div class="text-[11px] font-medium text-brand-700">{contextHint}</div>
+          <div class="mt-1 text-[11px] text-content-muted">A new session captures this page context so the assistant knows where you are.</div>
+        </div>
+      </template>
+
+      <template lwc:if={loading}>
+        <div class="flex items-center gap-2 py-6 text-[12px] text-content-muted"><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span>Loading sessions…</div>
+      </template>
+      <template lwc:elseif={loadError}>
+        <x-empty-state tone="rose" title="Couldn't load sessions" description={loadError}><div class="mt-2"><button class="rounded-lg border border-line-strong px-3 py-1 text-[12px] hover:bg-surface-sunken" onclick={onReload}>Retry</button></div></x-empty-state>
+      </template>
+      <template lwc:elseif={isEmpty}>
+        <x-empty-state tone="brand" title="No sessions yet for this org" description="Start a session and ask anything about this org — records, fields, flows, errors, or a change you want to make.">
+          <div class="mt-3"><button class="rounded-lg bg-brand-500 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-500 disabled:opacity-50" disabled={creating} onclick={onNew}>{creatingLabel}</button></div>
+        </x-empty-state>
+      </template>
+      <template lwc:else>
+        <ul class="space-y-1.5">
+          <template for:each={rows} for:item="s">
+            <li key={s.id}>
+              <button class="w-full rounded-xl border border-line bg-surface px-3 py-2 text-left transition hover:border-brand-500/40 hover:bg-surface" data-id={s.id} onclick={onPick}>
+                <div class="flex items-center gap-2">
+                  <span class="min-w-0 flex-1 truncate text-[13px] font-medium text-content-strong">{s.title}</span>
+                  <span class={s.statusCls}><template lwc:if={s.isRunning}><span class="h-1.5 w-1.5 rounded-full bg-current pulse-dot"></span></template>{s.statusLabel}</span>
+                </div>
+                <div class="mt-1 flex items-center gap-2 text-[11px] text-content-subtle">
+                  <span>{s.when}</span>
+                  <template lwc:if={s.cost}><span>·</span><span>{s.cost}</span></template>
+                  <template lwc:if={s.helpful}><span class="ml-auto rounded bg-emerald-500/15 px-1.5 text-emerald-700">helpful</span></template>
+                  <template lwc:if={s.unhelpful}><span class="ml-auto rounded bg-rose-500/15 px-1.5 text-rose-700">not helpful</span></template>
+                </div>
+              </button>
+            </li>
+          </template>
+        </ul>
+      </template>
+    </div>
+  </div>
+</template>

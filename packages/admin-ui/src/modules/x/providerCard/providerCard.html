@@ -1,0 +1,26 @@
+<template lwc:render-mode="light">
+  <div class="card card-pad">
+    <div class="flex items-start gap-3">
+      <div class={badgeCls}>{badgeText}</div>
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2"><h3 class="text-sm font-semibold text-content-strong">{label}</h3><x-badge value={statusValue} label={statusLabel} color={statusColor} dot></x-badge></div>
+        <p class="mt-0.5 text-xs text-content-muted">{desc}</p>
+        <div class="mt-2 flex flex-wrap gap-x-4 text-[11px] text-content-subtle"><span>Endpoint: <span class="mono text-content-muted">{currentBaseUrl}</span></span><template lwc:if={updated}><span>{updated}</span></template></div>
+      </div>
+    </div>
+    <template lwc:if={editing}>
+      <div class="mt-4 rounded-lg border border-line bg-canvas p-4">
+        <x-form-field label="API key" name="apiKey" type="password" value={apiKey} placeholder={placeholder} hint="Stored encrypted on the server; never shown again." mono required onchange={handleKey}></x-form-field>
+        <x-form-field label="Base URL (optional)" name="baseUrl" type="url" value={baseUrl} placeholder="https://api.example.com" hint="Only for proxies / gateways." mono onchange={handleBase}></x-form-field>
+        <div class="flex justify-end gap-2"><button class="btn-secondary btn-sm" onclick={cancel}>Cancel</button><button class="btn-primary btn-sm" onclick={save} disabled={cannotSave}>Save key</button></div>
+      </div>
+    </template>
+    <template lwc:else>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button class="btn-secondary btn-sm" onclick={startEdit}><x-icon name="edit" cls="h-3.5 w-3.5"></x-icon>{editLabel}</button>
+        <button class="btn-secondary btn-sm" onclick={test} disabled={testing}><template lwc:if={testing}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template><template lwc:else><x-icon name="bolt" cls="h-3.5 w-3.5"></x-icon></template>Test connection</button>
+      </div>
+      <template lwc:if={testResult}><div class={testCls}>{testMessage}</div></template>
+    </template>
+  </div>
+</template>

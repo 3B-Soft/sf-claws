@@ -1,0 +1,82 @@
+<template lwc:render-mode="light">
+  <template lwc:if={error}><x-error-state error={error} onretry={load}></x-error-state></template>
+  <template lwc:elseif={loading}><x-skeleton variant="text" rows="6"></x-skeleton></template>
+  <template lwc:else>
+    <template lwc:if={configured}>
+      <div class="card mb-4 flex flex-wrap items-center gap-3 px-5 py-3">
+        <x-icon name="git" cls="h-5 w-5 text-content-muted"></x-icon>
+        <a href={repoUrl} target="_blank" rel="noopener" class="link font-medium">{repoName}</a>
+        <x-badge value={repo.commitStrategy} color="brand"></x-badge>
+        <x-badge value={tokenStatus} color={tokenColor} dot></x-badge>
+        <span class="mono text-content-subtle">default: {repo.defaultBranch} · prefix: {repo.branchPrefix}</span>
+        <div class="ml-auto flex items-center gap-2">
+          <button class="btn-secondary btn-sm" onclick={test} disabled={testing}><template lwc:if={testing}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template><template lwc:else><x-icon name="bolt" cls="h-3.5 w-3.5"></x-icon></template>Test</button>
+          <button class="btn-ghost btn-sm text-content-subtle hover:text-rose-700" onclick={remove} title="Remove repository settings"><x-icon name="trash" cls="h-3.5 w-3.5"></x-icon></button>
+        </div>
+        <template lwc:if={testResult}><div class={testCls}><x-icon name={testIcon} cls="h-4 w-4"></x-icon><span>{testMessage}</span><template lwc:if={testExtra}><span class="text-content-muted">· {testExtra}</span></template></div></template>
+      </div>
+      <div class="mb-5"><x-tabs tabs={sections} active={section} onselect={selectSection}></x-tabs></div>
+    </template>
+    <template lwc:else>
+      <div class="mb-4 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3 text-sm text-brand-700"><span class="font-medium">No repository configured.</span> Point this client at the SFDX repo where the harness commits metadata and documentation.</div>
+    </template>
+
+    <template lwc:if={isSettings}>
+      <div class="card card-pad max-w-3xl">
+        <div class="grid gap-x-4 sm:grid-cols-2">
+          <x-form-field label="Owner" name="owner" value={f.owner} placeholder="acme-org" mono required onchange={handleField}></x-form-field>
+          <x-form-field label="Repository" name="repo" value={f.repo} placeholder="salesforce-metadata" mono required onchange={handleField}></x-form-field>
+          <x-form-field label="Default branch" name="defaultBranch" value={f.defaultBranch} mono onchange={handleField}></x-form-field>
+          <x-form-field label="Branch prefix" name="branchPrefix" value={f.branchPrefix} mono hint="Harness branches are created under this prefix." onchange={handleField}></x-form-field>
+          <x-form-field label="Source root" name="sourceRoot" value={f.sourceRoot} mono hint="SFDX package directory inside the repo." onchange={handleField}></x-form-field>
+          <x-form-field label="Docs root" name="docsRoot" value={f.docsRoot} mono hint="Where session documentation is committed." onchange={handleField}></x-form-field>
+        </div>
+        <x-form-field label="Commit strategy" name="commitStrategy" type="select" value={f.commitStrategy} options={strategyOptions} hint={strategyHint} onchange={handleField}></x-form-field>
+        <x-form-field label={tokenLabel} name="token" type="password" value={f.token} placeholder="github_pat_…" hint={tokenHint} mono onchange={handleField}></x-form-field>
+        <div class="flex justify-end"><button class="btn-primary" onclick={save} disabled={cannotSave}>Save settings</button></div>
+      </div>
+    </template>
+
+    <template lwc:if={isBranches}>
+      <div class="card">
+        <div class="flex items-center justify-between border-b border-line px-5 py-3"><h3 class="text-sm font-semibold text-content-strong">Branches</h3><button class="btn-secondary btn-sm" onclick={loadBranches}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon>Refresh</button></div>
+        <template lwc:if={branchesLoading}><x-skeleton rows="5"></x-skeleton></template>
+        <template lwc:elseif={branchesError}><div class="p-4"><x-error-state error={branchesError} compact onretry={loadBranches}></x-error-state></div></template>
+        <template lwc:elseif={hasBranches}>
+          <ul class="divide-y divide-line">
+            <template for:each={branchRows} for:item="b">
+              <li key={b.id} class="flex flex-wrap items-center gap-3 px-5 py-2.5">
+                <x-icon name="git" cls="h-4 w-4 text-content-subtle"></x-icon>
+                <a href={b.url} target="_blank" rel="noopener" class="mono text-content-strong hover:text-brand-600">{b.name}</a>
+                <template lwc:if={b.isDefault}><x-badge value="default" color="brand"></x-badge></template>
+                <template lwc:if={b.isHarness}><x-badge value="harness" color="violet"></x-badge></template>
+                <template lwc:if={b.protectedFlag}><x-badge value="protected" color="rose"></x-badge></template>
+                <span class="mono text-content-subtle">{b.sha}</span>
+                <span class="ml-auto flex gap-1.5"><button class="btn-ghost btn-xs" data-name={b.name} onclick={commitsOf}>Commits</button><template lwc:if={b.isDefault}></template><template lwc:else><button class="btn-secondary btn-xs" data-name={b.name} onclick={compareBranch}>Compare</button></template></span>
+              </li>
+            </template>
+          </ul>
+        </template>
+        <template lwc:else><div class="p-4"><x-empty-state icon="git" title="No branches returned" description="Check the token permissions and repository name."></x-empty-state></div></template>
+      </div>
+    </template>
+
+    <template lwc:if={isCompare}><x-branch-compare client-id={clientId} branches={branchOptions} base={compareBase} head={compareHead} repo-url={repoUrl}></x-branch-compare></template>
+
+    <template lwc:if={isCommits}>
+      <div class="card">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3"><h3 class="text-sm font-semibold text-content-strong">Commits</h3><div class="flex items-center gap-2"><div class="w-56"><x-form-field name="branch" type="select" value={commitsBranch} options={branchOptions} placeholder="— branch —" compact onchange={handleCommitsBranch}></x-form-field></div><button class="btn-secondary btn-sm" onclick={loadCommits}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon></button></div></div>
+        <template lwc:if={commitsLoading}><x-skeleton rows="6"></x-skeleton></template>
+        <template lwc:elseif={commitsError}><div class="p-4"><x-error-state error={commitsError} compact onretry={loadCommits}></x-error-state></div></template>
+        <template lwc:elseif={hasCommits}>
+          <ul class="divide-y divide-line">
+            <template for:each={commitRows} for:item="c">
+              <li key={c.id} class="flex items-center gap-3 px-5 py-2.5"><a href={c.url} target="_blank" rel="noopener" class="kbd hover:text-brand-600">{c.sha}</a><span class="min-w-0 flex-1 truncate text-sm text-content-strong">{c.title}</span><span class="text-xs text-content-muted">{c.author}</span><span class="text-xs text-content-subtle">{c.when}</span></li>
+            </template>
+          </ul>
+        </template>
+        <template lwc:else><div class="p-4"><x-empty-state icon="git" title="No commits" description="Pick a branch to list its commits."></x-empty-state></div></template>
+      </div>
+    </template>
+  </template>
+</template>

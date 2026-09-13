@@ -1,0 +1,76 @@
+<template lwc:render-mode="light">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="flex items-center gap-1 border-b border-line px-3 py-1.5">
+      <button class={notesCls} data-view="notes" onclick={onView}>Notes</button>
+      <button class={docsCls} data-view="docs" onclick={onView}>Docs</button>
+      <button class={historyCls} data-view="history" onclick={onView}>Org history</button>
+      <button class="ml-auto rounded-md px-2 py-1 text-[11px] text-content-muted hover:bg-surface-sunken hover:text-content" onclick={onReload}>Refresh</button>
+    </div>
+    <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+
+      <template lwc:if={isNotes}>
+        <template lwc:if={hasSession}>
+          <template lwc:if={hasNotes}>
+            <div class="mb-2 text-[11px] text-content-subtle">{noteCount} scratchpad note(s) written by the agents while working on this session.</div>
+            <div class="space-y-2">
+              <template for:each={notes} for:item="n">
+                <div key={n.key}>
+                  <button class={n.cls} data-id={n.id} onclick={onToggle}>
+                    <div class="flex items-center gap-2"><span class={n.roleCls}>{n.roleText}</span><span class="min-w-0 flex-1 truncate text-[12px] font-semibold text-content-strong">{n.title}</span><span class="text-[10px] text-content-subtle">{n.when}</span></div>
+                    <template lwc:if={n.tagsText}><div class="mt-1 truncate text-[10px] text-violet-700/80">{n.tagsText}</div></template>
+                  </button>
+                  <template lwc:if={n.open}><div class="mt-1 rounded-xl border border-line bg-canvas p-3"><x-markdown-view text={n.content}></x-markdown-view></div></template>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template lwc:else><x-empty-state title="No notes yet" description="Sub-agents jot down findings, decisions and open questions here while they work. Notes are the session's working memory."></x-empty-state></template>
+        </template>
+        <template lwc:else><x-empty-state tone="brand" title="No session selected" description="Open a session in the Chat tab to see its notes and documentation."></x-empty-state></template>
+      </template>
+
+      <template lwc:elseif={isDocs}>
+        <template lwc:if={hasSession}>
+          <template lwc:if={hasDocs}>
+            <div class="space-y-2">
+              <template for:each={docs} for:item="d">
+                <div key={d.key}>
+                  <button class={d.cls} data-id={d.id} onclick={onToggle}>
+                    <div class="flex items-center gap-2"><span class="min-w-0 flex-1 truncate text-[12px] font-semibold text-content-strong">{d.title}</span><template lwc:if={d.committed}><span class="rounded bg-emerald-500/15 px-1 font-mono text-[10px] text-emerald-700">{d.sha}</span></template></div>
+                    <div class="mt-0.5 truncate font-mono text-[10px] text-content-subtle">{d.path}</div>
+                    <template lwc:if={d.summary}><div class="mt-1 text-[11px] text-content-muted">{d.summary}</div></template>
+                    <div class="mt-1 flex gap-2 text-[10px] text-content-subtle"><span>{d.when}</span><template lwc:if={d.tagsText}><span>· {d.tagsText}</span></template></div>
+                  </button>
+                  <template lwc:if={d.open}><div class="mt-1 rounded-xl border border-line bg-canvas p-3"><x-markdown-view text={d.markdown}></x-markdown-view></div></template>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template lwc:else><x-empty-state title="No documentation yet" description="When the assistant finishes a change it writes technical and end-user documentation here (and commits it to the repo)."></x-empty-state></template>
+        </template>
+        <template lwc:else><x-empty-state tone="brand" title="No session selected" description="Open a session in the Chat tab to see its documentation, or browse the org history."></x-empty-state></template>
+      </template>
+
+      <template lwc:else>
+        <template lwc:if={orgDocsLoading}><div class="flex items-center gap-2 py-4 text-[12px] text-content-muted"><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span>Loading history for {orgLabel}…</div></template>
+        <template lwc:if={orgDocsError}><div class="mb-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">{orgDocsError}</div></template>
+        <template lwc:if={hasHistory}>
+          <div class="space-y-2">
+            <template for:each={historyRows} for:item="d">
+              <div key={d.key}>
+                <button class={d.cls} data-id={d.id} onclick={onToggle}>
+                  <div class="flex items-center gap-2"><span class="min-w-0 flex-1 truncate text-[12px] font-semibold text-content-strong">{d.title}</span><template lwc:if={d.isCurrent}><span class="rounded bg-brand-500/20 px-1 text-[10px] text-brand-700">this session</span></template><template lwc:if={d.committed}><span class="rounded bg-emerald-500/15 px-1 font-mono text-[10px] text-emerald-700">{d.sha}</span></template></div>
+                  <template lwc:if={d.summary}><div class="mt-1 text-[11px] text-content-muted">{d.summary}</div></template>
+                  <div class="mt-1 flex gap-2 text-[10px] text-content-subtle"><span>{d.when}</span><template lwc:if={d.tagsText}><span>· {d.tagsText}</span></template></div>
+                  <template lwc:if={d.stale}><div class="mt-1 text-[10px] text-amber-700">{d.staleNote}</div></template>
+                </button>
+                <template lwc:if={d.open}><div class="mt-1 rounded-xl border border-line bg-canvas p-3"><x-markdown-view text={d.markdown}></x-markdown-view></div></template>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template lwc:elseif={historyIdle}><x-empty-state title="No history for this org yet" description="Documentation from every session on this org accumulates here — it is the persistent memory the assistant reads before starting new work."></x-empty-state></template>
+      </template>
+    </div>
+  </div>
+</template>
