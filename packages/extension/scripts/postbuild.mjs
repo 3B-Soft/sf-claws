@@ -3,6 +3,8 @@
  *  1. builds the remaining targets with the shared config factory (options page, background
  *     service worker, content script) — one self-contained file each, stable names
  *  2. copies src/manifest.json into dist/ (version from package.json) and checks references
+ *     --store: strips the localhost origin dev builds use, so the Web Store upload asks only for
+ *     permissions a published user can actually need
  *  3. generates deterministic PNG icons (16/32/48/128) with a tiny hand-written encoder
  *  4. zips dist/ into release/sf-claws.zip (deflate, fixed timestamps => reproducible)
  */
@@ -189,9 +191,16 @@ for (const target of ['options', 'background', 'content']) {
 }
 
 // ---------------------------------------------------------------- 2. manifest
+const store = process.argv.includes('--store');
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8'));
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+// package.json is the single source of the version. A copy in src/manifest.json would be
+// overwritten here and silently drift, so the one that matters is the one nobody edits by hand.
+if (manifest.version) throw new Error('src/manifest.json must not declare "version": bump it in package.json instead');
 manifest.version = pkg.version;
+// The Chrome Web Store lists every optional origin on the install prompt. localhost is only ever
+// useful to someone running the control plane on their own machine from an unpacked build.
+if (store) manifest.optional_host_permissions = (manifest.optional_host_permissions ?? []).filter((o) => !o.includes('localhost'));
 fs.writeFileSync(path.join(dist, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 
 // sanity: every referenced file must exist
@@ -211,8 +220,6 @@ for (const r of refs) if (!fs.existsSync(path.join(dist, r))) throw new Error(`m
 // ---------------------------------------------------------------- 4. zip
 fs.mkdirSync(releaseDir, { recursive: true });
 const files = walk(dist).sort();
-fs.writeFileSync(
-  path.join(releaseDir, 'sf-claws.zip'),
-  zip(files.map((f) => ({ name: path.relative(dist, f).split(path.sep).join('/'), data: fs.readFileSync(f) }))),
-);
-console.log(`extension: dist/ ready (${files.length} files), release/sf-claws.zip written (v${manifest.version})`);
+const zipName = store ? `sf-claws-store-${manifest.version}.zip` : 'sf-claws.zip';
+fs.writeFileSync(path.join(releaseDir, zipName), zip(files.map((f) => ({ name: path.relative(dist, f).split(path.sep).join('/'), data: fs.readFileSync(f) }))));
+console.log(`extension: dist/ ready (${files.length} files), release/${zipName} written (v${manifest.version})`);

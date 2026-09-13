@@ -1,4 +1,4 @@
-# SF Claws for Salesforce — Chrome extension
+# SF Claws — Chrome extension
 
 Manifest V3 side-panel extension for Salesforce admins. It follows the active Salesforce tab, resolves the registered org on the SF Claws control plane, and gives you a chat with the agent swarm, staged metadata changes with visual diffs, a SOQL/metadata explorer, notes/documentation and the GitHub view — all from the side panel.
 
@@ -44,12 +44,15 @@ Opening a session loads `GET /sessions/:id/snapshot`, stores it in IndexedDB (`s
 ## Development
 
 ```
-npm run dev -w @sf-claws/extension     # vite build --watch (reload the extension in Chrome after changes)
-npm run build -w @sf-claws/extension   # production build + postbuild (manifest, icons, zip)
+npm run dev -w @sf-claws/extension          # vite build --watch (reload the extension in Chrome after changes)
+npm run build -w @sf-claws/extension        # production build + postbuild (manifest, icons, zip)
+npm run build:store -w @sf-claws/extension  # the Chrome Web Store upload — see docs/PUBLISHING.md
 ```
 
 - Stack: LWC (light DOM) + Tailwind v4 + Vite 7; components under `src/modules/x/`, plain modules under `src/lib/`.
 - The side panel also runs as a plain web page (`dist/sidepanel.html` via `file://` or any static server): `chrome.*` is shimmed by `src/lib/storage.js` / `src/lib/bridge.js` (storage falls back to `localStorage`). Add `?sfUrl=https://acme.lightning.force.com/lightning/r/Account/001.../view` to simulate a Salesforce tab context.
+- The version comes from `package.json` alone; `src/manifest.json` must not declare one (postbuild
+  throws if it does, because a second copy silently drifts from the one that ships).
 - `scripts/postbuild.mjs` bundles `src/content.js` as a classic IIFE (content scripts cannot be ES modules; `src/recorder.js` is bundled into `background.js` as a self-contained function passed to `executeScript`), copies `src/manifest.json` (version taken from `package.json`), generates the 16/32/48/128 PNG icons with a tiny deterministic PNG encoder, and writes the release zip.
 - CSP: `script-src 'self'` — no inline scripts; all JS is loaded from `assets/`.
 

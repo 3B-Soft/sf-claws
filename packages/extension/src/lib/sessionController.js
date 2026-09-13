@@ -74,6 +74,8 @@ if (typeof document !== 'undefined') document.addEventListener('visibilitychange
 
 function publish(extra = {}) {
   if (!transcript) return;
+  // The action badge and the "a card is waiting" notification live in the service worker; it only
+  // learns about confirmations from here, because the panel is what holds the event stream.
   reportAwaiting();
   sessionStore.set((s) => ({
     items: [...transcript.items],
@@ -89,9 +91,6 @@ function publish(extra = {}) {
     version: s.version + 1,
     ...extra,
   }));
-  // The action badge and the "a card is waiting" notification live in the service worker; it only
-  // learns about confirmations from here, because the panel is what holds the event stream.
-  reportPendingConfirmations(transcript.pendingConfirmations);
 }
 
 /** Apply a snapshot-like payload (SessionSnapshot or the cached copy) to a fresh transcript. */
@@ -381,7 +380,6 @@ export function closeSession() {
   transcript = null;
   currentId = null;
   rawEvents = [];
-  reportPendingConfirmations([]);
   sessionStore.set(initial());
   reportAwaiting();
 }

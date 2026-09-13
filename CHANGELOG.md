@@ -4,6 +4,20 @@ All notable changes to SF Claws are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Opening a session in the side panel threw `ReferenceError: reportPendingConfirmations is not
+  defined` and rendered an empty transcript. Two call sites were left behind by a rename; the
+  correct `reportAwaiting()` was already being called beside both.
+
+### Added
+
+- `npm run build:store -w @sf-claws/extension` produces the Chrome Web Store upload, and
+  `tools/store-assets.mjs` generates the listing images from the real screenshots. See
+  `docs/PUBLISHING.md`.
+
 ## [0.0.1] - 2026-09-13
 
 First public release. Everything below was built by 3B for its own operations team before being
