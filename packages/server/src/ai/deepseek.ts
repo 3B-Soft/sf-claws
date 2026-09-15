@@ -16,8 +16,6 @@ export const DEEPSEEK_DIALECT: OpenAiDialect = {
   label: 'DeepSeek',
   defaultBaseUrl: 'https://api.deepseek.com/v1',
   defaultTestModel: 'deepseek-chat',
-  maxTokensParam: 'max_tokens',
-  reasoning: 'reasoning_content',
 };
 
 export class DeepseekProvider extends OpenAiCompatibleProvider {

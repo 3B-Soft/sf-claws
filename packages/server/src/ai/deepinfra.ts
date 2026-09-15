@@ -15,8 +15,6 @@ export const DEEPINFRA_DIALECT: OpenAiDialect = {
   label: 'DeepInfra',
   defaultBaseUrl: 'https://api.deepinfra.com/v1/openai',
   defaultTestModel: 'deepseek-ai/DeepSeek-V3',
-  maxTokensParam: 'max_tokens',
-  reasoning: 'reasoning_content',
 };
 
 export class DeepinfraProvider extends OpenAiCompatibleProvider {

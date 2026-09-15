@@ -109,4 +109,12 @@ git pull
 docker build -t sf-claws:latest .
 ```
 
-3. Back up your data, then restart the container. The new database change runs by itself when the server starts.
+3. Back up your data, then restart the container. The new database change runs by itself when the server starts, but take a copy of the database first:
+    ```
+    docker run --rm -v sf-claws-data:/data -v "$PWD":/backup alpine tar czf /backup/sf-claws-data-$(date +%F).tgz -C /data .
+    ```
+    Then click Redeploy on the project in Hostinger's Docker Manager, or
+    ```
+    docker compose up -d --force-recreate
+    ```
+    Restarting alone isn't enough, because the container has to be recreated from the new image. Your data lives in the sf-claws-data volume, so it carries over.

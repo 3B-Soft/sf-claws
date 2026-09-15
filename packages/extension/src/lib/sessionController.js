@@ -450,7 +450,7 @@ export async function sendMessage(text) {
   const id = currentId;
   if (!id || !text.trim()) return;
   sessionStore.set({ sending: true });
-  transcript.addLocalUser(text);
+  const localKey = transcript.addLocalUser(text);
   transcript.status = 'running';
   publish();
   try {
@@ -458,6 +458,9 @@ export async function sendMessage(text) {
     // a session, and "the record I am looking at" is usually what the next prompt is about.
     await api.sendMessage(id, text, undefined, currentPageContextForApi());
   } catch (e) {
+    if (currentId !== id) throw e;
+    // Not accepted, so never echoed: the text goes back into the composer instead.
+    transcript.removeLocalUser(localKey);
     transcript.status = sessionStore.get().session?.status || 'idle';
     publish({ error: e.message });
     throw e;

@@ -1,8 +1,8 @@
 <template lwc:render-mode="light">
   <template lwc:if={hasSession}>
-    <x-chat-thread onshowlist={onShowList} onnewsession={onNew}></x-chat-thread>
+    <x-chat-thread class="contents" onshowlist={onShowList} onnewsession={onNew}></x-chat-thread>
   </template>
   <template lwc:else>
-    <x-session-list onselect={onSelect} onnew={onNew} creating={creating} error={error} canback={hasBack}></x-session-list>
+    <x-session-list class="contents" onselect={onSelect} onnew={onNew} creating={creating} error={error} canback={hasBack}></x-session-list>
   </template>
 </template>

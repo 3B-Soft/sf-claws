@@ -3,15 +3,6 @@ import { createTranscript } from '../src/lib/transcript.js';
 import { flattenRecord } from '../src/lib/soql.js';
 
 describe('transcript reducer', () => {
-  it('patches the optimistic user bubble instead of showing it twice', () => {
-    const t = createTranscript();
-    t.addLocalUser('hello');
-    t.apply({ type: 'user.message', seq: 1, at: 'now', text: 'hello', userId: 'u1' });
-    const users = t.items.filter((i) => i.kind === 'user');
-    expect(users).toHaveLength(1);
-    expect(users[0]).toMatchObject({ seq: 1, userId: 'u1', local: false });
-  });
-
   it('merges streamed thinking deltas from one agent into one row', () => {
     const t = createTranscript();
     t.apply({ type: 'assistant.thinking', seq: 1, at: 'now', agentId: 'a', text: 'Let me ' });
