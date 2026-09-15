@@ -115,6 +115,6 @@ docker build -t sf-claws:latest .
     ```
     Then click Redeploy on the project in Hostinger's Docker Manager, or
     ```
-    run docker compose up -d --force-recreate
+    docker compose up -d --force-recreate
     ```
     Restarting alone isn't enough, because the container has to be recreated from the new image. Your data lives in the sf-claws-data volume, so it carries over.
