@@ -44,6 +44,8 @@
     <x-form-field label="Label" name="label" value={form.label} placeholder="UAT sandbox" required onchange={handleField}></x-form-field>
     <x-form-field label="Kind" name="kind" type="select" value={form.kind} options={kindOptions} onchange={handleField}></x-form-field>
     <x-form-field label="Login URL" name="loginUrl" type="url" value={form.loginUrl} hint="login.salesforce.com, test.salesforce.com or a MyDomain URL." mono onchange={handleField}></x-form-field>
+    <x-form-field label="Consumer Key" name="consumerKey" value={form.consumerKey} hint="From the Connected App this org authorizes through. Its callback URL is this server's URL followed by /api/v1/oauth/salesforce/callback." required mono onchange={handleField}></x-form-field>
+    <x-form-field label="Consumer Secret" name="consumerSecret" type="password" value={form.consumerSecret} hint="Leave empty for a PKCE-only app. Stored encrypted." mono onchange={handleField}></x-form-field>
     <x-form-field label="API version" name="apiVersion" value={form.apiVersion} mono onchange={handleField}></x-form-field>
     <x-form-field type="toggle" label="Protected" name="protected" value={form.protected} hint="Require explicit confirmation and policy checks for every deploy (always on for production)." onchange={handleField}></x-form-field>
     <div slot="footer"><button class="btn-secondary" onclick={closeCreate}>Cancel</button><button class="btn-primary" onclick={create} disabled={cannotCreate}>Add &amp; connect</button></div>

@@ -79,8 +79,13 @@ export async function clientRoutes(app: FastifyInstance, ctx: AppContext) {
     clientFor(req);
     const admin = requireRole(req, 'admin');
     const { clientId } = req.params as any;
-    const body = parse(CreateOrgRequest, req.body);
-    const org = ctx.repos.orgs.create({ clientId, ...body, protected: body.protected || body.kind === 'production' });
+    const { consumerSecret, ...body } = parse(CreateOrgRequest, req.body);
+    const org = ctx.repos.orgs.create({
+      clientId,
+      ...body,
+      protected: body.protected || body.kind === 'production',
+      consumerSecretEnc: consumerSecret ? ctx.secrets.encryptFor(clientId, consumerSecret) : null,
+    });
     ctx.repos.audit.log({ userId: admin.id, action: 'org.create', target: org.id, details: { label: org.label, kind: org.kind } });
     reply.status(201);
     return publicOrg(org);

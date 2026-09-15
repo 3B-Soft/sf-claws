@@ -9,7 +9,7 @@ a reviewable change looks like.
 npm install
 npm run build -w @sf-claws/shared          # the contract package; UIs read its dist/
 cp packages/server/.env.example packages/server/.env
-# fill MASTER_KEY, JWT_SECRET, SF_CLIENT_ID/SECRET
+# fill MASTER_KEY, JWT_SECRET
 npm run dev:server                          # http://localhost:8787
 npm run dev:admin                           # http://localhost:5173
 npm run build -w @sf-claws/extension        # load packages/extension/dist as an unpacked extension

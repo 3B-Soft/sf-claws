@@ -94,7 +94,7 @@ guarantee, and how to run one instance per client when a client requires it.
 ```bash
 npm install
 npm run build -w @sf-claws/shared
-cp packages/server/.env.example packages/server/.env   # fill MASTER_KEY, JWT_SECRET, SF_CLIENT_ID/SECRET
+cp packages/server/.env.example packages/server/.env   # fill MASTER_KEY, JWT_SECRET
 npm run dev:server        # http://localhost:8787  (API + serves the admin UI build when present)
 npm run dev:admin         # http://localhost:5173
 npm run build -w @sf-claws/extension   # then load packages/extension/dist as an unpacked extension

@@ -134,6 +134,8 @@ export const SalesforceOrg = z.object({
   instanceUrl: z.string().nullable().optional(),
   /** https://login.salesforce.com, https://test.salesforce.com or a MyDomain login URL. */
   loginUrl: z.string(),
+  /** Consumer Key of the org's own Connected App; null means the server-wide SF_CLIENT_ID. */
+  consumerKey: z.string().nullable().optional(),
   apiVersion: z.string().default('62.0'),
   username: z.string().nullable().optional(),
   status: OrgConnectionStatus,

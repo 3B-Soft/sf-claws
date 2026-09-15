@@ -97,6 +97,10 @@ export const CreateOrgRequest = z.object({
   loginUrl: z.string().url().default('https://login.salesforce.com'),
   apiVersion: z.string().default('62.0'),
   protected: z.boolean().default(false),
+  /** Consumer Key of the Connected App this org authorizes through. Omitted only when the server sets SF_CLIENT_ID as a fallback. */
+  consumerKey: z.string().trim().min(1).optional(),
+  /** Consumer Secret; omit for a PKCE-only app. Stored tenant-encrypted and never returned. */
+  consumerSecret: z.string().optional(),
 });
 // GET  /orgs/:orgId/connect/start -> { url }   (Salesforce OAuth web-server flow w/ PKCE; redirect back to server)
 // GET  /oauth/salesforce/callback (server-side)

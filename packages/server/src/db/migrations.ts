@@ -496,4 +496,14 @@ ALTER TABLE client_members ADD COLUMN role TEXT NOT NULL DEFAULT 'member' CHECK 
 CREATE INDEX idx_client_members_client ON client_members(client_id);
 `,
   },
+  {
+    name: 'org_connected_app',
+    sql: `
+-- Each org authorizes through its own Connected App, entered when the org is added. The consumer key
+-- identifies the app and is not secret; the consumer secret is tenant-encrypted like the tokens. NULL
+-- keeps the server-wide SF_CLIENT_ID, which orgs connected before this hold refresh tokens for.
+ALTER TABLE orgs ADD COLUMN consumer_key TEXT;
+ALTER TABLE orgs ADD COLUMN consumer_secret_enc TEXT;
+`,
+  },
 ];

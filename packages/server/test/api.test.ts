@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/http/app.js';
 import { makeContext } from './helpers.js';
+import { ConnectionManager } from '../src/salesforce/connection.js';
 
 describe('http api', () => {
   let app: FastifyInstance;
@@ -54,11 +55,17 @@ describe('http api', () => {
       method: 'POST',
       url: `/api/v1/clients/${clientId}/orgs`,
       headers: auth(),
-      payload: { label: 'Prod', kind: 'production', loginUrl: 'https://login.salesforce.com' },
+      payload: { label: 'Prod', kind: 'production', loginUrl: 'https://login.salesforce.com', consumerKey: 'org-key', consumerSecret: 'org-secret' },
     });
     expect(o.statusCode).toBe(201);
     orgId = o.json().id;
     expect(o.json().protected).toBe(true); // production auto-protected
+    expect(o.json().consumerKey).toBe('org-key');
+    expect(JSON.stringify(o.json())).not.toContain('org-secret');
+    // The org's own Connected App wins over the server-wide SF_CLIENT_ID.
+    const oauth2 = new ConnectionManager(ctx.repos, ctx.config, ctx.secrets, ctx.log).oauth2(ctx.repos.orgs.byId(orgId)!);
+    expect(oauth2.clientId).toBe('org-key');
+    expect(oauth2.clientSecret).toBe('org-secret');
     const gh = await app.inject({
       method: 'PUT',
       url: `/api/v1/clients/${clientId}/github`,

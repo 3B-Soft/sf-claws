@@ -94,7 +94,7 @@ export class SalesforceService {
     const org = this.repos.orgs.byId(orgId);
     if (!org) throw new HttpError(404, 'NOT_FOUND', 'Org not found');
     const { verifier } = pkcePair();
-    const oauth2 = this.connections.oauth2(org.loginUrl, verifier);
+    const oauth2 = this.connections.oauth2(org, verifier);
     const state = newId('st');
     this.repos.oauthStates.create(state, orgId, userId, verifier);
     const url = oauth2.getAuthorizationUrl({ scope: 'api refresh_token web openid', state, prompt: 'login consent' } as any);
@@ -112,7 +112,7 @@ export class SalesforceService {
     if (!st) throw badRequest('OAuth state is invalid or expired. Start the connection again.');
     const org = this.repos.orgs.byId(st.orgId);
     if (!org) throw new HttpError(404, 'NOT_FOUND', 'Org not found');
-    const oauth2 = this.connections.oauth2(org.loginUrl, st.codeVerifier);
+    const oauth2 = this.connections.oauth2(org, st.codeVerifier);
     const jsforce = (await import('jsforce')).default;
     const conn = new jsforce.Connection({ oauth2, version: org.apiVersion });
     try {
@@ -161,7 +161,7 @@ export class SalesforceService {
     const org = this.repos.orgs.byId(orgId);
     if (org && secrets.refreshTokenEnc) {
       try {
-        await this.connections.oauth2(org.loginUrl).revokeToken(this.secrets.decrypt(secrets.refreshTokenEnc));
+        await this.connections.oauth2(org).revokeToken(this.secrets.decrypt(secrets.refreshTokenEnc));
       } catch {
         /* best effort */
       }

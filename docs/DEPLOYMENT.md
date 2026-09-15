@@ -1,12 +1,15 @@
 # Deployment
 
-## 1. Salesforce Connected App (once, in any org you control)
+## 1. Salesforce Connected App (per org)
+Each org authorizes through a Connected App whose Consumer Key and Secret are entered when the org is added in the admin console (client → Orgs → Add org). Create the app in the client's org, or reuse one app for several orgs you control:
 1. Setup → App Manager → New Connected App. Enable OAuth settings.
 2. Callback URL: `https://<your-server>/api/v1/oauth/salesforce/callback`
 3. Scopes: `api`, `refresh_token, offline_access`, `web`, `openid`.
-4. Enable PKCE ("Require Proof Key for Code Exchange"); disable "Require secret for Web Server Flow" if you prefer PKCE-only (then leave `SF_CLIENT_SECRET` empty).
-5. Copy Consumer Key → `SF_CLIENT_ID`, Consumer Secret → `SF_CLIENT_SECRET`.
-Each client org is authorised by an admin clicking "Connect to Salesforce" in the admin console; the refresh token is stored encrypted. For sandboxes set the org's login URL to `https://test.salesforce.com` (or the MyDomain login URL).
+4. Enable PKCE ("Require Proof Key for Code Exchange"); disable "Require secret for Web Server Flow" if you prefer PKCE-only (then leave the Consumer Secret empty).
+5. Copy the Consumer Key and Consumer Secret into the org's form.
+An admin then clicks "Connect to Salesforce"; the refresh token and consumer secret are stored encrypted with the client's key. Existing orgs can be given their own app with `PATCH /api/v1/orgs/:orgId` `{ "consumerKey": "…", "consumerSecret": "…" }` and then reconnected.
+
+`SF_CLIENT_ID` / `SF_CLIENT_SECRET` in `.env` are optional: a fallback for orgs saved without a Consumer Key (including orgs connected before per-org apps existed). For sandboxes set the org's login URL to `https://test.salesforce.com` (or the MyDomain login URL).
 
 ## 2. GitHub
 Per client, create a fine-grained personal access token (or a GitHub App installation token) with `Contents: read/write` and `Pull requests: read/write` on the client's SFDX repository, and enter it in the client's GitHub tab. The repository must already contain the SFDX project (default `force-app/main/default`).
@@ -19,7 +22,7 @@ In the admin console (super admin): AI → Providers → set a key for any of An
 npm ci
 npm run build
 cd packages/server
-cp .env.example .env    # set PUBLIC_URL, MASTER_KEY, JWT_SECRET, SF_CLIENT_ID/SECRET, CORS_ORIGINS
+cp .env.example .env    # set PUBLIC_URL, MASTER_KEY, JWT_SECRET, CORS_ORIGINS
 NODE_ENV=production node dist/index.js
 ```
 `ADMIN_UI_DIST=../admin-ui/dist` (default) serves the admin console from the same origin, including `/pair?code=` for extension pairing and the OAuth result page. Put the server behind TLS (nginx/Caddy/Cloud Run/etc.); SSE requires proxies to disable response buffering (`X-Accel-Buffering: no` is set).
@@ -55,8 +58,6 @@ services:
       TRUST_PROXY: "true"
       MASTER_KEY: "<openssl rand -base64 32>"
       JWT_SECRET: "<openssl rand -base64 32>"
-      SF_CLIENT_ID: "<consumer key>"
-      SF_CLIENT_SECRET: "<consumer secret>"
     volumes:
       - sf-claws-data:/data
   caddy:

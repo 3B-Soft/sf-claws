@@ -25,24 +25,31 @@ export async function orgRoutes(app: FastifyInstance, ctx: AppContext) {
   app.patch('/orgs/:orgId', async (req) => {
     const o = orgFor(req);
     const admin = requireRole(req, 'admin');
-    const body = parse(
+    const { consumerSecret, ...body } = parse(
       z.object({
         label: z.string().min(1).optional(),
         kind: z.enum(['production', 'sandbox', 'scratch', 'developer']).optional(),
         loginUrl: z.string().url().optional(),
+        consumerKey: z.string().trim().min(1).nullable().optional(),
+        consumerSecret: z.string().nullable().optional(),
         apiVersion: z.string().optional(),
         protected: z.boolean().optional(),
         instructions: AgentInstructions.nullable().optional(),
       }),
       req.body,
     );
-    const updated = ctx.repos.orgs.update(o.id, body)!;
+    const secretPatch = consumerSecret === undefined ? {} : { consumerSecretEnc: consumerSecret ? ctx.secrets.encryptFor(o.clientId, consumerSecret) : null };
+    const updated = ctx.repos.orgs.update(o.id, { ...body, ...secretPatch })!;
     ctx.sf.connections.invalidate(o.id);
     ctx.repos.audit.log({
       userId: admin.id,
       action: 'org.update',
       target: o.id,
-      details: { ...body, ...(body.instructions !== undefined ? { instructions: `${body.instructions?.length ?? 0} chars` } : {}) },
+      details: {
+        ...body,
+        ...(body.instructions !== undefined ? { instructions: `${body.instructions?.length ?? 0} chars` } : {}),
+        ...(consumerSecret !== undefined ? { consumerSecret: consumerSecret ? 'set' : 'cleared' } : {}),
+      },
     });
     return publicOrg(updated);
   });

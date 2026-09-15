@@ -68,11 +68,19 @@ export default class OrgsTab extends LightningElement {
     return ORG_KINDS.map((k) => ({ value: k, label: k[0].toUpperCase() + k.slice(1) }));
   }
   get cannotCreate() {
-    return this.busy || !this.form.label?.trim();
+    return this.busy || !this.form.label?.trim() || !this.form.consumerKey?.trim();
   }
 
   openCreate() {
-    this.form = { label: '', kind: 'sandbox', loginUrl: 'https://test.salesforce.com', apiVersion: '62.0', protected: false };
+    this.form = {
+      label: '',
+      kind: 'sandbox',
+      loginUrl: 'https://test.salesforce.com',
+      apiVersion: '62.0',
+      protected: false,
+      consumerKey: '',
+      consumerSecret: '',
+    };
     this.modalOpen = true;
   }
   closeCreate() {
@@ -94,6 +102,8 @@ export default class OrgsTab extends LightningElement {
         label: this.form.label.trim(),
         kind: this.form.kind,
         loginUrl: this.form.loginUrl,
+        consumerKey: this.form.consumerKey.trim(),
+        consumerSecret: this.form.consumerSecret || undefined,
         apiVersion: this.form.apiVersion || '62.0',
         protected: !!this.form.protected,
       });

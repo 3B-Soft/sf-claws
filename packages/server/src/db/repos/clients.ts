@@ -89,6 +89,7 @@ export class ClientMembersRepo {
 export interface OrgSecrets {
   accessTokenEnc: string | null;
   refreshTokenEnc: string | null;
+  consumerSecretEnc: string | null;
 }
 export interface OrgRow extends SalesforceOrg {
   myDomainHost: string | null;
@@ -96,7 +97,7 @@ export interface OrgRow extends SalesforceOrg {
 }
 
 const ORG_COLS =
-  'id, client_id, label, kind, sf_org_id, instance_url, my_domain_host, login_url, api_version, username, status, protected, instructions, created_at, last_connected_at, last_error';
+  'id, client_id, label, kind, sf_org_id, instance_url, my_domain_host, login_url, consumer_key, api_version, username, status, protected, instructions, created_at, last_connected_at, last_error';
 const toOrg = (r: any): OrgRow => {
   const o = rowToObj<OrgRow>(r, { bools: ['protected'] });
   (o as any).githubRepoId = null;
@@ -124,19 +125,40 @@ export class OrgsRepo {
   }
   secrets(id: string): OrgSecrets {
     return (
-      rowToObj<OrgSecrets>(this.db.prepare('SELECT access_token_enc, refresh_token_enc FROM orgs WHERE id=?').get(id)) ?? {
+      rowToObj<OrgSecrets>(this.db.prepare('SELECT access_token_enc, refresh_token_enc, consumer_secret_enc FROM orgs WHERE id=?').get(id)) ?? {
         accessTokenEnc: null,
         refreshTokenEnc: null,
+        consumerSecretEnc: null,
       }
     );
   }
-  create(input: { clientId: string; label: string; kind: OrgKind; loginUrl: string; apiVersion: string; protected: boolean }): OrgRow {
+  create(input: {
+    clientId: string;
+    label: string;
+    kind: OrgKind;
+    loginUrl: string;
+    apiVersion: string;
+    protected: boolean;
+    consumerKey?: string | null;
+    consumerSecretEnc?: string | null;
+  }): OrgRow {
     const id = newId('org');
     this.db
       .prepare(
-        `INSERT INTO orgs (id, client_id, label, kind, login_url, api_version, status, protected, created_at) VALUES (?, ?, ?, ?, ?, ?, 'disconnected', ?, ?)`,
+        `INSERT INTO orgs (id, client_id, label, kind, login_url, consumer_key, consumer_secret_enc, api_version, status, protected, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'disconnected', ?, ?)`,
       )
-      .run(id, input.clientId, input.label, input.kind, input.loginUrl, input.apiVersion, input.protected ? 1 : 0, nowIso());
+      .run(
+        id,
+        input.clientId,
+        input.label,
+        input.kind,
+        input.loginUrl,
+        input.consumerKey ?? null,
+        input.consumerSecretEnc ?? null,
+        input.apiVersion,
+        input.protected ? 1 : 0,
+        nowIso(),
+      );
     return this.byId(id)!;
   }
   update(
@@ -145,6 +167,8 @@ export class OrgsRepo {
       label: string;
       kind: OrgKind;
       loginUrl: string;
+      consumerKey: string | null;
+      consumerSecretEnc: string | null;
       apiVersion: string;
       protected: boolean;
       status: OrgConnectionStatus;
@@ -163,6 +187,8 @@ export class OrgsRepo {
       label: 'label',
       kind: 'kind',
       loginUrl: 'login_url',
+      consumerKey: 'consumer_key',
+      consumerSecretEnc: 'consumer_secret_enc',
       apiVersion: 'api_version',
       protected: 'protected',
       status: 'status',

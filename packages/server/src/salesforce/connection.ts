@@ -30,13 +30,24 @@ export class ConnectionManager {
     private log: Logger,
   ) {}
 
-  oauth2(loginUrl: string, codeVerifier?: string): OAuth2 {
-    if (!this.config.SF_CLIENT_ID) throw new HttpError(503, 'SF_NOT_CONFIGURED', 'Salesforce Connected App is not configured on the server (SF_CLIENT_ID)');
+  /**
+   * OAuth client for an org's own Connected App. An org saved without a consumer key falls back to
+   * the server-wide SF_CLIENT_ID/SECRET; the secret never mixes across the two, since a refresh token
+   * only works with the app that issued it.
+   */
+  oauth2(org: OrgRow, codeVerifier?: string): OAuth2 {
+    const clientId = org.consumerKey || this.config.SF_CLIENT_ID;
+    if (!clientId) throw new HttpError(400, 'SF_NOT_CONFIGURED', `Org "${org.label}" has no Connected App Consumer Key. Add one to the org before connecting.`);
+    let clientSecret = this.config.SF_CLIENT_SECRET || undefined;
+    if (org.consumerKey) {
+      const enc = this.repos.orgs.secrets(org.id).consumerSecretEnc;
+      clientSecret = enc ? this.secrets.decrypt(enc) : undefined;
+    }
     const o = new jsforce.OAuth2({
-      clientId: this.config.SF_CLIENT_ID,
-      clientSecret: this.config.SF_CLIENT_SECRET || undefined,
+      clientId,
+      clientSecret,
       redirectUri: `${this.config.PUBLIC_URL}/api/v1/oauth/salesforce/callback`,
-      loginUrl,
+      loginUrl: org.loginUrl,
     });
     if (codeVerifier) o.codeVerifier = codeVerifier;
     return o;
@@ -55,7 +66,7 @@ export class ConnectionManager {
     if (!secrets.refreshTokenEnc || !org.instanceUrl)
       throw new HttpError(409, 'ORG_DISCONNECTED', `Org "${org.label}" is not connected. Ask an admin to connect it.`);
     const conn = new jsforce.Connection({
-      oauth2: this.oauth2(org.loginUrl),
+      oauth2: this.oauth2(org),
       instanceUrl: org.instanceUrl,
       accessToken: secrets.accessTokenEnc ? this.secrets.decrypt(secrets.accessTokenEnc) : undefined,
       refreshToken: this.secrets.decrypt(secrets.refreshTokenEnc),
