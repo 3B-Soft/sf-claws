@@ -117,7 +117,9 @@ export class KnowledgeService {
     const snap = await this.repos_.snapshot(source.repoRef, this.tokenFor(source));
     const docs: KnowledgeDoc[] = [];
     for (const [path, content] of snap.files) {
-      if (!/\.mdx?$/i.test(path)) continue;
+      // Dot and underscore folders (.docs, _temp, _emails) and root agent guides are authoring
+      // material in a content repo, not product documentation; they only pollute search.
+      if (!/\.mdx?$/i.test(path) || /(^|\/)[._]/.test(path) || /^(claude|agents)\.md$/i.test(path)) continue;
       const { meta, body } = splitFrontMatter(content);
       docs.push({
         sourceId: source.id,
@@ -151,16 +153,18 @@ export class KnowledgeService {
     const sources = this.forClient(clientId).filter((s) => s.kind === 'docs');
     const terms = query
       .toLowerCase()
-      .split(/\s+/)
+      .split(/[^a-z0-9_]+/)
       .filter((t) => t.length > 2);
     if (!terms.length) return [];
     const results: { doc: KnowledgeDoc; score: number; snippet: string }[] = [];
+    const failures: string[] = [];
     for (const source of sources) {
       let docs: KnowledgeDoc[];
       try {
         docs = await this.corpus(source);
       } catch (e) {
         this.log.warn({ source: source.name, err: (e as Error).message }, 'knowledge source unavailable');
+        failures.push(`"${source.name}": ${(e as Error).message}`);
         continue;
       }
       for (const doc of docs) {
@@ -175,15 +179,23 @@ export class KnowledgeService {
         if (score > 0) results.push({ doc, score, snippet: snippetAround(doc.body, terms[0]) });
       }
     }
+    // No source loaded at all: an empty list would read as "not documented", which is false.
+    // ponytail: a partial failure (one of several sources) still returns the others' hits silently.
+    if (failures.length && failures.length === sources.length) throw new Error(`Product documentation unavailable — ${failures.join('; ')}`);
     return results.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 
   async readDoc(clientId: string, path: string): Promise<KnowledgeDoc | null> {
+    const failures: Error[] = [];
     for (const source of this.forClient(clientId).filter((s) => s.kind === 'docs')) {
-      const docs = await this.corpus(source).catch(() => [] as KnowledgeDoc[]);
+      const docs = await this.corpus(source).catch((e: Error) => {
+        failures.push(e);
+        return [] as KnowledgeDoc[];
+      });
       const hit = docs.find((d) => d.path === path || d.path.endsWith(`/${path}`));
       if (hit) return hit;
     }
+    if (failures.length) throw failures[0];
     return null;
   }
 

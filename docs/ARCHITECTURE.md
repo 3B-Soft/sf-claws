@@ -258,7 +258,12 @@ early so the documentation guarantee can still run, and the configured number st
 
 Two kinds, both configured per deployment with nothing product-specific compiled in:
 
-- **docs** — a repository of markdown loaded as a searchable corpus with a compact index.
+- **docs** — a repository of markdown loaded as a searchable corpus with a compact index. Any
+  layout works, including the product content-repo shape (`products.json`,
+  `<product>/articles|faq/*.md`, `<product>/releases/<version>/index.md`). Dot and underscore
+  folders (`.docs`, `_temp`) and root `CLAUDE.md`/`AGENTS.md` are authoring material and skipped.
+  When no docs source can load (missing token, bad ref), search and read fail with the reason
+  instead of answering "no matches".
 - **repo** — a source repository searched on demand by the `researcher` sub-agent.
 
 `knowledge/repo-store.ts` downloads a branch tarball once and serves grep, read, glob and path

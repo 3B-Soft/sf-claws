@@ -259,6 +259,40 @@ describe('knowledge service', () => {
     expect(ok.ok).toBe(true);
     expect(ok.message).toContain('markdown documents');
   });
+
+  it('searches a product content repo (products.json + <product>/articles|faq|releases) and skips authoring folders', async () => {
+    const ctx = makeContext({
+      fetch: fakeFetch(
+        makeTarball({
+          'products.json': '{"products":[]}',
+          'Claude.md': '# Authoring rules for layout docs',
+          '.docs/release-changelog-guide.md': 'layout guide',
+          '_temp/export.md': 'layout export',
+          'forms/articles/page-layouts.md': '---\ntitle: Page layouts\ntags: layout\n---\nAdd the field to the Contact page layout.',
+          'forms/releases/Version_10/index.md': '---\ntitle: Version 10 Change Log\n---\nLayout fixes.',
+        }),
+      ),
+    });
+    const { client } = await seedClientOrgUser(ctx);
+    ctx.repos.knowledge.create({
+      kind: 'docs',
+      name: 'KnowHow',
+      repoRef: 'acme/knowhow',
+      guidance: '',
+      scope: 'global',
+      tokenEnc: ctx.secrets.encrypt('gh-token'),
+    });
+    const hits = await ctx.knowledge.searchDocs(client.id, 'Contact page-layout?');
+    expect(hits.map((h) => h.doc.path)).toEqual(['forms/articles/page-layouts.md', 'forms/releases/Version_10/index.md']);
+  });
+
+  it('reports an unusable documentation source instead of returning no matches', async () => {
+    const ctx = makeContext({ fetch: fakeFetch(makeTarball(SAMPLE)) });
+    const { client } = await seedClientOrgUser(ctx);
+    ctx.repos.knowledge.create({ kind: 'docs', name: 'No token', repoRef: 'acme/product', guidance: '', scope: 'global' });
+    await expect(ctx.knowledge.searchDocs(client.id, 'compliance')).rejects.toThrow(/"No token".*no access token/i);
+    await expect(ctx.knowledge.readDoc(client.id, 'docs/setup.md')).rejects.toThrow(/no access token/i);
+  });
 });
 
 describe('regex safety guard', () => {

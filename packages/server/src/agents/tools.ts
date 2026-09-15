@@ -233,11 +233,13 @@ export const TOOLS: ToolDef[] = [
     roles: READERS,
     run: async (input, ctx) => {
       const hits = await ctx.app.knowledge.searchDocs(ctx.session.clientId, String(input.query), Number(input.limit ?? 8));
-      if (!hits.length)
-        return {
-          text: `No product documentation matches "${input.query}". Try fewer or different keywords, or say plainly that it is not documented.`,
-          output: [],
-        };
+      if (!hits.length) {
+        const text = ctx.app.knowledge.forClient(ctx.session.clientId).some((s) => s.kind === 'docs')
+          ? `No product documentation matches "${input.query}". Try fewer or different keywords, or say plainly that it is not documented.`
+          : 'No product documentation sources are linked for this client. Say so rather than answering from general knowledge.';
+        // `message`, not an empty list: the panel renders output, and a bare [] reads as a broken step.
+        return { text, output: { message: text } };
+      }
       return {
         text: hits.map((h) => `### ${h.doc.title} (${h.doc.sourceName})\npath: ${h.doc.path}\n${h.snippet}`).join('\n\n'),
         output: hits.map((h) => ({ path: h.doc.path, title: h.doc.title, source: h.doc.sourceName })),
@@ -1328,7 +1330,10 @@ export const TOOLS: ToolDef[] = [
       const notes = input.title
         ? ([ctx.app.repos.notes.byTitle(ctx.session.id, input.title)].filter(Boolean) as any[])
         : ctx.app.repos.notes.list(ctx.session.id);
-      if (!notes.length) return { text: input.title ? `No note titled "${input.title}"` : 'Scratchpad is empty.', output: [] };
+      if (!notes.length) {
+        const text = input.title ? `No note titled "${input.title}"` : 'Scratchpad is empty.';
+        return { text, output: { message: text } };
+      }
       return {
         text: notes.map((n) => `## ${n.title} (by ${n.role})\n${clip(n.content, 20_000)}`).join('\n\n'),
         output: notes.map((n) => ({ id: n.id, title: n.title, role: n.role, tags: n.tags, updatedAt: n.updatedAt })),

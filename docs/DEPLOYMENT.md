@@ -95,7 +95,7 @@ See `packages/server/.env.example`. `CORS_ORIGINS` must include the admin UI ori
 
 Access logs never contain bearer tokens: the `Authorization` header is redacted, and so are the `token`, `code` and `state` query parameters (the SSE stream authenticates with `?token=` because `EventSource` cannot set headers).
 
-## 7. Reflecting changes
+## 7. Reflecting Server changes
 
 If a change has been made in the repo, to reflect that change in the built VPS, follow:
 
@@ -118,3 +118,18 @@ docker build -t sf-claws:latest .
     docker compose up -d --force-recreate
     ```
     Restarting alone isn't enough, because the container has to be recreated from the new image. Your data lives in the sf-claws-data volume, so it carries over.
+
+## 8. Reflecting Chrome extension changes
+
+1. Run commands to re-generate the extension package
+
+```
+npm run build -w @sf-claws/shared
+npm run build -w @sf-claws/extension
+```
+
+- Loaded unpacked: open chrome://extensions, click reload on SF Claws, then close and reopen the side panel.
+
+- Installed from the zip or the Web Store: hand out the new packages/extension/release/sf-claws.zip.
+
+For the store, bump version in packages/extension/package.json first (it's still 0.0.1), or Chrome won't take the update.
