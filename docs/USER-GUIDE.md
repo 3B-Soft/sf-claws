@@ -7,7 +7,7 @@
 5. Approval cards explain *why* the AI wants to run a command and *what* exactly it will run; choose Allow once, Allow for this session (when offered) or Deny. While a card is waiting the extension icon shows the count, and if the side panel is out of view you get a system notification (switch it off on the extension's Options page). The notification needs the side panel open somewhere: the panel is what listens to the session, so with it closed nothing can alert you.
 6. The agent can read what your browser recorded (console errors, failed requests) when it asks and you have a session open on that tab: recording starts when the session opens, stays on that tab only, and credential-looking parameters (`sid`, `token`, ...) are scrubbed before anything is stored.
 7. After a deploy the harness reads every component back out of the org and shows you what actually landed, with anything missing marked clearly. Then commit to GitHub when asked; documentation is written automatically to the Notes tab and the repository.
-8. Rate the session (helpful / not helpful) — it helps your agency improve the harness.
+8. Rate the session (helpful / not helpful) — it helps your agency improve the harness. When you are done, press **Complete**: the session moves to the **Completed** tab of the session list (sending it another message reopens it). **New** reuses an untouched blank session on the same org instead of creating another.
 9. If a session dies (server restart, closed laptop), open it again and press **Resume**; the harness continues from its saved todo list and notes.
 
 Keep an eye on the API limits gauge; the harness warns when an org is close to its daily limits.

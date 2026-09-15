@@ -242,4 +242,21 @@ describe('session runtime', () => {
     expect(ctx.repos.confirmations.pending(session.id)).toHaveLength(0);
     expect(ctx.repos.deploys.list(session.id).filter((d) => !d.checkOnly)).toHaveLength(0);
   });
+
+  it('reuses an untouched session on New session, and stops once it has a message or is completed', async () => {
+    const provider = new FakeProvider([() => text('Hello.')]);
+    const ctx = makeContext({ provider });
+    disablePlanMode(ctx);
+    const { user, org } = await seedClientOrgUser(ctx);
+    const a = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+    expect(ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' }).id).toBe(a.id);
+
+    ctx.runtime.startTurn(a.id, user.id, 'hi');
+    await waitForIdle(ctx, a.id);
+    const b = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+    expect(b.id).not.toBe(a.id);
+
+    expect(ctx.runtime.completeSession(b.id).status).toBe('completed');
+    expect(ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' }).id).not.toBe(b.id);
+  });
 });

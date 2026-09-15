@@ -10,6 +10,7 @@
         </div>
       </div>
       <template lwc:if={isBusy}><button class="rounded-lg border border-rose-500/40 px-2.5 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-500/10 disabled:opacity-50" disabled={cancelBusy} onclick={onCancel}>{cancelLabel}</button></template>
+      <template lwc:if={canComplete}><button class="rounded-lg border border-line-strong px-2.5 py-1 text-[11px] text-content hover:bg-surface-sunken" onclick={onComplete} title="Mark this session done">Complete</button></template>
       <button class="rounded-lg border border-line-strong px-2.5 py-1 text-[11px] text-content hover:bg-surface-sunken" onclick={onNew}>New</button>
     </div>
 

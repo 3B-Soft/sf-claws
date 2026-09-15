@@ -25,7 +25,7 @@
         <nav class="flex gap-1 border-b border-line bg-canvas px-2 py-1.5">
           <template for:each={tabs} for:item="t">
             <button key={t.id} class={t.cls} data-id={t.id} onclick={onTab}>
-              <span class="truncate">{t.label}</span>
+              <span class="min-w-0 truncate">{t.label}</span>
               <template lwc:if={t.badge}><span class={t.badgeCls}>{t.badge}</span></template>
             </button>
           </template>

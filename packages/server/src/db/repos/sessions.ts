@@ -159,6 +159,9 @@ export class EventsRepo {
       .prepare('INSERT INTO session_events (session_id, seq, type, at, payload) VALUES (?, ?, ?, ?, ?)')
       .run(sessionId, seq, ev.type, ev.at, JSON.stringify(ev));
   }
+  hasType(sessionId: string, type: SessionEvent['type']): boolean {
+    return !!this.db.prepare('SELECT 1 FROM session_events WHERE session_id=? AND type=? LIMIT 1').get(sessionId, type);
+  }
   listAfter(sessionId: string, after = 0, limit = 5000): SessionEvent[] {
     return this.db
       .prepare('SELECT payload FROM session_events WHERE session_id=? AND seq>? ORDER BY seq LIMIT ?')

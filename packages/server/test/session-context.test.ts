@@ -169,8 +169,9 @@ describe('browser capture', () => {
   it('refuses a response from another session, since a requestId is a bearer token for a pending call', async () => {
     const ctx = makeContext();
     const { user, org } = await seedClientOrgUser(ctx);
-    const a = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
-    const b = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+    // Titled, so the second is a separate session rather than the untouched first one reused.
+    const a = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual', title: 'A' });
+    const b = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual', title: 'B' });
     let requestId = '';
     ctx.runtime.bus.subscribe(a.id, (e: any) => {
       if (e.type === 'browser.request') requestId = e.requestId;
@@ -188,8 +189,9 @@ describe('session feedback', () => {
   it('keeps "not yet rated" distinct from "rated unhelpful"', async () => {
     const ctx = makeContext();
     const { user, org } = await seedClientOrgUser(ctx);
-    const a = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
-    const b = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+    // Titled, so the second is a separate session rather than the untouched first one reused.
+    const a = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual', title: 'A' });
+    const b = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual', title: 'B' });
     // A nullable boolean read back as false made every unrated session render as "not helpful".
     expect(ctx.repos.sessions.byId(a.id)!.helpful).toBeNull();
     ctx.repos.sessions.update(b.id, { helpful: false });

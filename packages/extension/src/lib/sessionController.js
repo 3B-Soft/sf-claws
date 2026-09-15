@@ -533,6 +533,15 @@ export async function feedback(helpful, note) {
   schedulePersist();
 }
 
+/** Mark the current session done; the server's session.status event updates the thread. */
+export async function complete() {
+  const id = currentId;
+  if (!id) return;
+  const row = await api.complete(id);
+  sessionStore.set((s) => ({ session: s.session ? { ...s.session, status: row.status, completedAt: row.completedAt } : s.session }));
+  schedulePersist();
+}
+
 export async function createSession({ title } = {}) {
   const { org, uiMode } = appStore.get();
   if (!org) throw new Error('No org resolved for this tab');

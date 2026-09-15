@@ -11,6 +11,7 @@ export default class SessionList extends LightningElement {
   @api error = '';
   @api canback = false;
   sessions = [];
+  view = 'active'; // 'active' | 'completed'
   loading = true;
   loadError = '';
   fromCache = false;
@@ -70,19 +71,41 @@ export default class SessionList extends LightningElement {
     return this.fromCache ? `Offline — showing sessions cached ${fmtRelative(this.cachedAt)}` : '';
   }
 
-  get rows() {
-    return this.sessions.map((s) => ({
-      id: s.id,
-      title: s.title || 'Untitled session',
-      when: fmtRelative(s.updatedAt || s.createdAt),
-      statusCls: statusClass(s.status),
-      statusLabel: statusLabel(s.status),
-      cost: s.costUsd ? fmtUsd(s.costUsd) : '',
-      helpful: s.helpful === true,
-      unhelpful: s.helpful === false,
-      note: truncate(s.feedbackNote || '', 60),
-      isRunning: s.status === 'running' || s.status === 'awaiting_confirmation',
+  get viewTabs() {
+    const done = this.sessions.filter((s) => s.status === 'completed').length;
+    return [
+      { id: 'active', label: 'Active', count: this.sessions.length - done },
+      { id: 'completed', label: 'Completed', count: done },
+    ].map((t) => ({
+      ...t,
+      cls: `rounded-md px-2.5 py-1 text-[12px] font-medium ${t.id === this.view ? 'bg-surface-sunken text-content-strong' : 'text-content-muted hover:text-content'}`,
     }));
+  }
+  get viewEmpty() {
+    return this.rows.length === 0;
+  }
+  get viewEmptyText() {
+    return this.view === 'completed' ? 'No completed sessions yet.' : 'No active sessions. Start a new one above.';
+  }
+  onView(e) {
+    this.view = e.currentTarget.dataset.id;
+  }
+
+  get rows() {
+    return this.sessions
+      .filter((s) => (s.status === 'completed') === (this.view === 'completed'))
+      .map((s) => ({
+        id: s.id,
+        title: s.title || 'Untitled session',
+        when: fmtRelative(s.updatedAt || s.createdAt),
+        statusCls: statusClass(s.status),
+        statusLabel: statusLabel(s.status),
+        cost: s.costUsd ? fmtUsd(s.costUsd) : '',
+        helpful: s.helpful === true,
+        unhelpful: s.helpful === false,
+        note: truncate(s.feedbackNote || '', 60),
+        isRunning: s.status === 'running' || s.status === 'awaiting_confirmation',
+      }));
   }
   get creatingLabel() {
     return this.creating ? 'Creating…' : 'New session';

@@ -149,6 +149,7 @@ export function createApi({ getBaseUrl, getToken }) {
       }),
     confirm: (id, confirmationId, optionId, answerText) => api.post(`/sessions/${id}/confirm`, { body: { confirmationId, optionId, answerText } }),
     cancel: (id) => api.post(`/sessions/${id}/cancel`),
+    complete: (id) => api.post(`/sessions/${id}/complete`),
     browserCapture: (id, body) => api.post(`/sessions/${id}/browser-capture`, { body }),
     feedback: (id, helpful, note) => api.post(`/sessions/${id}/feedback`, { body: note ? { helpful, note } : { helpful } }),
     workspace: (id) => api.get(`/sessions/${id}/workspace`),

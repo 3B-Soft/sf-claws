@@ -118,6 +118,13 @@ export class SessionRuntime {
     const org = this.app.repos.orgs.byId(input.orgId);
     if (!org) throw notFound('Org');
     if (input.taskId && !this.app.repos.tasks.byId(input.taskId)) throw notFound('Task');
+    // A plain "New session" reuses the caller's newest untouched one on this org rather than piling up blanks.
+    if (!input.taskId && !input.projectId && !input.title) {
+      const blank = this.app.repos.sessions
+        .list({ userId: input.userId, orgId: org.id, status: 'idle', limit: 20 })
+        .find((s) => !s.taskId && !s.projectId && !this.active.has(s.id) && !this.app.repos.events.hasType(s.id, 'user.message'));
+      if (blank) return this.app.repos.sessions.update(blank.id, { pageContext: input.pageContext })!;
+    }
     const title =
       input.title?.trim() ||
       (input.taskId
@@ -136,6 +143,12 @@ export class SessionRuntime {
     this.bus.emit(s.id, { type: 'session.status', status: 'idle', message: 'Session created' });
     this.app.repos.audit.log({ userId: input.userId, action: 'session.create', target: s.id, details: { orgId: org.id } });
     return s;
+  }
+
+  /** The user marks the session done. Emitted as a status event so an open panel updates live. */
+  completeSession(sessionId: string): SessionRow {
+    this.setStatus(sessionId, 'completed', 'Completed by user');
+    return this.app.repos.sessions.byId(sessionId)!;
   }
 
   isRunning(sessionId: string): boolean {

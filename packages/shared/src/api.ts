@@ -194,7 +194,8 @@ export const UpdateTaskRequest = z.object({
 
 // ----------------------------- sessions ------------------------------------
 
-// POST /sessions                -> Session
+// POST /sessions                -> Session (with no title/project/task, returns the caller's newest
+//                                  idle session on that org that has no user message yet, if any)
 export const CreateSessionRequest = z.object({
   orgId: z.string(),
   projectId: z.string().optional(),
@@ -228,6 +229,7 @@ export type BrowserCaptureResponse = z.infer<typeof BrowserCaptureResponse>;
 export const ConfirmRequest = z.object({ confirmationId: z.string(), optionId: z.string(), answerText: z.string().max(4000).optional() });
 // POST /sessions/:id/cancel
 // POST /sessions/:id/feedback  { helpful, note? }
+// POST /sessions/:id/complete  -> Session (status 'completed'; 400 while running)
 export const FeedbackRequest = z.object({ helpful: z.boolean(), note: z.string().max(2000).optional() });
 // GET  /sessions/:id/events?after=<seq>   -> text/event-stream (SSE)
 // GET  /sessions/:id/history?after=<seq>  -> SessionEvent[] (replay)

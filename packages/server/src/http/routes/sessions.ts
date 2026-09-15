@@ -156,7 +156,7 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
   app.post('/sessions/:id/complete', async (req) => {
     const { session } = access(req);
     if (ctx.runtime.isRunning(session.id)) throw badRequest('Session is running');
-    return ctx.repos.sessions.update(session.id, { status: 'completed', completedAt: new Date().toISOString() });
+    return ctx.runtime.completeSession(session.id);
   });
 
   app.get('/sessions/:id/history', async (req) => {

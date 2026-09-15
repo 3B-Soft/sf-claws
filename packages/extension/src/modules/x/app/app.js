@@ -92,8 +92,8 @@ export default class App extends LightningElement {
         ...t,
         active,
         badge: badgeFor[t.id] || 0,
-        cls: `relative flex-1 min-w-0 px-2 py-2 text-[12px] font-medium rounded-lg transition-colors ${active ? 'bg-surface-sunken text-content-strong shadow-inner' : 'text-content-muted hover:text-content hover:bg-surface-sunken'}`,
-        badgeCls: `ml-1 inline-flex min-w-[16px] h-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${t.id === 'chat' ? 'bg-amber-600 text-white' : 'bg-brand-500 text-white'}`,
+        cls: `relative inline-flex flex-1 min-w-0 items-center justify-center px-2 py-2 text-[12px] font-medium rounded-lg transition-colors ${active ? 'bg-surface-sunken text-content-strong shadow-inner' : 'text-content-muted hover:text-content hover:bg-surface-sunken'}`,
+        badgeCls: `ml-1 inline-flex shrink-0 min-w-[16px] h-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${t.id === 'chat' ? 'bg-amber-600 text-white' : 'bg-brand-500 text-white'}`,
       };
     });
   }

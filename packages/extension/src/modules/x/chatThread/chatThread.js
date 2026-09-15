@@ -4,6 +4,7 @@ import {
   sessionStore,
   sendMessage,
   cancel,
+  complete,
   feedback,
   confirm,
   reconnect,
@@ -334,6 +335,16 @@ export default class ChatThread extends LightningElement {
   }
   onNew() {
     this.dispatchEvent(new CustomEvent('newsession'));
+  }
+  get canComplete() {
+    return !this.isBusy && this.status !== 'completed' && !this.session.sending;
+  }
+  async onComplete() {
+    try {
+      await complete();
+    } catch (e) {
+      sessionStore.set({ error: e.message });
+    }
   }
   onToggleSwarm() {
     this.swarmOpen = !this.swarmOpen;

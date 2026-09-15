@@ -33,6 +33,12 @@
         </x-empty-state>
       </template>
       <template lwc:else>
+        <div class="mb-2 flex gap-1">
+          <template for:each={viewTabs} for:item="t">
+            <button key={t.id} class={t.cls} data-id={t.id} onclick={onView}>{t.label} <span class="text-content-subtle">{t.count}</span></button>
+          </template>
+        </div>
+        <template lwc:if={viewEmpty}><div class="py-4 text-center text-[12px] text-content-muted">{viewEmptyText}</div></template>
         <ul class="space-y-1.5">
           <template for:each={rows} for:item="s">
             <li key={s.id}>
