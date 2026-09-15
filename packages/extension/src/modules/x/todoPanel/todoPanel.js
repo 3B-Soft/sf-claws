@@ -4,7 +4,7 @@ import { LightningElement, api } from 'lwc';
 export default class TodoPanel extends LightningElement {
   static renderMode = 'light';
   @api items = [];
-  collapsed = false;
+  collapsed = true;
 
   get list() {
     return Array.isArray(this.items) ? this.items : [];

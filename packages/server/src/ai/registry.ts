@@ -99,7 +99,7 @@ export const DEFAULT_MODELS: Omit<AiModel, 'id' | 'createdAt'>[] = [
 
 /** Default role bindings by provider model id (resolved to db ids on seed). */
 export const DEFAULT_BINDINGS: { role: AgentRole; modelId: string; effort: RoleModelBinding['effort']; maxIterations: number }[] = [
-  { role: 'orchestrator', modelId: 'claude-opus-5', effort: 'high', maxIterations: 60 },
+  { role: 'orchestrator', modelId: 'claude-opus-5', effort: 'xhigh', maxIterations: 60 },
   { role: 'analyst', modelId: 'claude-sonnet-5', effort: 'medium', maxIterations: 40 },
   { role: 'metadata_builder', modelId: 'claude-opus-5', effort: 'high', maxIterations: 40 },
   { role: 'flow_builder', modelId: 'claude-opus-5', effort: 'high', maxIterations: 40 },

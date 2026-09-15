@@ -11,3 +11,4 @@ coverage/
 .DS_Store
 packages/extension/release/
 workspaces/
+packages/server/eval/output/

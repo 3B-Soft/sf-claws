@@ -79,6 +79,7 @@ export function buildSoql({ sobject, fields, filters, fieldTypes, orderBy, order
 
 /** Flatten a record for table display (relationship objects -> dotted keys). */
 export function flattenRecord(rec, prefix = '') {
+  if (typeof prefix !== 'string') prefix = ''; // callers pass this straight to .map(), whose second argument is the index
   const out = {};
   for (const [k, v] of Object.entries(rec || {})) {
     if (k === 'attributes') continue;

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { makeContext, seedClientOrgUser, FakeProvider, text, toolCall, waitForIdle, disablePlanMode, nextEvent } from './helpers.js';
 import type { LlmResponse } from '../src/ai/types.js';
 import { LlmError } from '../src/ai/types.js';
+import { PLAN_REVISIONS_NOTE } from '../src/agents/runtime.js';
 
 /**
  * These exercise the new runtime behaviour through the real agent loop rather than calling the
@@ -90,6 +91,13 @@ describe('plan mode', () => {
     const s = ctx.repos.sessions.byId(session.id)!;
     expect(s.planApprovedAt).toBeFalsy();
     expect(s.planRevision).toBe(1);
+    // The rejection is kept for the doc writer's Lesson section and the next session's planner.
+    const note = ctx.repos.notes.byTitle(session.id, PLAN_REVISIONS_NOTE)!;
+    expect(note).toBeTruthy();
+    expect(note.tags).toContain('lesson');
+    expect(note.content).toContain('Revision 1 REJECTED');
+    expect(note.content).toContain('Use a formula field instead');
+    expect(note.content).toContain('v1');
   });
 });
 

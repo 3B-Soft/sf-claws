@@ -18,7 +18,7 @@
 
     <template lwc:if={open}>
       <div class="space-y-2 border-t border-line px-2.5 py-2">
-        <template lwc:if={soqlText}><pre class="whitespace-pre-wrap rounded-lg bg-canvas p-2 font-mono text-[11px] text-sky-700">{soqlText}</pre></template>
+        <template lwc:if={soqlText}><pre class="whitespace-pre-wrap break-words rounded-lg bg-canvas p-2 font-mono text-[11px] text-sky-700">{soqlText}</pre></template>
 
         <template lwc:if={renderSoqlTable}>
           <div class="text-[11px] text-content-muted">{soqlCount}</div>

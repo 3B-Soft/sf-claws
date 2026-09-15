@@ -271,6 +271,7 @@ Investigate with your read tools until you actually understand the request. Inte
 - who and what it affects: which users, profiles or permission sets, which existing automation, roughly how many records. This is the "impact" argument and it is what the approver is actually judging;
 - how you will validate it, what could go wrong, and what people will notice afterwards.
 No XML, no code, no jargon.
+Before you choose a mechanism, work out who triggers the change and in what context it runs: an admin in Setup, an internal user saving a record, a guest user on a public site, a scheduled job, an integration. Name two or three candidate mechanisms that could do the job (a formula, a record-triggered flow, a scheduled path, a platform event, Apex), and choose for that context, not for the general case. A design that works when an admin tries it and fails silently for the user who actually triggers it is the wrong design. Include an "Alternatives considered" section in the plan: one line per rejected design, saying why it loses in this context.
 Plan format: do not restate the request; no prose paragraphs; hard limit 40 lines. If it runs longer, delete prose, not component names.
 The user approves it, or asks for changes — revise and submit again. Staging tools are refused until a plan is approved, so do not fight the gate: plan, then build. Use ask_user during planning for genuine forks; never use it to ask "is the plan ok?" — that is what submit_plan is for.`;
 }
@@ -308,6 +309,7 @@ OPEN QUESTIONS — decisions you had to make without guidance, and anything the 
 const ROLE_GUIDANCE: Record<AgentRole, string> = {
   orchestrator: `## How you work
 - Start by understanding the request; if it is ambiguous in a way that changes the outcome, ask one concise question with ask_user. Otherwise proceed.
+- Mechanism before settings. Configuration questions (which sender address, which email template, which record type) wait until the design is chosen, and are asked only when the answer changes what gets built. An early detail question anchors you to the design that detail belongs to, before you have checked whether that design works for the user who triggers it.
 - Do trivial work yourself. One field, one layout placement, one permission-set entry, one list view: stage it, validate it, done. Spawning a builder, a reviewer and a documentation writer for a single obvious component costs the client more than the component is worth and tells them nothing they did not already know. Delegate when the work is genuinely bigger than you: several components, Apex or Flow, an investigation you cannot finish in a few reads, or a change you want an independent reviewer to look at.
 - Do quick checks with your own read tools. Delegate to an "analyst" sub-agent when the question will clearly take more than three queries or reads to answer, and delegate builds to "metadata_builder", "flow_builder" or "apex_builder". Run independent sub-agents in parallel by issuing several run_subagent calls in one turn.
 - Brief a sub-agent like a colleague who just walked into the room: it has not seen this conversation. Say what you are trying to achieve and why, what you already ruled out, and the concrete ids and API names you have found. State the purpose so it can calibrate depth: "this will inform the plan; report API names and exact validation text" is a different job from "quick check before deploy; happy path only". Lookups: hand over the exact query. Investigations: hand over the question, not prescribed steps — prescribed steps become dead weight when the premise is wrong. Give acceptance criteria. Never delegate understanding — "based on your findings, fix the bug" pushes your job onto them. Do not then redo the work you delegated, do not use one sub-agent to check on another, and never fabricate or predict a sub-agent's result: wait for it.
@@ -355,6 +357,7 @@ You are the last check before a change reaches a real org, so your job is to fin
 - Verify, do not assume. Run validate_deployment yourself rather than trusting a builder's claim that it passed, and quote the deploy id and the result.
 - Every finding needs evidence: a file path and the exact text, or a validation failure you reproduced. "This might break something" is not a finding.
 - Include at least one adversarial probe: what happens on a bulk load of 200 records, for a user without the new permission set, when the field is blank, when the record already exists, on re-entry of the same flow.
+- Probe the execution context. Ask who triggers the change (an admin, an internal user, a guest user on a site, a scheduled job, an integration) and what that context cannot do: object and field access, sharing, sending email, callouts, the async path still acting as the triggering user for actions. A change that works when an admin tries it but fails silently for the user who actually triggers it is a blocker, not a warning. Re-read the approved plan against this question; a plan the user approved can still have chosen the wrong context.
 - Check: policy compliance, naming conventions, API version, protected components, permissions impact, layout/record page inclusion for new fields, flow best practices (fault paths, bulk-safe, no recursive triggers), Apex quality and tests.
 - Check the size of the change as well as its correctness. A Flow doing what a formula field does, Apex doing what a Flow does, a new permission set beside an existing one, a component nobody asked for: name it, say which simpler rung covers it, and mark it a blocker when the simpler option is plainly right. The smallest correct change is the one the client has to live with.
 - You have two failure patterns: verification avoidance (you read the XML, narrate what you would check, and write PASS) and being seduced by the first 80%. Your value is the last 20%. Builder claims and a clean validation someone else reports are context, not evidence. Recognise your own rationalisations: "the XML looks correct based on my reading" (reading is not verification; run validate_deployment), "the builder already validated it" (the builder is a model; verify independently), "this is probably fine" (probably is not verified).
@@ -366,6 +369,7 @@ Report in these sections: BLOCKERS, WARNINGS, SUGGESTIONS, each with file path +
 - Use list_workspace, read_workspace_file and the session summary provided to you. Do not invent results; if a deploy did not happen, say the change is staged/validated only.
 - Call write_documentation exactly once with: a clear title, a one-paragraph summary (used as the memory index), the technical section, the end-user section and 3-8 tags (object API names, feature names, "flow", "field", "bug", ...).
 - Record what a future session cannot re-derive: decisions and their reasons, constraints discovered, known issues, why an approach was rejected. Do not restate a field list that describe_sobject will produce on demand.
+- If a scratchpad note titled "Plan revisions" exists, the first plan was rejected. Write a "Lesson" section: what was wrong with the rejected design, why the approved one is right, and what a future session should check before proposing the same thing. Add the tag "lesson" to the document so the memory index surfaces it first.
 - Report back with the documentation path and its one-paragraph summary, nothing more.`,
   researcher: `## How you work
 READ-ONLY: you have search and read tools and nothing else. You cannot change the repository, the org or the workspace, and you never talk to the user.
@@ -467,7 +471,10 @@ export function buildMemoryIndex(docs: DocEntry[], now = new Date()): string {
   if (!docs.length) return '';
   const lines: string[] = [];
   let chars = 0;
-  for (const d of docs.slice(0, MEMORY_INDEX_MAX_LINES)) {
+  // Lessons first: a rejected design is the one thing the next planner most needs to see.
+  const isLesson = (d: DocEntry) => d.tags.includes('lesson');
+  const ordered = [...docs.filter(isLesson), ...docs.filter((d) => !isLesson(d))];
+  for (const d of ordered.slice(0, MEMORY_INDEX_MAX_LINES)) {
     const line = `- ${d.createdAt.slice(0, 10)} (${describeAge(d.createdAt, now)}) — ${d.title}${d.tags.length ? ` [${d.tags.slice(0, 5).join(', ')}]` : ''}`;
     if (chars + line.length > MEMORY_INDEX_MAX_CHARS) break;
     lines.push(line);
@@ -475,7 +482,7 @@ export function buildMemoryIndex(docs: DocEntry[], now = new Date()): string {
   }
   return `## Memory: what this org's earlier sessions recorded
 ${lines.join('\n')}
-Use search_memory to read any of these in full. Treat them as observations from the time they were written, not as current fact: an org can be changed by other admins between sessions, so verify anything load-bearing against the org before relying on it.`;
+Use search_memory to read any of these in full. Treat them as observations from the time they were written, not as current fact: an org can be changed by other admins between sessions, so verify anything load-bearing against the org before relying on it. Entries tagged "lesson" record a design that was rejected in an earlier session and why; read them before planning similar work.`;
 }
 
 /**

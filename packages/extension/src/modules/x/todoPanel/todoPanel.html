@@ -10,7 +10,7 @@
       <div class="mx-3 h-1 overflow-hidden rounded bg-surface-sunken"><div class={barCls} style={barStyle}></div></div>
       <template lwc:if={collapsed}><div class="h-2"></div></template>
       <template lwc:else>
-        <ul class="space-y-0.5 px-3 pb-2 pt-2">
+        <ul class="max-h-40 space-y-0.5 overflow-y-auto px-3 pb-2 pt-2">
           <template for:each={rows} for:item="t">
             <li key={t.key} class="flex items-start gap-2">
               <span class={t.glyphCls}>{t.glyph}</span>

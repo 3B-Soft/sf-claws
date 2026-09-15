@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { makeContext, seedClientOrgUser, FakeProvider, text, toolCalls, waitForIdle } from './helpers.js';
 import { anthropicSystemBlocks } from '../src/ai/anthropic.js';
 import { splitSystemPrompt, SYSTEM_CACHE_BOUNDARY } from '../src/ai/types.js';
-import { DYNAMIC_BOUNDARY, buildPromptSections, parseReviewVerdict, compactInstructionsFrom, stripAnalysis } from '../src/agents/prompts.js';
+import { DYNAMIC_BOUNDARY, buildPromptSections, buildMemoryIndex, parseReviewVerdict, compactInstructionsFrom, stripAnalysis } from '../src/agents/prompts.js';
 import { PromptCacheProbe, describeCacheBreak } from '../src/agents/cache-probe.js';
 import { PolicyRules } from '@sf-claws/shared';
 
@@ -166,5 +166,33 @@ describe('prompt helpers', () => {
     expect(compactInstructionsFrom('# Acme\n## Compact instructions\nKeep every Case number.\n## Other\nx')).toBe('Keep every Case number.');
     expect(compactInstructionsFrom('no such block')).toBeNull();
     expect(stripAnalysis('<analysis>thinking</analysis>\n1. Primary request')).toBe('1. Primary request');
+  });
+});
+
+describe('memory index', () => {
+  it('lists lessons before routine documents, however old they are', () => {
+    const doc = (title: string, createdAt: string, tags: string[]) =>
+      ({
+        id: title,
+        sessionId: 's',
+        clientId: 'c',
+        orgId: 'o',
+        path: `${title}.md`,
+        title,
+        markdown: '',
+        summary: '',
+        tags,
+        createdAt,
+        updatedAt: createdAt,
+      }) as any;
+    const index = buildMemoryIndex(
+      [
+        doc('Renewal date field', '2026-09-10T00:00:00Z', ['field']),
+        doc('Guest email: platform event, not async path', '2026-01-05T00:00:00Z', ['lesson', 'flow']),
+      ],
+      new Date('2026-09-15T00:00:00Z'),
+    );
+    expect(index.indexOf('Guest email')).toBeLessThan(index.indexOf('Renewal date field'));
+    expect(index).toContain('tagged "lesson"');
   });
 });

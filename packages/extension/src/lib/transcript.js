@@ -90,9 +90,13 @@ export function createTranscript() {
     }
     const at = ev.at;
     switch (ev.type) {
-      case 'user.message':
-        push({ kind: 'user', seq: ev.seq, at, text: ev.text, userId: ev.userId });
+      case 'user.message': {
+        // The controller already pushed an optimistic copy; patch it instead of showing the bubble twice.
+        const local = [...state.items].reverse().find((i) => i.kind === 'user' && i.local && i.text === ev.text);
+        if (local) touch(local, { seq: ev.seq, at, userId: ev.userId, local: false });
+        else push({ kind: 'user', seq: ev.seq, at, text: ev.text, userId: ev.userId });
         break;
+      }
       case 'agent.spawned': {
         state.agents.set(ev.agentId, {
           agentId: ev.agentId,
@@ -131,9 +135,13 @@ export function createTranscript() {
         else touch(item, { text: ev.text ?? item.text, streaming: false });
         break;
       }
-      case 'assistant.thinking':
-        push({ kind: 'thinking', seq: ev.seq, at, agentId: ev.agentId, role: ev.role, text: ev.text });
+      case 'assistant.thinking': {
+        // One event per streamed delta: append to the previous thinking row from the same agent.
+        const last = state.items[state.items.length - 1];
+        if (last && last.kind === 'thinking' && last.agentId === ev.agentId) touch(last, { text: (last.text || '') + (ev.text || '') });
+        else push({ kind: 'thinking', seq: ev.seq, at, agentId: ev.agentId, role: ev.role, text: ev.text || '' });
         break;
+      }
       case 'tool.call': {
         const key = `tool-${ev.toolCallId}`;
         const item = state.byKey.get(key);

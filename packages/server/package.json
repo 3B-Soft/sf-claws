@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval": "vitest run -c vitest.eval.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
