@@ -20,6 +20,8 @@ All notable changes to SF Claws are recorded here. The format follows
 - `npm run build:store -w @sf-claws/extension` produces the Chrome Web Store upload, and
   `tools/store-assets.mjs` generates the listing images from the real screenshots. See
   `docs/PUBLISHING.md`.
+- `docs/DEPLOYMENT.md` covers Docker Manager UIs (Hostinger, Portainer): a compose file with
+  inline configuration and Caddy for TLS, so the app port is never published.
 
 ## [0.0.1] - 2026-09-13
 

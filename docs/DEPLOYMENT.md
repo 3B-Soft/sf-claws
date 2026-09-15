@@ -36,6 +36,42 @@ Back up `DATA_DIR` (SQLite file `harness.sqlite` + WAL). Rotate `MASTER_KEY` onl
 docker compose up -d --build     # uses docker-compose.yml, env from packages/server/.env
 ```
 
+### Docker Manager (Hostinger, Portainer, …)
+These UIs drive the host's own Docker, so build the image on the host once over SSH:
+```bash
+git clone https://github.com/3B-Soft/sf-claws.git && cd sf-claws
+docker build -t sf-claws:latest .
+```
+Then deploy this compose file from the UI. It needs no `.env` file. Caddy terminates TLS and is the only service publishing ports, so the app is never reachable over plain HTTP. Replace `srv123456.hstgr.cloud` with your hostname (a Hostinger VPS hostname works without owning a domain) and fill in the secrets.
+
+```yaml
+services:
+  sf-claws:
+    image: sf-claws:latest
+    restart: unless-stopped
+    environment:
+      PUBLIC_URL: https://srv123456.hstgr.cloud
+      CORS_ORIGINS: https://srv123456.hstgr.cloud
+      TRUST_PROXY: "true"
+      MASTER_KEY: "<openssl rand -base64 32>"
+      JWT_SECRET: "<openssl rand -base64 32>"
+      SF_CLIENT_ID: "<consumer key>"
+      SF_CLIENT_SECRET: "<consumer secret>"
+    volumes:
+      - sf-claws-data:/data
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ['80:80', '443:443']
+    command: caddy reverse-proxy --from srv123456.hstgr.cloud --to sf-claws:8787
+    volumes:
+      - caddy-data:/data
+volumes:
+  sf-claws-data:
+  caddy-data:
+```
+To upgrade, run `git pull && docker build -t sf-claws:latest .` in the checkout, then recreate the stack from the UI. Back up the `sf-claws-data` volume.
+
 ## 5. Chrome extension
 Build: `npm run build -w @sf-claws/extension`. Distribute `packages/extension/release/sf-claws.zip` via the Chrome Web Store (private/unlisted) or enterprise policy (`ExtensionInstallForcelist`), or load `packages/extension/dist` unpacked for development. On first run each admin enters the server URL, requests permission for that origin, and pairs the device: the panel shows a code, the admin console approves it (the user must already be approved by the super admin).
 
