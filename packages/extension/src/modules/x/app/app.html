@@ -31,11 +31,11 @@
           </template>
         </nav>
         <main class="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <template lwc:if={isChat}><x-chat-tab></x-chat-tab></template>
-          <template lwc:elseif={isChanges}><x-changes-tab></x-changes-tab></template>
-          <template lwc:elseif={isExplore}><x-explore-tab></x-explore-tab></template>
-          <template lwc:elseif={isNotes}><x-notes-tab></x-notes-tab></template>
-          <template lwc:elseif={isGithub}><x-github-tab></x-github-tab></template>
+          <template lwc:if={isChat}><x-chat-tab class="contents"></x-chat-tab></template>
+          <template lwc:elseif={isChanges}><x-changes-tab class="contents"></x-changes-tab></template>
+          <template lwc:elseif={isExplore}><x-explore-tab class="contents"></x-explore-tab></template>
+          <template lwc:elseif={isNotes}><x-notes-tab class="contents"></x-notes-tab></template>
+          <template lwc:elseif={isGithub}><x-github-tab class="contents"></x-github-tab></template>
         </main>
       </template>
 

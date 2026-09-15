@@ -126,7 +126,7 @@
   <template lwc:elseif={isError}>
     <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">
       <div class="font-semibold">Error</div>
-      <div class="mt-0.5 whitespace-pre-wrap">{errorMessage}</div>
+      <div class="mt-0.5 whitespace-pre-wrap break-words">{errorMessage}</div>
       <template lwc:if={errorRecoverable}><div class="mt-1 text-[11px] text-rose-700/70">The agent will try to recover.</div></template>
     </div>
   </template>

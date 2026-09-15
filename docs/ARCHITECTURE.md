@@ -32,13 +32,17 @@ Modules:
   which folds them into `package.xml` and would ask Salesforce to create them. `metadata-xml.ts`
   holds what does not need delegating: manifests, well-formedness checks, the render projection.
 - `github/` — Octokit against the Git Data API: blobs → tree → commit → ref, so no clone is needed.
-- `ai/` — provider-neutral message model; `anthropic.ts`, and `openai.ts` whose Chat Completions
-  transport is shared by every OpenAI-compatible endpoint through a dialect (`deepseek.ts` and
-  `deepinfra.ts` are two: `max_tokens` instead of `max_completion_tokens`, no `reasoning_effort`,
+- `ai/` — provider-neutral message model; `anthropic.ts`, and `openai.ts`, which holds two
+  transports. OpenAI itself uses the Responses API (`/v1/responses`), because newer models refuse
+  function tools beside a reasoning effort on Chat Completions: it sends `reasoning: { effort }` with
+  `store: false`, streams reasoning summaries as thinking, announces each function call on its
+  `output_item.done`, and keeps the encrypted reasoning items in the message's `raw` so the same
+  model gets them back on the next turn. Every OpenAI-compatible gateway stays on Chat Completions
+  through a dialect (`deepseek.ts` and `deepinfra.ts` are two: `max_tokens`, no effort knob,
   thinking streamed back as `reasoning_content`). `types.ts` owns `SYSTEM_CACHE_BOUNDARY` and
   `splitSystemPrompt`, which is what makes the prompt ordering a real cost boundary: Anthropic gets
-  two system blocks with the breakpoint after the stable half, and the compatible endpoints get the
-  marker stripped. Sampling dials are per model and are never sent to a thinking model, which
+  two system blocks with the breakpoint after the stable half, and the OpenAI-family endpoints get
+  the marker stripped. Sampling dials are per model and are never sent to a thinking model, which
   rejects them. `registry.ts` resolves role → model bindings, per-user provider keys, fallback
   models and cost.
 - `agents/` — the runtime. See below.

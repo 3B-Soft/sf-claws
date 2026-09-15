@@ -90,9 +90,15 @@ export function createTranscript() {
     }
     const at = ev.at;
     switch (ev.type) {
-      case 'user.message':
-        push({ kind: 'user', seq: ev.seq, at, text: ev.text, userId: ev.userId });
+      case 'user.message': {
+        // The echo of a message this panel sent replaces its optimistic copy rather than adding a
+        // second bubble. Oldest first, so the same text sent twice still pairs up one-to-one.
+        const local = state.items.find((i) => i.kind === 'user' && i.local && i.text === ev.text);
+        const item = { kind: 'user', seq: ev.seq, at, text: ev.text, userId: ev.userId };
+        if (local) touch(local, { ...item, local: false });
+        else push(item);
         break;
+      }
       case 'agent.spawned': {
         state.agents.set(ev.agentId, {
           agentId: ev.agentId,
@@ -324,7 +330,14 @@ export function createTranscript() {
     },
     /** Add a local (optimistic) user message before the server echoes user.message. */
     addLocalUser(text) {
-      push({ kind: 'user', at: new Date().toISOString(), text, local: true, key: `local-${Date.now()}` });
+      return push({ kind: 'user', at: new Date().toISOString(), text, local: true, key: `local-${Date.now()}` }).key;
+    },
+    /** Drop an optimistic user message the server never accepted (the POST failed). */
+    removeLocalUser(key) {
+      const item = state.byKey.get(key);
+      if (!item?.local) return;
+      state.items.splice(state.items.indexOf(item), 1);
+      state.byKey.delete(key);
     },
     get items() {
       return state.items;
