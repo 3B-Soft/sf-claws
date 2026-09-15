@@ -101,8 +101,9 @@ That last row is the one a reviewer is most likely to question. The relevant cod
 ## 6. Privacy
 
 A privacy policy URL is **mandatory** for this listing — the extension handles authentication
-information and work-related content — and a URL that 404s is an instant rejection. Publish one
-before submitting.
+information and work-related content — and a URL that 404s is an instant rejection. The policy is
+`docs/PRIVACY.md`; once the repository is public, use
+`https://github.com/3B-Soft/sf-claws/blob/main/docs/PRIVACY.md`.
 
 Data-use disclosures, answered honestly:
 
