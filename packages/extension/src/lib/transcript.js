@@ -417,3 +417,17 @@ export function toolMeta(tool = '') {
   if (t.includes('skill') || t.includes('memory') || t.includes('search')) return { glyph: 'S', tone: 'slate', title: 'Knowledge' };
   return { glyph: '•', tone: 'slate', title: 'Step' };
 }
+
+/**
+ * True once the latest user message has a finished assistant reply after it. `idle` alone is not
+ * enough: a new session is idle with a "Session created" status item and nothing said yet.
+ */
+export function turnAnswered(items = []) {
+  let lastUser = -1;
+  let lastReply = -1;
+  items.forEach((it, i) => {
+    if (it.kind === 'user') lastUser = i;
+    else if (it.kind === 'assistant' && !it.streaming) lastReply = i;
+  });
+  return lastReply > lastUser;
+}

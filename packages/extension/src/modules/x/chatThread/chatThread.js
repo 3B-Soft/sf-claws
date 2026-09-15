@@ -16,6 +16,7 @@ import {
   dismissContextPressure,
 } from '../../../lib/sessionController.js';
 import { quickActionsFor } from '../../../lib/context.js';
+import { turnAnswered } from '../../../lib/transcript.js';
 import { statusClass, statusLabel, fmtTokens, fmtUsd, roleClass, roleLabel, truncate, fmtRelative } from '../../../lib/format.js';
 
 export default class ChatThread extends LightningElement {
@@ -111,7 +112,7 @@ export default class ChatThread extends LightningElement {
     return this.isRunning || this.isAwaiting;
   }
   get isDone() {
-    return ['completed', 'failed', 'cancelled', 'idle'].includes(this.status) && this.hasItems;
+    return ['completed', 'failed', 'cancelled', 'idle'].includes(this.status) && !this.session.sending && turnAnswered(this.items);
   }
   get statusMessage() {
     return this.session.statusMessage || '';
