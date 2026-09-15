@@ -8,6 +8,9 @@ All notable changes to SF Claws are recorded here. The format follows
 
 ### Fixed
 
+- `npm run typecheck` failed on a clean checkout (and in CI, which typechecks before building)
+  because the server resolves `@sf-claws/shared` from its unbuilt `dist/`. The script now builds
+  shared first.
 - Opening a session in the side panel threw `ReferenceError: reportPendingConfirmations is not
   defined` and rendered an empty transcript. Two call sites were left behind by a rename; the
   correct `reportAwaiting()` was already being called beside both.

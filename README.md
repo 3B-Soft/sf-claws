@@ -1,5 +1,7 @@
 # SF Claws
 
+[![CI](https://github.com/3B-Soft/sf-claws/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/3B-Soft/sf-claws/actions/workflows/ci.yml)
+
 **An agentic Salesforce harness for the people who know the business process, not the XML.**
 
 SF Claws lets a Salesforce admin debug, build and ship changes in a client org from a Chrome side

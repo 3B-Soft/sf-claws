@@ -19,7 +19,7 @@
     "dev:admin": "npm run dev -w @sf-claws/admin-ui",
     "dev:extension": "npm run dev -w @sf-claws/extension",
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run build -w @sf-claws/shared && npm run typecheck --workspaces --if-present",
     "demo": "node tools/demo-server.mjs",
     "screenshots": "node tools/screenshots.mjs",
     "contrast": "node tools/contrast-audit.mjs",
