@@ -3979,9 +3979,9 @@
     ]
   },
   {
-    "title": "Large public surface: packages/extension/src/modules/x/confirmationCard exports 46 of 49 symbols (94%)",
+    "title": "Large public surface: packages/extension/src/modules/x/confirmationCard exports 47 of 50 symbols (94%)",
     "source": "exported-surface",
-    "description": "Module \"packages/extension/src/modules/x/confirmationCard\" exports 46 of its 49 symbols (94%). A large, near-fully-exported module hides little of its implementation, so consumers can couple to internals and it is hard to change without breaking them. Worth a visibility review — though a deliberate library API may legitimately export most of its surface.",
+    "description": "Module \"packages/extension/src/modules/x/confirmationCard\" exports 47 of its 50 symbols (94%). A large, near-fully-exported module hides little of its implementation, so consumers can couple to internals and it is hard to change without breaking them. Worth a visibility review — though a deliberate library API may legitimately export most of its surface.",
     "confidence": 0.6,
     "evidence": [
       {

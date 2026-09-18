@@ -2,11 +2,11 @@
 
 ## Repository Map
 
-115 modules, 4285 symbols, grouped by area. Every module is in `facts.jsonl`, or query_facts(kind="module").
+115 modules, 4286 symbols, grouped by area. Every module is in `facts.jsonl`, or query_facts(kind="module").
 
 | Area | Modules | Symbols | Languages |
 |------|---------|---------|-----------|
-| `packages` | 114 | 4196 | typescript |
+| `packages` | 114 | 4197 | typescript |
 | `tools` | 1 | 89 | typescript |
 
 Largest modules:
@@ -141,4 +141,4 @@ _No specific architecture pattern detected._
 
 ---
 
-*Generated at 2026-09-18T09:45:18Z in 541.774125ms. 6095 facts, 85 insights.*
+*Generated at 2026-09-18T10:30:00Z in 579.888667ms. 6096 facts, 85 insights.*

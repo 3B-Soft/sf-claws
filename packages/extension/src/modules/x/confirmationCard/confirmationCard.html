@@ -2,7 +2,7 @@
   <div class={cardCls}>
     <div class="flex items-center gap-2">
       <span class={kindCls}>{kindText}</span>
-      <span class="min-w-0 flex-1 truncate text-[13px] font-semibold text-content-strong" title={title}>{title}</span>
+      <span class={titleCls} title={title}>{title}</span>
     </div>
 
     <template lwc:if={hasImpact}>

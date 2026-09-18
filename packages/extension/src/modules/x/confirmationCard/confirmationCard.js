@@ -17,6 +17,10 @@ export default class ConfirmationCard extends LightningElement {
   get title() {
     return this.item?.title;
   }
+  get titleCls() {
+    const wrapping = this.isQuestion ? 'whitespace-normal break-words leading-relaxed' : 'truncate';
+    return `min-w-0 flex-1 text-[13px] font-semibold text-content-strong ${wrapping}`;
+  }
   get description() {
     return this.item?.description;
   }
