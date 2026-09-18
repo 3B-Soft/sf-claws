@@ -5,6 +5,7 @@ import { ProvidersRepo, ModelsRepo, BindingsRepo, SkillsRepo, PoliciesRepo } fro
 import { ProjectsRepo, TasksRepo } from './projects.js';
 import { KnowledgeSourcesRepo, CustomAgentsRepo } from './knowledge.js';
 import { CompileControlRepo } from './compile-control.js';
+import { HarnessRepo } from './harness.js';
 import {
   SessionsRepo,
   EventsRepo,
@@ -22,6 +23,7 @@ import {
 } from './sessions.js';
 
 export interface Repos {
+  harness: HarnessRepo;
   compileControl: CompileControlRepo;
   users: UsersRepo;
   tokens: TokensRepo;
@@ -59,6 +61,7 @@ export interface Repos {
 
 export function createRepos(db: Db): Repos {
   return {
+    harness: new HarnessRepo(db),
     compileControl: new CompileControlRepo(db),
     users: new UsersRepo(db),
     tokens: new TokensRepo(db),

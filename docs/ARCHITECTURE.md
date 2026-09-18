@@ -366,28 +366,67 @@ USD, duration). `tool_invocations` per tool call (tool, ok, duration, result siz
 records logins, approvals, org connections, deploys, commits and configuration changes.
 `/admin/usage/summary`, `/admin/tools/summary` and `/admin/budget` aggregate them for the console.
 
-## Compile controller (first increment)
+## Compile controller and durable recovery
 
 `session_compile_control` persists dirty paths, content hashes, root diagnostics, the repair allowlist,
 and the no-progress stop across turns, agent replacements and server restarts. Workspace tools enforce
 these gates before writes, including after asynchronous original-file retrieval. Human edits may repair
 a stopped session; a successful manual full validation resets the stop. Validation freezes writes and
-an in-process org queue serializes validation/deployment submissions. This queue is not a distributed
-lease: multiple server processes must not operate the same org concurrently.
+an in-process org queue serializes validation/deployment submissions. A unique active-checkpoint index
+also reserves the org durably across restarts. Attempts are reserved transactionally before submission.
+The deployment architecture remains single-process; this is not a distributed worker scheduler.
 
 A timer and model-boundary checks request a dependency-expanded check-only slice at eight dirty files
 or ten minutes. Apex companion files must be present; an incomplete group blocks new components until
 its companions are supplied. Slice selection currently uses conservative source-name references and
-staged schema, not an AST graph. Slices use Metadata API today; the Tooling API fast path remains open.
+staged schema, not an AST graph. Existing unmanaged Apex-only slices in non-production orgs use Tooling
+`MetadataContainer` / `ContainerAsyncRequest(IsCheckOnly=true)` when companion metadata is unchanged.
+New/deleted components, schema, changed companion metadata, production, explicit test requests, and
+full checks use Metadata API. A missing existing Apex ID falls back to Metadata without creating a stub.
 Slice success is explicitly labelled and never satisfies the full-validation deployment gate.
 
 Dependent-class diagnostics are grouped under their named root. While roots remain, agents may edit
 only failing components and their direct staged dependencies, and may not introduce new components.
 Unchanged failed payloads are refused; two subsequent compiles without fewer root components stop all
-agent loops, including paid wrap-up/documentation. Current staged files are preserved, not rolled back.
-Opaque Salesforce failures stop code generation rather than suggesting code repairs. Timed platform
-retries, durable payload checkpoints, rollback, and atomic token reservations are not implemented in
-this increment. Existing full-validation, review, approval and deployment fingerprint gates still apply.
+agent loops, including paid wrap-up/documentation. Each remote operation archives the staged tree,
+controller state, source payload and exact Metadata ZIP (or Tooling member payload), with a checksum.
+Comparable compiler regressions quarantine the candidate and atomically restore the prior staged
+checkpoint, then stop for manual validation. Both trees remain recoverable. This is NOT org rollback.
+
+`UNKNOWN_EXCEPTION` and lock faults are platform failures, not proof of a code problem or proof of a
+specific lock. Check-only payloads retry unchanged after 15s and 45s with ±10% jitter, at most three
+submissions including the first. Retry times, job IDs, outcomes and attempt times survive restart.
+Auth/quota rejections do not retry. Lost acknowledgements and nonterminal polling failures retain the
+org reservation: reconcile the known job/container; never blindly resubmit. Real deployments are
+archived but are not automatically resubmitted. Reconciliation never authorizes current workspace
+contents; a fresh full check is required. Existing review, approval and fingerprint gates still apply.
+
+## Shared facts and pre-hydration
+
+Before constructing an agent, `pre-hydration.ts` inspects an optional org-local Git checkout at
+`DATA_DIR/workspaces/<clientId>/<orgId>` with read-only status, diff and log commands. It never clones,
+stashes, checks out, or claims HEAD mirrors Salesforce. Missing Git baselines are recorded as unavailable.
+Targets come from explicit API names, page context, staged files and changed Git source: at most eight
+per pass, three simultaneous org reads, a 20-second remote-evidence deadline, and one bounded second
+pass through `hydrate_context`. Already-issued read-only calls may finish after the hydration deadline;
+queued expired reads are not sent. Unrelated/global discovery is never part of pre-hydration.
+
+`session_hydration` stores the evidence manifest outside conversation history (source, access identity,
+API version, retrieval time, hash, verified/absent/unavailable status). Compact projections go after the
+prompt cache boundary and are refreshed before model iterations, including after compaction and in
+replacement agents. Stale evidence is labelled and omitted from previews. The bundle also includes
+the request, approved plan, staged schema delta, open roots and spend to date.
+
+Successful describes, metadata reads/listings and content-hashed skills share a bounded LRU cache
+(256 entries / 16 MiB, 60-second TTL) keyed by tenant, org, user/access principal, API version, connection
+identity, schema revision and resource. Concurrent misses coalesce; callers get isolated copies of the
+full result, not a reference to discarded conversation text. Workspace/todo edits do not invalidate
+live schema; org mutations and reconnects do. Errors are never cached as absence, and staging refuses
+to guess that a component is new after its original-source lookup fails.
+
+Recovery endpoints and operational limits are documented in [HARNESS-RECOVERY.md](HARNESS-RECOVERY.md).
+Automatic org-to-Git baseline synchronization, AST graphing and atomic token reservations remain
+separate work; this increment does not claim to implement them.
 
 ## Security notes
 

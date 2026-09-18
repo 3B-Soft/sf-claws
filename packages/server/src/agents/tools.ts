@@ -10,6 +10,7 @@ import type { RepoStore } from '../knowledge/repo-store.js';
 import { compileSafePattern } from '../knowledge/pattern-guard.js';
 import { componentSubject, permissionRefusalText } from './policy.js';
 import { classifyAnonymousApex } from './apex-classify.js';
+import { sha256 } from '../lib/crypto.js';
 
 /**
  * The object a SOQL statement reads, for permission scoping. Anything the regex cannot name still
@@ -169,12 +170,17 @@ export async function stageWorkspaceFile(
   let original = existing?.original ?? ctx.originals.get(path) ?? null;
   if (!existing && original === null && metadataType && fullName) {
     try {
-      const files = await ctx.app.sf.readComponent(ctx.org.id, metadataType, fullName);
+      const files = await ctx.runtime.readFact(ctx.session.id, `metadata:${metadataType}:${fullName}`, () =>
+        ctx.app.sf.readComponent(ctx.org.id, metadataType, fullName),
+      );
       const match = files.find((f) => f.path === path);
       if (match) original = match.content;
       for (const f of files) ctx.originals.set(f.path, f.content);
-    } catch {
-      /* org unreachable or component missing -> treat as created */
+    } catch (error) {
+      return {
+        text: `Cannot establish the original component: ${(error as Error).message}. Nothing staged; an authorization or transport failure is not evidence of absence.`,
+        ok: false,
+      };
     }
   }
   const action: WorkspaceFile['action'] = existing ? existing.action : original !== null ? 'modified' : 'created';
@@ -191,6 +197,17 @@ export async function stageWorkspaceFile(
 }
 
 export const TOOLS: ToolDef[] = [
+  {
+    name: 'hydrate_context',
+    readOnly: true,
+    concurrencySafe: false,
+    earlyStart: false,
+    description:
+      'Fetch one bounded second hydration pass for newly discovered API names (for example object Account or ApexClass ExistingClass). Persists verified evidence in the shared context bundle. At most two passes per user turn; never performs global discovery.',
+    inputSchema: obj({ targets: { type: 'string' } }, ['targets']),
+    roles: READERS,
+    run: async (input, ctx) => ({ text: await ctx.runtime.hydrateContext(ctx.session.id, String(input.targets).slice(0, 4000)) }),
+  },
   {
     name: 'consult_specialist',
     readOnly: false,
@@ -420,7 +437,10 @@ export const TOOLS: ToolDef[] = [
     run: async (input, ctx) => {
       const skill = ctx.app.skills.byName(ctx.agent.role, ctx.session.clientId, ctx.org.id, String(input.name));
       if (!skill) return { text: `No skill named "${input.name}" applies to you. Use the exact name from the list in your instructions.`, ok: false };
-      return { text: `### [${skill.kind.toUpperCase()}] ${skill.name}\n${skill.content.trim()}`, output: { name: skill.name, kind: skill.kind } };
+      return ctx.runtime.readFact(ctx.session.id, `skill:${ctx.agent.role}:${skill.name}:${sha256(skill.content)}`, async () => ({
+        text: `### [${skill.kind.toUpperCase()}] ${skill.name}\n${skill.content.trim()}`,
+        output: { name: skill.name, kind: skill.kind },
+      }));
     },
   },
   {
@@ -661,7 +681,7 @@ export const TOOLS: ToolDef[] = [
     ),
     roles: READERS,
     run: async (input, ctx) => {
-      const d: any = await ctx.app.sf.describe(ctx.org.id, input.sobject);
+      const d: any = await ctx.runtime.readFact(ctx.session.id, `describe:${input.sobject}`, () => ctx.app.sf.describe(ctx.org.id, input.sobject));
       const include = new Set<string>(Array.isArray(input.include) ? input.include.map(String) : []);
       // Compact means compact: no urls, no child relationships, no record type infos unless asked.
       // A wide standard object's full describe is hundreds of kilobytes of mostly noise.
@@ -714,7 +734,7 @@ export const TOOLS: ToolDef[] = [
     inputSchema: obj({ filter: { type: 'string' } }),
     roles: READERS,
     run: async (input, ctx) => {
-      let list = await ctx.app.sf.describeGlobal(ctx.org.id);
+      let list = await ctx.runtime.readFact(ctx.session.id, 'sobjects', () => ctx.app.sf.describeGlobal(ctx.org.id));
       if (input.filter) {
         const f = String(input.filter).toLowerCase();
         list = list.filter((s) => s.name.toLowerCase().includes(f) || s.label.toLowerCase().includes(f));
@@ -736,7 +756,7 @@ export const TOOLS: ToolDef[] = [
     inputSchema: obj({}),
     roles: READERS,
     run: async (_input, ctx) => {
-      const r = await ctx.app.sf.describeMetadata(ctx.org.id);
+      const r = await ctx.runtime.readFact(ctx.session.id, 'metadata-types', () => ctx.app.sf.describeMetadata(ctx.org.id));
       return { text: r.map((t) => t.xmlName).join(', '), output: r };
     },
   },
@@ -749,7 +769,9 @@ export const TOOLS: ToolDef[] = [
     inputSchema: obj({ type: { type: 'string' }, folder: { type: 'string' } }, ['type']),
     roles: READERS,
     run: async (input, ctx) => {
-      const r = await ctx.app.sf.listMetadata(ctx.org.id, input.type, input.folder);
+      const r = await ctx.runtime.readFact(ctx.session.id, `metadata-list:${input.type}:${input.folder ?? ''}`, () =>
+        ctx.app.sf.listMetadata(ctx.org.id, input.type, input.folder),
+      );
       return {
         text: jsonFull(
           r.map((c) => ({
@@ -773,7 +795,9 @@ export const TOOLS: ToolDef[] = [
     inputSchema: obj({ type: { type: 'string' }, fullName: { type: 'string' } }, ['type', 'fullName']),
     roles: READERS,
     run: async (input, ctx) => {
-      const files = await ctx.app.sf.readComponent(ctx.org.id, input.type, input.fullName);
+      const files = await ctx.runtime.readFact(ctx.session.id, `metadata:${input.type}:${input.fullName}`, () =>
+        ctx.app.sf.readComponent(ctx.org.id, input.type, input.fullName),
+      );
       for (const f of files) ctx.originals.set(f.path, f.content);
       if (!files.length) return { text: `No files returned for ${input.type} ${input.fullName} (component may not exist).`, output: [] };
       return {

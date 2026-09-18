@@ -1,6 +1,14 @@
 import JSZip from 'jszip';
 import type { Connection } from 'jsforce';
-import type { DeployFailure, OrgKind, OrgLimits } from '@sf-claws/shared';
+import type { DeployFailure, OrgKind, OrgLimits, WorkspaceFile } from '@sf-claws/shared';
+import {
+  resolveToolingMembers,
+  submitToolingCompile,
+  pollToolingCompile,
+  reconcileToolingContainer,
+  type ToolingMember,
+  type ToolingJob,
+} from './tooling-compile.js';
 import { SourceFormatRegistry } from '@sf-claws/shared';
 import type { Repos } from '../db/repos/index.js';
 import type { Config } from '../config.js';
@@ -56,6 +64,8 @@ export interface DeployOutcome {
 export type TestLevel = 'NoTestRun' | 'RunSpecifiedTests' | 'RunLocalTests' | 'RunAllTestsInOrg';
 
 export interface DeployOptions {
+  preparedZip?: Buffer;
+  onSubmitted?: (id: string) => void;
   checkOnly: boolean;
   testLevel: TestLevel;
   runTests?: string[];
@@ -142,6 +152,7 @@ export class SalesforceService {
       });
       if (kindMismatch) this.log.warn({ orgId: org.id, registered: org.kind, detectedKind }, 'Org kind mismatch accepted by override');
       this.connections.invalidate(org.id);
+      this.repos.harness.invalidate(org.id);
       this.repos.audit.log({
         userId: st.userId,
         action: 'org.connected',
@@ -168,6 +179,7 @@ export class SalesforceService {
     }
     this.repos.orgs.update(orgId, { status: 'disconnected', accessTokenEnc: null, refreshTokenEnc: null });
     this.connections.invalidate(orgId);
+    this.repos.harness.invalidate(orgId);
   }
 
   async status(orgId: string): Promise<{ status: string; identity: unknown | null; error: string | null }> {
@@ -432,7 +444,7 @@ export class SalesforceService {
   async deploy(orgId: string, files: SourceFile[], opts: DeployOptions): Promise<DeployOutcome> {
     return this.wrap(orgId, async () => {
       const conn = await this.conn(orgId);
-      const { zipBuffer: buffer } = await buildDeployPackage(files, conn.version, opts.deleted ?? []);
+      const buffer = opts.preparedZip ?? (await buildDeployPackage(files, conn.version, opts.deleted ?? [])).zipBuffer;
       const locator = conn.metadata.deploy(buffer, {
         checkOnly: opts.checkOnly,
         testLevel: opts.testLevel,
@@ -446,7 +458,45 @@ export class SalesforceService {
         purgeOnDelete: false,
       });
       const start: any = await locator;
+      opts.onSubmitted?.(start.id);
       return this.finishDeploy(conn, start.id, opts);
+    }).finally(() => {
+      if (!opts.checkOnly) this.repos.harness.invalidate(orgId);
+    });
+  }
+
+  async prepareDeploy(orgId: string, files: SourceFile[], deleted: { type: string; fullName: string }[]): Promise<string> {
+    const org = this.repos.orgs.byId(orgId)!;
+    return (await buildDeployPackage(files, org.apiVersion, deleted)).zipBuffer.toString('base64');
+  }
+  async prepareToolingCompile(orgId: string, files: WorkspaceFile[]): Promise<ToolingMember[] | null> {
+    if (this.repos.orgs.byId(orgId)?.kind === 'production') return null;
+    return this.wrap(orgId, async () => resolveToolingMembers(await this.conn(orgId), files));
+  }
+  async toolingCompile(
+    orgId: string,
+    members: ToolingMember[],
+    callbacks: { onContainer: (id: string) => void; onSubmitted: (id: string) => void; onProgress?: (message: string) => void },
+  ): Promise<DeployOutcome> {
+    return this.wrap(orgId, async () => {
+      const conn = await this.conn(orgId);
+      const job = await submitToolingCompile(conn, members, callbacks.onContainer);
+      callbacks.onSubmitted(job.id);
+      return pollToolingCompile(conn, job, callbacks);
+    });
+  }
+  async resumeValidation(orgId: string, engine: 'metadata' | 'tooling', id: string, opts: DeployOptions & { containerId?: string }): Promise<DeployOutcome> {
+    return this.wrap(orgId, async () => {
+      const conn = await this.conn(orgId);
+      return engine === 'metadata' ? this.finishDeploy(conn, id, opts) : pollToolingCompile(conn, { id, containerId: opts.containerId! }, opts);
+    });
+  }
+  async findToolingJob(orgId: string, containerId: string): Promise<ToolingJob | null> {
+    return this.wrap(orgId, async () => reconcileToolingContainer(await this.conn(orgId), containerId));
+  }
+  async cleanupToolingContainer(orgId: string, containerId: string): Promise<void> {
+    await this.wrap(orgId, async () => {
+      await (await this.conn(orgId)).tooling.sobject('MetadataContainer').destroy(containerId);
     });
   }
 
@@ -461,7 +511,7 @@ export class SalesforceService {
       const id = await conn.metadata.deployRecentValidation({ id: validationId });
       // Quick Deploy runs no tests, so the test level only matters for the coverage query: none.
       return this.finishDeploy(conn, typeof id === 'string' ? id : (id as any).id, { ...opts, checkOnly: false, testLevel: 'NoTestRun' });
-    });
+    }).finally(() => this.repos.harness.invalidate(orgId));
   }
 
   /** Poll a started deploy to completion, cancelling it on timeout or abort. */
@@ -559,6 +609,7 @@ export class SalesforceService {
     return this.wrap(orgId, async () => {
       const conn = await this.conn(orgId);
       const r: any = await conn.tooling.executeAnonymous(apex);
+      if (r.success) this.repos.harness.invalidate(orgId);
       return {
         compiled: r.compiled,
         success: r.success,
@@ -621,6 +672,7 @@ export class SalesforceService {
       if (!rec) throw new Error(`Flow "${developerName}" not found`);
       const r: any = await conn.tooling.sobject('FlowDefinition').update({ Id: rec.Id, Metadata: { activeVersionNumber: versionNumber ?? 0 } } as any);
       if (r && r.success === false) throw new Error(JSON.stringify(r.errors));
+      this.repos.harness.invalidate(orgId);
       return { id: rec.Id, activeVersionNumber: versionNumber };
     });
   }

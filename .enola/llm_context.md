@@ -2,23 +2,23 @@
 
 ## Repository Map
 
-115 modules, 4210 symbols, grouped by area. Every module is in `facts.jsonl`, or query_facts(kind="module").
+115 modules, 4285 symbols, grouped by area. Every module is in `facts.jsonl`, or query_facts(kind="module").
 
 | Area | Modules | Symbols | Languages |
 |------|---------|---------|-----------|
-| `packages` | 114 | 4121 | typescript |
+| `packages` | 114 | 4196 | typescript |
 | `tools` | 1 | 89 | typescript |
 
 Largest modules:
-- `packages/server/src/agents` — 332 symbols (typescript)
-- `packages/server/src/db/repos` — 250 symbols (typescript)
-- `packages/shared/src` — 220 symbols (typescript)
+- `packages/server/src/agents` — 366 symbols (typescript)
+- `packages/server/src/db/repos` — 270 symbols (typescript)
+- `packages/shared/src` — 227 symbols (typescript)
 - `packages/extension/src/lib` — 189 symbols (typescript)
 - `packages/admin-ui/src/modules/x/sessionDetailPage` — 107 symbols (typescript)
+- `packages/server/src/salesforce` — 107 symbols (typescript)
 - `packages/extension/src/modules/x/chatThread` — 106 symbols (typescript)
 - `packages/extension/src/modules/x/changesTab` — 96 symbols (typescript)
 - `packages/admin-ui/src/lib` — 95 symbols (typescript)
-- `packages/server/src/salesforce` — 93 symbols (typescript)
 - `tools` — 89 symbols (typescript)
 - `packages/extension/src/modules/x/transcriptItem` — 87 symbols (typescript)
 - `packages/extension/src/modules/x/soqlBuilder` — 85 symbols (typescript)
@@ -33,7 +33,7 @@ Largest modules:
 
 ## Extraction Quality
 
-- Files parsed: **251** / 383 seen (35 file(s) + 9 directory tree(s) skipped by ignore globs)
+- Files parsed: **258** / 390 seen (38 file(s) + 9 directory tree(s) skipped by ignore globs)
 - Parse errors: 0
 
 ## Architecture Pattern
@@ -42,7 +42,7 @@ _No specific architecture pattern detected._
 
 ## Entry Points
 
-159 handlers, 15 shown:
+170 handlers, 15 shown:
 - **handler**: `packages/admin-ui/src/lib.setUnauthorizedHandler` (packages/admin-ui/src/lib/api.js)
 - **handler**: `packages/extension/src/lib.normalizeServerUrl` (packages/extension/src/lib/storage.js)
 - **handler**: `packages/extension/src/lib.saveServerUrl` (packages/extension/src/lib/state.js)
@@ -58,9 +58,9 @@ _No specific architecture pattern detected._
 - **handler**: `packages/server/src/agents.applyCompileResult` (packages/server/src/agents/compile-control.ts)
 - **handler**: `packages/server/src/agents.backoffMs` (packages/server/src/agents/backoff.ts)
 - **handler**: `packages/server/src/agents.budgetTurnResults` (packages/server/src/agents/budget.ts)
-- … and 144 more (query_facts(kind="route") for all)
+- … and 155 more (query_facts(kind="route") for all)
 - **main**: `packages/server/src.main` (packages/server/src/index.ts)
-264 routes, 15 shown:
+268 routes, 15 shown:
 - **route** DELETE `/admin/agents/:id` (packages/server/src/http/routes/admin.ts)
 - **route** DELETE `/admin/knowledge/:id` (packages/server/src/http/routes/admin.ts)
 - **route** DELETE `/admin/models/:id` (packages/server/src/http/routes/admin.ts)
@@ -76,15 +76,15 @@ _No specific architecture pattern detected._
 - **route** DELETE `/sessions/{}/permissions/{}` (packages/extension/src/lib/api.js)
 - **route** DELETE `/skills/:id` (packages/server/src/http/routes/skills.ts)
 - **route** DELETE `/tasks/:id` (packages/server/src/http/routes/projects.ts)
-- … and 249 more (query_facts(kind="route") for all)
+- … and 253 more (query_facts(kind="route") for all)
 
 ## Routes
 
-264 routes, grouped by path prefix. query_facts(kind="route") for all of them.
+268 routes, grouped by path prefix. query_facts(kind="route") for all of them.
 
 | Prefix | Routes | Methods | Example |
 |--------|--------|---------|----------|
-| `/sessions` | 71 | DELETE, GET, PATCH, POST, PUT | `/sessions` |
+| `/sessions` | 75 | DELETE, GET, PATCH, POST, PUT | `/sessions` |
 | `/admin` | 65 | DELETE, GET, PATCH, POST, PUT | `/admin/agents` |
 | `/clients` | 39 | DELETE, GET, PATCH, POST, PUT | `/clients` |
 | `/orgs` | 35 | DELETE, GET, PATCH, POST | `/orgs` |
@@ -141,4 +141,4 @@ _No specific architecture pattern detected._
 
 ---
 
-*Generated at 2026-09-18T08:50:41Z in 484.859042ms. 5965 facts, 85 insights.*
+*Generated at 2026-09-18T09:45:18Z in 541.774125ms. 6095 facts, 85 insights.*

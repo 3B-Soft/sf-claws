@@ -29,6 +29,10 @@ import type { CustomAgent } from '@sf-claws/shared';
 import { buildReminders, BUDGET_REMINDER_FRACTIONS } from './reminders.js';
 import { deploySubjects, permissionBlockedMessage, permissionRefusalText } from './policy.js';
 import type { TestLevel, DeployOutcome } from '../salesforce/service.js';
+import { FactCache, OrgReadLimiter } from './fact-cache.js';
+import { preHydrate, hydrationPrompt } from './pre-hydration.js';
+import { toolingEligible } from '../salesforce/tooling-compile.js';
+import { executeCheckpoint, classifyFailure } from './validation-recovery.js';
 import {
   applyCompileResult,
   compileDue,
@@ -39,6 +43,7 @@ import {
   missingCompanions,
   COMPILE_INTERVAL_MS,
   repairComponents,
+  rootDiagnostics,
 } from './compile-control.js';
 
 interface ActiveTurn {
@@ -107,6 +112,39 @@ export class SessionRuntime {
   private idleSweep: ReturnType<typeof setInterval> | null = null;
   /** Cache-break detection across calls; keyed per session and agent. */
   readonly cacheProbe = new PromptCacheProbe();
+  readonly facts = new FactCache();
+  private readLimiter = new OrgReadLimiter();
+  hydrationPrompt(sessionId: string): string {
+    return hydrationPrompt(this.app, sessionId);
+  }
+  async hydrateContext(sessionId: string, targets: string): Promise<string> {
+    await preHydrate(this.app, sessionId, targets, true);
+    return this.hydrationPrompt(sessionId);
+  }
+  factIdentity(sessionId: string): string {
+    const session = this.app.repos.sessions.byId(sessionId)!;
+    const org = this.app.repos.orgs.byId(session.orgId)!;
+    return JSON.stringify([
+      session.clientId,
+      org.id,
+      session.userId,
+      org.username,
+      org.sfOrgId,
+      org.instanceUrl,
+      org.consumerKey,
+      org.lastConnectedAt,
+      org.status,
+      org.apiVersion,
+      this.app.repos.harness.revision(org.id),
+    ]);
+  }
+  readFact<T>(sessionId: string, resource: string, loader: () => Promise<T>): Promise<T> {
+    const orgId = this.app.repos.sessions.byId(sessionId)!.orgId;
+    return this.facts.read(`${this.factIdentity(sessionId)}:${resource}`, () => this.readLimiter.run(orgId, loader));
+  }
+  factFetchedAt(sessionId: string, resource: string): string {
+    return new Date(this.facts.fetchedAt(`${this.factIdentity(sessionId)}:${resource}`) ?? Date.now()).toISOString();
+  }
   private orgCommands = new Map<string, Promise<void>>();
   private compiling = new Set<string>();
   private pendingCompiles = new Map<string, Promise<DeployRun>>();
@@ -122,6 +160,32 @@ export class SessionRuntime {
   }
 
   // ------------------------------------------------------------ lifecycle
+  async reconcileCheckpoint(sessionId: string, checkpointId: string): Promise<void> {
+    const checkpoint = this.app.repos.harness.get(sessionId, checkpointId);
+    if (!checkpoint) throw notFound('Checkpoint');
+    if (!['in_progress', 'uncertain'].includes(checkpoint.status)) return;
+    await this.orgCommand(checkpoint.orgId, async () => {
+      if (!['in_progress', 'uncertain'].includes(this.app.repos.harness.get(sessionId, checkpoint.id)!.status)) return;
+      this.compiling.add(sessionId);
+      try {
+        const outcome = await executeCheckpoint(this.app, checkpoint);
+        this.app.repos.harness.finish(sessionId, checkpoint.id, outcome.ok ? 'succeeded' : 'failed', rootDiagnostics(outcome.failures).length);
+        this.app.repos.deploys.update(checkpoint.deployId, {
+          status: outcome.ok ? 'succeeded' : 'failed',
+          sfDeployId: outcome.sfDeployId,
+          failures: outcome.failures,
+          completedAt: new Date().toISOString(),
+        });
+        if (!checkpoint.checkOnly) this.app.repos.harness.invalidate(checkpoint.orgId);
+        const state = this.app.repos.compileControl.get(sessionId);
+        state.stopped = 'Archived job reconciled. Run a fresh full validation of the current workspace before resuming.';
+        this.app.repos.compileControl.set(sessionId, state);
+        this.validatedFingerprints.delete(sessionId);
+      } finally {
+        this.compiling.delete(sessionId);
+      }
+    });
+  }
   createSession(input: {
     userId: string;
     orgId: string;
@@ -224,6 +288,17 @@ export class SessionRuntime {
 
   private async runTurn(sessionId: string, text: string, turn: ActiveTurn): Promise<void> {
     this.setStatus(sessionId, 'running', null);
+    const session = this.app.repos.sessions.byId(sessionId)!;
+    const unresolved = this.app.repos.harness.active(session.orgId);
+    if (unresolved) {
+      this.setStatus(sessionId, 'failed', `Unresolved remote operation in checkpoint ${unresolved.id}. Reconcile it before starting an agent.`);
+      return;
+    }
+    if (!this.app.repos.compileControl.get(sessionId).stopped) await preHydrate(this.app, sessionId, text);
+    if (turn.abort.signal.aborted) {
+      this.setStatus(sessionId, 'cancelled', 'Cancelled during hydration');
+      return;
+    }
     const ctx = this.toolContext(sessionId, { id: 'orchestrator', role: 'orchestrator', parentId: null }, turn);
     const limits = await this.refreshLimits(sessionId).catch(() => null);
     if (limits?.warnings.length)
@@ -443,6 +518,7 @@ export class SessionRuntime {
       tools: toolsForRole(role).map((t) => t.name),
       specialistInstructions: specialist ? { name: specialist.name, instructions: specialist.instructions } : null,
     });
+    sections.push({ name: 'hydration', text: this.hydrationPrompt(ctx.session.id) });
     return { system: sections.map((x) => x.text).join('\n\n'), sections };
   }
 
@@ -707,6 +783,26 @@ export class SessionRuntime {
   ): Promise<DeployRun> {
     const session = this.app.repos.sessions.byId(sessionId)!;
     const org = this.app.repos.orgs.byId(session.orgId)!;
+    const activeCheckpoint = this.app.repos.harness.active(org.id);
+    if (activeCheckpoint) {
+      if (opts.agentId || activeCheckpoint.sessionId !== sessionId || !activeCheckpoint.checkOnly)
+        throw conflict(`Org has an unresolved job in checkpoint ${activeCheckpoint.id}; reconcile it before submitting new work.`);
+      const reconciled = await executeCheckpoint(this.app, activeCheckpoint);
+      this.app.repos.harness.finish(sessionId, activeCheckpoint.id, reconciled.ok ? 'succeeded' : 'failed', rootDiagnostics(reconciled.failures).length);
+      this.app.repos.deploys.update(activeCheckpoint.deployId, {
+        status: reconciled.ok ? 'succeeded' : 'failed',
+        sfDeployId: reconciled.sfDeployId,
+        failures: reconciled.failures,
+        completedAt: new Date().toISOString(),
+      });
+      // Reconciliation never authorizes current files, which may have changed while the server was down.
+      const state = this.app.repos.compileControl.get(sessionId);
+      state.stopped = 'Archived job reconciled. Run a fresh full validation of the current workspace before resuming.';
+      this.app.repos.compileControl.set(sessionId, state);
+      this.validatedFingerprints.delete(sessionId);
+      this.bus.emit(sessionId, { type: 'workspace.file', path: '[reconciled-checkpoint]', action: 'modified', metadataType: null, fullName: null });
+      return this.app.repos.deploys.byId(activeCheckpoint.deployId)!;
+    }
     const allFiles = this.app.repos.workspace.list(sessionId);
     if (opts.paths && (!opts.paths.length || opts.paths.some((p) => !allFiles.some((f) => f.path === p))))
       throw badRequest('Compile paths must name staged files.');
@@ -732,9 +828,23 @@ export class SessionRuntime {
     const sourceFiles = files.filter((f) => f.action !== 'deleted').map((f) => ({ path: f.path, content: f.content }));
     const v = this.app.policy.checkDeploy(rules, org, session.uiMode, sourceFiles.length + deleted.length);
     if (v) throw new HttpError(422, 'POLICY', v.message);
+    const members =
+      scope === 'slice' &&
+      org.kind !== 'production' &&
+      (!opts.testLevel || opts.testLevel === 'NoTestRun') &&
+      toolingEligible(files) &&
+      this.app.sf.prepareToolingCompile
+        ? await this.app.sf.prepareToolingCompile(org.id, files)
+        : null;
+    const engine = members ? ('tooling' as const) : ('metadata' as const);
+    if (members) {
+      testLevel = 'NoTestRun';
+      runTests = [];
+    }
     const hash = compileHash(files, { testLevel, runTests: [...runTests].sort() });
     if (opts.agentId && control.lastFailedHash === hash)
       throw badRequest('This unchanged payload already failed. Repair its root errors before compiling it again.');
+    const zipBase64 = engine === 'metadata' && this.app.sf.prepareDeploy ? await this.app.sf.prepareDeploy(org.id, sourceFiles, deleted) : undefined;
     const run = this.app.repos.deploys.create({
       sessionId,
       orgId: org.id,
@@ -744,14 +854,25 @@ export class SessionRuntime {
       scope,
     });
     this.app.repos.deploys.update(run.id, { status: 'in_progress' });
+    const checkpoint = this.app.repos.harness.create({
+      sessionId,
+      orgId: org.id,
+      deployId: run.id,
+      engine,
+      scope,
+      checkOnly: true,
+      comparisonKey: sha256(
+        JSON.stringify([this.factIdentity(sessionId), engine, scope, files.map((f) => f.path).sort(), testLevel, [...runTests].sort(), rules.minCodeCoverage]),
+      ),
+      workspace: allFiles,
+      control,
+      payload: { apiVersion: org.apiVersion, files: sourceFiles, deleted, testLevel, runTests, zipBase64, members: members ?? undefined },
+    });
     let outcome: DeployOutcome;
     try {
-      outcome = await this.app.sf.deploy(org.id, sourceFiles, {
-        checkOnly: true,
-        testLevel,
-        runTests,
-        deleted,
-        onProgress: (m) => this.bus.emit(sessionId, { type: 'session.status', status: 'running', message: `Validating: ${m}` }),
+      outcome = await executeCheckpoint(this.app, checkpoint, {
+        signal: this.active.get(sessionId)?.abort.signal,
+        progress: (m) => this.bus.emit(sessionId, { type: 'session.status', status: 'running', message: `Validating: ${m}` }),
       });
     } catch (e) {
       control.stopped =
@@ -793,12 +914,37 @@ export class SessionRuntime {
       completedAt: new Date().toISOString(),
     })!;
     // What passed validation, recorded now: a later deploy of anything else is not what was checked.
-    const next = applyCompileResult(control, files, outcome.failures, ok, hash, scope === 'full');
+    const kind = classifyFailure(outcome);
+    const infrastructureFailure = !ok && ['platform', 'auth', 'quota', 'transport', 'unknown', 'cancelled'].includes(kind);
+    const next = infrastructureFailure
+      ? {
+          ...control,
+          checks: control.checks + 1,
+          stopped: `Salesforce ${kind} failure. No code repair is indicated; inspect the archived attempts and validate manually before resuming.`,
+        }
+      : applyCompileResult(control, files, outcome.failures, ok, hash, scope === 'full');
     next.repairKeys = repairComponents(next.roots, allFiles);
     if (!ok && (!next.roots.length || outcome.failures.some((f) => /UNKNOWN_EXCEPTION/i.test(f.problem))))
       next.stopped =
         'Salesforce returned a platform or test-level failure without component diagnostics. Stop code generation and inspect the validation result before retrying.';
     this.app.repos.compileControl.set(sessionId, next);
+    const roots = rootDiagnostics(outcome.failures).length;
+    this.app.repos.harness.finish(sessionId, checkpoint.id, ok ? 'succeeded' : 'failed', infrastructureFailure ? null : roots);
+    const previous = this.app.repos.harness.previous(sessionId, checkpoint.comparisonKey, checkpoint.id);
+    if (!ok && kind === 'component' && previous?.rootCount !== null && previous?.rootCount !== undefined && roots > previous.rootCount) {
+      const restored = {
+        ...previous.control,
+        stopped: `Compile regressed from ${previous.rootCount} to ${roots} root errors. Restored workspace checkpoint ${previous.id}; failed candidate ${checkpoint.id} is quarantined. Validate manually before resuming.`,
+        checks: next.checks,
+        noProgress: next.noProgress,
+      };
+      this.app.repos.harness.restore(sessionId, checkpoint.id, previous, restored);
+      for (const file of previous.workspace)
+        this.bus.emit(sessionId, { type: 'workspace.file', path: file.path, action: 'modified', metadataType: file.metadataType, fullName: file.fullName });
+      for (const file of allFiles.filter((f) => !previous.workspace.some((p) => p.path === f.path)))
+        this.bus.emit(sessionId, { type: 'workspace.file', path: file.path, action: 'deleted', metadataType: file.metadataType, fullName: file.fullName });
+      this.bus.emit(sessionId, { type: 'session.error', agentId: null, message: restored.stopped, recoverable: true });
+    }
     if (ok && scope === 'full') this.validatedFingerprints.set(sessionId, workspaceFingerprint(files));
     else this.validatedFingerprints.delete(sessionId);
     this.bus.emit(sessionId, {
@@ -820,6 +966,7 @@ export class SessionRuntime {
 
   /** True when the latest validation succeeded and the workspace has not changed since. */
   readyToDeploy(sessionId: string): { ok: boolean; reason?: string; validation?: DeployRun } {
+    if (this.app.repos.compileControl.get(sessionId).stopped) return { ok: false, reason: this.app.repos.compileControl.get(sessionId).stopped! };
     const last = this.app.repos.deploys.latest(sessionId, true);
     if (!last) return { ok: false, reason: 'No validation has been run yet.' };
     if (last.scope === 'slice')
@@ -949,6 +1096,8 @@ export class SessionRuntime {
     userId: string,
     opts: { confirmationId?: string; confirmedBy?: string; approvedFingerprint?: WorkspaceFingerprint | null },
   ): Promise<{ ok: boolean; message: string; deployId: string; verification?: string }> {
+    const target = this.app.repos.sessions.byId(sessionId)!;
+    if (this.app.repos.harness.active(target.orgId)) throw conflict('An unresolved org operation must be reconciled before deployment.');
     const ready = this.readyToDeploy(sessionId);
     if (!ready.ok) throw new HttpError(409, 'NOT_VALIDATED', ready.reason!);
     const session = this.app.repos.sessions.byId(sessionId)!;
@@ -999,16 +1148,32 @@ export class SessionRuntime {
       ready.validation!.testLevel === 'RunSpecifiedTests'
         ? files.filter((f) => f.metadataType === 'ApexClass' && /@IsTest/i.test(f.content)).map((f) => f.fullName!)
         : [];
-    let outcome: DeployOutcome;
-    try {
-      outcome = await this.app.sf.deploy(org.id, sourceFiles, {
-        checkOnly: false,
+    const checkpoint = this.app.repos.harness.create({
+      sessionId,
+      orgId: org.id,
+      deployId: run.id,
+      engine: 'metadata',
+      scope: 'full',
+      checkOnly: false,
+      comparisonKey: `deployment:${run.id}`,
+      workspace: files,
+      control: this.app.repos.compileControl.get(sessionId),
+      payload: {
+        apiVersion: org.apiVersion,
+        files: sourceFiles,
+        deleted,
         testLevel: ready.validation!.testLevel,
         runTests,
-        deleted,
-        onProgress: (m) => this.bus.emit(sessionId, { type: 'session.status', status: 'running', message: `Deploying: ${m}` }),
+        zipBase64: this.app.sf.prepareDeploy ? await this.app.sf.prepareDeploy(org.id, sourceFiles, deleted) : undefined,
+      },
+    });
+    let outcome: DeployOutcome;
+    try {
+      outcome = await executeCheckpoint(this.app, checkpoint, {
+        progress: (m) => this.bus.emit(sessionId, { type: 'session.status', status: 'running', message: `Deploying: ${m}` }),
       });
     } catch (e) {
+      this.app.repos.harness.invalidate(org.id);
       this.app.repos.deploys.update(run.id, {
         status: 'failed',
         failures: [
@@ -1019,6 +1184,8 @@ export class SessionRuntime {
       this.bus.emit(sessionId, { type: 'deploy.result', deployId: run.id, ok: false, sfDeployId: null, componentsDeployed: 0, message: (e as Error).message });
       return { ok: false, message: (e as Error).message, deployId: run.id };
     }
+    this.app.repos.harness.invalidate(org.id);
+    this.app.repos.harness.finish(sessionId, checkpoint.id, outcome.ok ? 'succeeded' : 'failed', rootDiagnostics(outcome.failures).length);
     this.app.repos.deploys.update(run.id, {
       status: outcome.ok ? 'succeeded' : 'failed',
       sfDeployId: outcome.sfDeployId,

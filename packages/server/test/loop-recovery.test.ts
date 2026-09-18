@@ -130,7 +130,7 @@ describe('compaction', () => {
     await waitForIdle(ctx, session.id);
     expect(provider.summaries).toBeGreaterThanOrEqual(1);
     // The earlier Alpha result was summarised away, so the memo must not answer with a stub.
-    expect(describes.filter((d) => d === 'Alpha')).toHaveLength(2);
+    expect(describes.filter((d) => d === 'Alpha')).toHaveLength(1); // full cached evidence survives compaction
     expect(repeatResult).not.toContain('Unchanged since');
     expect(repeatResult).toContain('Alpha_Field_0__c');
     // The pre-compaction transcript is reachable as an artifact.

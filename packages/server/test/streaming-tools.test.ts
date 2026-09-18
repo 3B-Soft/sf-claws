@@ -51,6 +51,7 @@ describe('streaming tool execution', () => {
     const provider = new FakeProvider([]);
     provider.streamToolCalls = true;
     const sf = {
+      readComponent: async () => [], // verified missing component, not a transport failure
       query: async () => {
         mark('query');
         return { totalSize: 0, records: [], done: true };

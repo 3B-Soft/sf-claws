@@ -67,9 +67,9 @@
     ]
   },
   {
-    "title": "packages/server/src/http/routes calls 129 outbound endpoint(s)",
+    "title": "packages/server/src/http/routes calls 133 outbound endpoint(s)",
     "source": "domain",
-    "description": "packages/server/src/http/routes issues HTTP calls to 129 distinct endpoint(s) that no route in this repository serves, so they go to a third party or a sibling service. This is the dependency that breaks when the other side changes, and it is not visible from this repository's own routes.",
+    "description": "packages/server/src/http/routes issues HTTP calls to 133 distinct endpoint(s) that no route in this repository serves, so they go to a third party or a sibling service. This is the dependency that breaks when the other side changes, and it is not visible from this repository's own routes.",
     "confidence": 0.9,
     "evidence": [
       {
@@ -275,22 +275,22 @@
         "file": "packages/server/src/salesforce/service.ts",
         "fact": "/runTestsAsynchronous",
         "detail": "POST called from here",
-        "line": 578,
+        "line": 629,
         "fact_id": "51f8b93bef93558a54071d9880dfc53b"
       }
     ]
   },
   {
-    "title": "High fan-in symbol: packages/server/src/agents.SessionRuntime.app (55 dependents)",
+    "title": "High fan-in symbol: packages/server/src/agents.SessionRuntime.app (60 dependents)",
     "source": "god-class",
-    "description": "\"packages/server/src/agents.SessionRuntime.app\" is depended upon by 55 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
+    "description": "\"packages/server/src/agents.SessionRuntime.app\" is depended upon by 60 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
     "confidence": 0.95,
     "evidence": [
       {
         "file": "packages/server/src/agents/runtime.ts",
         "symbol": "packages/server/src/agents.SessionRuntime.app",
-        "detail": "55 symbols depend on this",
-        "line": 114,
+        "detail": "60 symbols depend on this",
+        "line": 152,
         "fact_id": "312828348147cc62a3ebc81aa542656a"
       },
       {
@@ -521,6 +521,66 @@
     ]
   },
   {
+    "title": "High fan-in symbol: packages/server/src/lib.newId (31 dependents)",
+    "source": "god-class",
+    "description": "\"packages/server/src/lib.newId\" is depended upon by 31 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
+    "confidence": 0.95,
+    "evidence": [
+      {
+        "file": "packages/server/src/lib/crypto.ts",
+        "symbol": "packages/server/src/lib.newId",
+        "detail": "31 symbols depend on this",
+        "line": 4,
+        "fact_id": "0982a6a04393a7e7d16eed75e9fdcdff"
+      },
+      {
+        "symbol": "packages/server/src/agents.AgentRun.run",
+        "detail": "depends on packages/server/src/lib.newId",
+        "fact_id": "e18f970f227f57627f24d15192f547c7"
+      },
+      {
+        "symbol": "packages/server/src/agents.AgentRun.wrapUp",
+        "detail": "depends on packages/server/src/lib.newId",
+        "fact_id": "0139fa2e9a79118230e563bd9f59dd2c"
+      },
+      {
+        "symbol": "packages/server/src/agents.SessionRuntime.captureBrowser",
+        "detail": "depends on packages/server/src/lib.newId",
+        "fact_id": "a8362f21130833ac4d0fdb5584efc5aa"
+      },
+      {
+        "symbol": "packages/server/src/agents.SessionRuntime.runSubagent",
+        "detail": "depends on packages/server/src/lib.newId",
+        "fact_id": "a1cc9c0c97b84e2fe1fb9181d21361c4"
+      },
+      {
+        "symbol": "packages/server/src/agents.SessionRuntime.runTurn",
+        "detail": "depends on packages/server/src/lib.newId",
+        "fact_id": "a7160b9ab12350d4a95e268babd3fd1f"
+      },
+      {
+        "symbol": "packages/server/src/agents.measuredCompletion",
+        "detail": "depends on packages/server/src/lib.newId",
+        "fact_id": "10bd3ae882cab083f6755bfcc4d57b40"
+      },
+      {
+        "symbol": "packages/server/src/agents.preHydrate",
+        "detail": "depends on packages/server/src/lib.newId",
+        "fact_id": "9b77bf55cae2dafc67cc9d8e2b9234ff"
+      },
+      {
+        "symbol": "packages/server/src/auth.AuthService.issueToken",
+        "detail": "depends on packages/server/src/lib.newId",
+        "fact_id": "3b0c8c6a8806d07d0ce8f3ca419ab48f"
+      }
+    ],
+    "suggested_actions": [
+      "Split the symbol along distinct responsibilities its callers use",
+      "Introduce narrower interfaces so callers depend only on what they need",
+      "Stabilize its public contract to limit churn for dependents"
+    ]
+  },
+  {
     "title": "High fan-in symbol: packages/extension/src/modules/x/chatThread.ChatThread.session (30 dependents)",
     "source": "god-class",
     "description": "\"packages/extension/src/modules/x/chatThread.ChatThread.session\" is depended upon by 30 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
@@ -590,7 +650,7 @@
         "file": "packages/server/src/agents/runtime.ts",
         "symbol": "packages/server/src/agents.SessionRuntime.bus",
         "detail": "29 symbols depend on this",
-        "line": 93,
+        "line": 98,
         "fact_id": "4b8c81fa9ccd360754943f63bbe83237"
       },
       {
@@ -641,57 +701,117 @@
     ]
   },
   {
-    "title": "High fan-in symbol: packages/server/src/lib.newId (28 dependents)",
+    "title": "High fan-in symbol: packages/server/src/salesforce.SalesforceService.conn (26 dependents)",
     "source": "god-class",
-    "description": "\"packages/server/src/lib.newId\" is depended upon by 28 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
+    "description": "\"packages/server/src/salesforce.SalesforceService.conn\" is depended upon by 26 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
     "confidence": 0.95,
     "evidence": [
       {
-        "file": "packages/server/src/lib/crypto.ts",
-        "symbol": "packages/server/src/lib.newId",
-        "detail": "28 symbols depend on this",
-        "line": 4,
-        "fact_id": "0982a6a04393a7e7d16eed75e9fdcdff"
+        "file": "packages/server/src/salesforce/service.ts",
+        "symbol": "packages/server/src/salesforce.SalesforceService.conn",
+        "detail": "26 symbols depend on this",
+        "line": 204,
+        "fact_id": "a26e2a5aa7dae757a898af73dfa55854"
       },
       {
-        "symbol": "packages/server/src/agents.AgentRun.run",
-        "detail": "depends on packages/server/src/lib.newId",
-        "fact_id": "e18f970f227f57627f24d15192f547c7"
+        "symbol": "packages/server/src/salesforce.SalesforceService",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
+        "fact_id": "739c8eefe886466eea28d1b0b2efb5d9"
       },
       {
-        "symbol": "packages/server/src/agents.AgentRun.wrapUp",
-        "detail": "depends on packages/server/src/lib.newId",
-        "fact_id": "0139fa2e9a79118230e563bd9f59dd2c"
+        "symbol": "packages/server/src/salesforce.SalesforceService.apexLogBody",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
+        "fact_id": "4389f28c5a729d79421a6a6fbd6eebf4"
       },
       {
-        "symbol": "packages/server/src/agents.SessionRuntime.captureBrowser",
-        "detail": "depends on packages/server/src/lib.newId",
-        "fact_id": "a8362f21130833ac4d0fdb5584efc5aa"
+        "symbol": "packages/server/src/salesforce.SalesforceService.cancelDeploy",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
+        "fact_id": "57d6c540e2e6b32d89355faade25f481"
       },
       {
-        "symbol": "packages/server/src/agents.SessionRuntime.runSubagent",
-        "detail": "depends on packages/server/src/lib.newId",
-        "fact_id": "a1cc9c0c97b84e2fe1fb9181d21361c4"
+        "symbol": "packages/server/src/salesforce.SalesforceService.cleanupToolingContainer",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
+        "fact_id": "790b2bafd7a183b03e6a85741dedc3b6"
       },
       {
-        "symbol": "packages/server/src/agents.SessionRuntime.runTurn",
-        "detail": "depends on packages/server/src/lib.newId",
-        "fact_id": "a7160b9ab12350d4a95e268babd3fd1f"
+        "symbol": "packages/server/src/salesforce.SalesforceService.componentDependencies",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
+        "fact_id": "72c226cd72aa247651201e2dff9b1962"
       },
       {
-        "symbol": "packages/server/src/agents.measuredCompletion",
-        "detail": "depends on packages/server/src/lib.newId",
-        "fact_id": "10bd3ae882cab083f6755bfcc4d57b40"
+        "symbol": "packages/server/src/salesforce.SalesforceService.createRecord",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
+        "fact_id": "935f196aec26ac9fc7096b9238c87ab8"
       },
       {
-        "symbol": "packages/server/src/auth.AuthService.issueToken",
-        "detail": "depends on packages/server/src/lib.newId",
-        "fact_id": "3b0c8c6a8806d07d0ce8f3ca419ab48f"
+        "symbol": "packages/server/src/salesforce.SalesforceService.deleteRecord",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
+        "fact_id": "a2a71d18e47eca8bb8f2843f61e00765"
       },
       {
-        "symbol": "packages/server/src/db/repos.ArtifactsRepo.create",
-        "detail": "depends on packages/server/src/lib.newId",
-        "fact_id": "7f3b03e4d738546445deed8fd85dd594"
+        "symbol": "packages/server/src/salesforce.SalesforceService.deploy",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
+        "fact_id": "a50164c296be2404eabc711725844b6a"
+      }
+    ],
+    "suggested_actions": [
+      "Split the symbol along distinct responsibilities its callers use",
+      "Introduce narrower interfaces so callers depend only on what they need",
+      "Stabilize its public contract to limit churn for dependents"
+    ]
+  },
+  {
+    "title": "High fan-in symbol: packages/server/src/salesforce.SalesforceService.wrap (25 dependents)",
+    "source": "god-class",
+    "description": "\"packages/server/src/salesforce.SalesforceService.wrap\" is depended upon by 25 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
+    "confidence": 0.95,
+    "evidence": [
+      {
+        "file": "packages/server/src/salesforce/service.ts",
+        "symbol": "packages/server/src/salesforce.SalesforceService.wrap",
+        "detail": "25 symbols depend on this",
+        "line": 209,
+        "fact_id": "f937dd0a326f6fee279143d0e75ad188"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "739c8eefe886466eea28d1b0b2efb5d9"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.apexLogBody",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "4389f28c5a729d79421a6a6fbd6eebf4"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.cleanupToolingContainer",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "790b2bafd7a183b03e6a85741dedc3b6"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.componentDependencies",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "72c226cd72aa247651201e2dff9b1962"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.createRecord",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "935f196aec26ac9fc7096b9238c87ab8"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.deleteRecord",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "a2a71d18e47eca8bb8f2843f61e00765"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.deploy",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "a50164c296be2404eabc711725844b6a"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.describe",
+        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "6e70bb602f0445c28d886d4aa24adba2"
       }
     ],
     "suggested_actions": [
@@ -890,7 +1010,7 @@
         "file": "packages/server/src/agents/runtime.ts",
         "symbol": "packages/server/src/agents.SessionRuntime.active",
         "detail": "22 symbols depend on this",
-        "line": 94,
+        "line": 99,
         "fact_id": "081adf1a5f9c9c2434ff81181465fd95"
       },
       {
@@ -1061,66 +1181,6 @@
     ]
   },
   {
-    "title": "High fan-in symbol: packages/server/src/salesforce.SalesforceService.conn (21 dependents)",
-    "source": "god-class",
-    "description": "\"packages/server/src/salesforce.SalesforceService.conn\" is depended upon by 21 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
-    "confidence": 0.95,
-    "evidence": [
-      {
-        "file": "packages/server/src/salesforce/service.ts",
-        "symbol": "packages/server/src/salesforce.SalesforceService.conn",
-        "detail": "21 symbols depend on this",
-        "line": 192,
-        "fact_id": "a26e2a5aa7dae757a898af73dfa55854"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
-        "fact_id": "739c8eefe886466eea28d1b0b2efb5d9"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.apexLogBody",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
-        "fact_id": "4389f28c5a729d79421a6a6fbd6eebf4"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.cancelDeploy",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
-        "fact_id": "57d6c540e2e6b32d89355faade25f481"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.componentDependencies",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
-        "fact_id": "72c226cd72aa247651201e2dff9b1962"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.createRecord",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
-        "fact_id": "935f196aec26ac9fc7096b9238c87ab8"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.deleteRecord",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
-        "fact_id": "a2a71d18e47eca8bb8f2843f61e00765"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.deploy",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
-        "fact_id": "a50164c296be2404eabc711725844b6a"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.describe",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.conn",
-        "fact_id": "6e70bb602f0445c28d886d4aa24adba2"
-      }
-    ],
-    "suggested_actions": [
-      "Split the symbol along distinct responsibilities its callers use",
-      "Introduce narrower interfaces so callers depend only on what they need",
-      "Stabilize its public contract to limit churn for dependents"
-    ]
-  },
-  {
     "title": "High fan-in symbol: packages/admin-ui/src/modules/x/app.App.routeName (20 dependents)",
     "source": "god-class",
     "description": "\"packages/admin-ui/src/modules/x/app.App.routeName\" is depended upon by 20 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
@@ -1232,66 +1292,6 @@
         "symbol": "packages/extension/src/modules/x/metadataVisual.MetadataVisual.flowHeader",
         "detail": "depends on packages/extension/src/modules/x/metadataVisual.MetadataVisual.p",
         "fact_id": "f119dc494eb963dafe13b0c51d137b7d"
-      }
-    ],
-    "suggested_actions": [
-      "Split the symbol along distinct responsibilities its callers use",
-      "Introduce narrower interfaces so callers depend only on what they need",
-      "Stabilize its public contract to limit churn for dependents"
-    ]
-  },
-  {
-    "title": "High fan-in symbol: packages/server/src/salesforce.SalesforceService.wrap (20 dependents)",
-    "source": "god-class",
-    "description": "\"packages/server/src/salesforce.SalesforceService.wrap\" is depended upon by 20 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
-    "confidence": 0.95,
-    "evidence": [
-      {
-        "file": "packages/server/src/salesforce/service.ts",
-        "symbol": "packages/server/src/salesforce.SalesforceService.wrap",
-        "detail": "20 symbols depend on this",
-        "line": 197,
-        "fact_id": "f937dd0a326f6fee279143d0e75ad188"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "739c8eefe886466eea28d1b0b2efb5d9"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.apexLogBody",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "4389f28c5a729d79421a6a6fbd6eebf4"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.componentDependencies",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "72c226cd72aa247651201e2dff9b1962"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.createRecord",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "935f196aec26ac9fc7096b9238c87ab8"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.deleteRecord",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "a2a71d18e47eca8bb8f2843f61e00765"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.deploy",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "a50164c296be2404eabc711725844b6a"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.describe",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "6e70bb602f0445c28d886d4aa24adba2"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.describeGlobal",
-        "detail": "depends on packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "41c6ba15edafe972043da3432eb067d6"
       }
     ],
     "suggested_actions": [
@@ -1601,15 +1601,15 @@
     ]
   },
   {
-    "title": "High fan-in symbol: packages/server/src/lib.notFound (17 dependents)",
+    "title": "High fan-in symbol: packages/server/src/lib.notFound (18 dependents)",
     "source": "god-class",
-    "description": "\"packages/server/src/lib.notFound\" is depended upon by 17 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
+    "description": "\"packages/server/src/lib.notFound\" is depended upon by 18 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
     "confidence": 0.95,
     "evidence": [
       {
         "file": "packages/server/src/lib/errors.ts",
         "symbol": "packages/server/src/lib.notFound",
-        "detail": "17 symbols depend on this",
+        "detail": "18 symbols depend on this",
         "line": 15,
         "fact_id": "bb7f1e8c89e99debcffa520d9dc9a833"
       },
@@ -1627,6 +1627,11 @@
         "symbol": "packages/server/src/agents.SessionRuntime.createSession",
         "detail": "depends on packages/server/src/lib.notFound",
         "fact_id": "1423abf53171a04e3aaa0a6165c1194c"
+      },
+      {
+        "symbol": "packages/server/src/agents.SessionRuntime.reconcileCheckpoint",
+        "detail": "depends on packages/server/src/lib.notFound",
+        "fact_id": "52d933f81bbb0ec06719d800b3bba840"
       },
       {
         "symbol": "packages/server/src/agents.SessionRuntime.resume",
@@ -1647,11 +1652,6 @@
         "symbol": "packages/server/src/auth.AuthService.approveDevice",
         "detail": "depends on packages/server/src/lib.notFound",
         "fact_id": "2a7b7f63eebcc09bba564998f3b010ec"
-      },
-      {
-        "symbol": "packages/server/src/auth.AuthService.pollDevice",
-        "detail": "depends on packages/server/src/lib.notFound",
-        "fact_id": "7b0c3e97faead72cf06bee0c30204d0e"
       }
     ],
     "suggested_actions": [
@@ -1850,15 +1850,78 @@
     ]
   },
   {
-    "title": "Call-graph hotspot: docs/ARCHITECTURE.md (fan-in 4, fan-out 21)",
+    "title": "Call-graph hotspot: packages/server/src/salesforce.SalesforceService.wrap (fan-in 25, fan-out 4)",
     "source": "hotspots",
-    "description": "\"docs/ARCHITECTURE.md\" is a pinch point: 4 symbols call into it and it calls out to 21 others, so a large share of call chains pass through it (degree-centrality proxy for betweenness). Such chokepoints are high-risk to change and high-value to test.",
+    "description": "\"packages/server/src/salesforce.SalesforceService.wrap\" is a pinch point: 25 symbols call into it and it calls out to 4 others, so a large share of call chains pass through it (degree-centrality proxy for betweenness). Such chokepoints are high-risk to change and high-value to test.",
+    "confidence": 0.7,
+    "evidence": [
+      {
+        "file": "packages/server/src/salesforce/service.ts",
+        "symbol": "packages/server/src/salesforce.SalesforceService.wrap",
+        "detail": "fan-in 25 × fan-out 4 = score 100",
+        "line": 209,
+        "fact_id": "f937dd0a326f6fee279143d0e75ad188"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService",
+        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "739c8eefe886466eea28d1b0b2efb5d9"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.apexLogBody",
+        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "4389f28c5a729d79421a6a6fbd6eebf4"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.cleanupToolingContainer",
+        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "790b2bafd7a183b03e6a85741dedc3b6"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.componentDependencies",
+        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "72c226cd72aa247651201e2dff9b1962"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.createRecord",
+        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "935f196aec26ac9fc7096b9238c87ab8"
+      },
+      {
+        "symbol": "packages/server/src/salesforce",
+        "detail": "called by packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "e360e6e38ead9ee4506737e0eb82469e"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.SalesforceService.connections",
+        "detail": "called by packages/server/src/salesforce.SalesforceService.wrap",
+        "fact_id": "8a36d22cd245dd932d56563c998a7637"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.String",
+        "detail": "called by packages/server/src/salesforce.SalesforceService.wrap"
+      },
+      {
+        "symbol": "packages/server/src/salesforce.fn",
+        "detail": "called by packages/server/src/salesforce.SalesforceService.wrap"
+      }
+    ],
+    "suggested_actions": [
+      "Add focused tests around this chokepoint before refactoring",
+      "Consider decomposing it so call paths don't all funnel through one symbol",
+      "Verify it isn't doing orchestration that belongs in callers"
+    ]
+  },
+  {
+    "title": "Call-graph hotspot: docs/ARCHITECTURE.md (fan-in 4, fan-out 22)",
+    "source": "hotspots",
+    "description": "\"docs/ARCHITECTURE.md\" is a pinch point: 4 symbols call into it and it calls out to 22 others, so a large share of call chains pass through it (degree-centrality proxy for betweenness). Such chokepoints are high-risk to change and high-value to test.",
     "confidence": 0.7,
     "evidence": [
       {
         "file": "docs/ARCHITECTURE.md",
         "symbol": "docs/ARCHITECTURE.md",
-        "detail": "fan-in 4 × fan-out 21 = score 84",
+        "detail": "fan-in 4 × fan-out 22 = score 88",
         "line": 1,
         "fact_id": "d8c683e2757756da4f88b37b7bba5758"
       },
@@ -1902,72 +1965,9 @@
         "fact_id": "6b6599fea4aa57ff71a4574404520431"
       },
       {
-        "symbol": "docs/ARCHITECTURE.md#compile-controller-first-increment",
+        "symbol": "docs/ARCHITECTURE.md#compile-controller-and-durable-recovery",
         "detail": "called by docs/ARCHITECTURE.md",
-        "fact_id": "f7f33d5140031504ad1b941a22d92c05"
-      }
-    ],
-    "suggested_actions": [
-      "Add focused tests around this chokepoint before refactoring",
-      "Consider decomposing it so call paths don't all funnel through one symbol",
-      "Verify it isn't doing orchestration that belongs in callers"
-    ]
-  },
-  {
-    "title": "Call-graph hotspot: packages/server/src/salesforce.SalesforceService.wrap (fan-in 20, fan-out 4)",
-    "source": "hotspots",
-    "description": "\"packages/server/src/salesforce.SalesforceService.wrap\" is a pinch point: 20 symbols call into it and it calls out to 4 others, so a large share of call chains pass through it (degree-centrality proxy for betweenness). Such chokepoints are high-risk to change and high-value to test.",
-    "confidence": 0.7,
-    "evidence": [
-      {
-        "file": "packages/server/src/salesforce/service.ts",
-        "symbol": "packages/server/src/salesforce.SalesforceService.wrap",
-        "detail": "fan-in 20 × fan-out 4 = score 80",
-        "line": 197,
-        "fact_id": "f937dd0a326f6fee279143d0e75ad188"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService",
-        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "739c8eefe886466eea28d1b0b2efb5d9"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.apexLogBody",
-        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "4389f28c5a729d79421a6a6fbd6eebf4"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.componentDependencies",
-        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "72c226cd72aa247651201e2dff9b1962"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.createRecord",
-        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "935f196aec26ac9fc7096b9238c87ab8"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.deleteRecord",
-        "detail": "calls into packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "a2a71d18e47eca8bb8f2843f61e00765"
-      },
-      {
-        "symbol": "packages/server/src/salesforce",
-        "detail": "called by packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "e360e6e38ead9ee4506737e0eb82469e"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.SalesforceService.connections",
-        "detail": "called by packages/server/src/salesforce.SalesforceService.wrap",
-        "fact_id": "8a36d22cd245dd932d56563c998a7637"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.String",
-        "detail": "called by packages/server/src/salesforce.SalesforceService.wrap"
-      },
-      {
-        "symbol": "packages/server/src/salesforce.fn",
-        "detail": "called by packages/server/src/salesforce.SalesforceService.wrap"
+        "fact_id": "03dc73185dfee6c63f0474860c68493e"
       }
     ],
     "suggested_actions": [
@@ -2186,7 +2186,7 @@
         "file": "packages/server/src/agents/agent.ts",
         "symbol": "packages/server/src/agents.AgentRun.compactNow",
         "detail": "fan-in 4 × fan-out 14 = score 56",
-        "line": 713,
+        "line": 719,
         "fact_id": "087400ef71ba16c7e93437492f7c9bfc"
       },
       {
@@ -2638,7 +2638,7 @@
         "file": "packages/server/src/agents/agent.ts",
         "symbol": "packages/server/src/agents.AgentRun.complete",
         "detail": "fan-in 3 × fan-out 14 = score 42",
-        "line": 344,
+        "line": 350,
         "fact_id": "3875b897dc72c0b38e9d4a4de5fa4edb"
       },
       {
@@ -3078,9 +3078,9 @@
     ]
   },
   {
-    "title": "Large public surface: packages/server/src/db/repos exports 236 of 250 symbols (94%)",
+    "title": "Large public surface: packages/server/src/db/repos exports 255 of 270 symbols (94%)",
     "source": "exported-surface",
-    "description": "Module \"packages/server/src/db/repos\" exports 236 of its 250 symbols (94%). A large, near-fully-exported module hides little of its implementation, so consumers can couple to internals and it is hard to change without breaking them. Worth a visibility review — though a deliberate library API may legitimately export most of its surface.",
+    "description": "Module \"packages/server/src/db/repos\" exports 255 of its 270 symbols (94%). A large, near-fully-exported module hides little of its implementation, so consumers can couple to internals and it is hard to change without breaking them. Worth a visibility review — though a deliberate library API may legitimately export most of its surface.",
     "confidence": 0.6,
     "evidence": [
       {
@@ -3131,9 +3131,9 @@
     ]
   },
   {
-    "title": "Large public surface: packages/shared/src exports 210 of 220 symbols (95%)",
+    "title": "Large public surface: packages/shared/src exports 217 of 227 symbols (96%)",
     "source": "exported-surface",
-    "description": "Module \"packages/shared/src\" exports 210 of its 220 symbols (95%). A large, near-fully-exported module hides little of its implementation, so consumers can couple to internals and it is hard to change without breaking them. Worth a visibility review — though a deliberate library API may legitimately export most of its surface.",
+    "description": "Module \"packages/shared/src\" exports 217 of its 227 symbols (96%). A large, near-fully-exported module hides little of its implementation, so consumers can couple to internals and it is hard to change without breaking them. Worth a visibility review — though a deliberate library API may legitimately export most of its surface.",
     "confidence": 0.6,
     "evidence": [
       {
@@ -4158,6 +4158,26 @@
     ]
   },
   {
+    "title": "High cyclomatic complexity: packages/server/src/agents.SessionRuntime.validateLocked (83)",
+    "source": "complexity-outliers",
+    "description": "\"packages/server/src/agents.SessionRuntime.validateLocked\" has a cyclomatic complexity of 83 — well above the repo average. Highly branched functions are hard to test fully and are frequent defect sites.",
+    "confidence": 0.7,
+    "evidence": [
+      {
+        "file": "packages/server/src/agents/runtime.ts",
+        "symbol": "packages/server/src/agents.SessionRuntime.validateLocked",
+        "detail": "cyclomatic complexity 83 at line 780",
+        "line": 780,
+        "fact_id": "9002fd69cfbb1687e7369e232d4adff8"
+      }
+    ],
+    "suggested_actions": [
+      "Extract guard clauses and nested branches into helper functions",
+      "Replace deep conditionals with table/strategy dispatch where possible",
+      "Add tests covering the distinct branches before refactoring"
+    ]
+  },
+  {
     "title": "High cyclomatic complexity: packages/server/src/http/routes.adminRoutes (83)",
     "source": "complexity-outliers",
     "description": "\"packages/server/src/http/routes.adminRoutes\" has a cyclomatic complexity of 83 — well above the repo average. Highly branched functions are hard to test fully and are frequent defect sites.",
@@ -4198,17 +4218,37 @@
     ]
   },
   {
-    "title": "High cyclomatic complexity: packages/server/src/http/routes.sessionRoutes (66)",
+    "title": "High cyclomatic complexity: packages/server/src/http/routes.sessionRoutes (70)",
     "source": "complexity-outliers",
-    "description": "\"packages/server/src/http/routes.sessionRoutes\" has a cyclomatic complexity of 66 — well above the repo average. Highly branched functions are hard to test fully and are frequent defect sites.",
+    "description": "\"packages/server/src/http/routes.sessionRoutes\" has a cyclomatic complexity of 70 — well above the repo average. Highly branched functions are hard to test fully and are frequent defect sites.",
     "confidence": 0.7,
     "evidence": [
       {
         "file": "packages/server/src/http/routes/sessions.ts",
         "symbol": "packages/server/src/http/routes.sessionRoutes",
-        "detail": "cyclomatic complexity 66 at line 24",
+        "detail": "cyclomatic complexity 70 at line 24",
         "line": 24,
         "fact_id": "7ccc3f143ec9719ff05e3d5851be59b4"
+      }
+    ],
+    "suggested_actions": [
+      "Extract guard clauses and nested branches into helper functions",
+      "Replace deep conditionals with table/strategy dispatch where possible",
+      "Add tests covering the distinct branches before refactoring"
+    ]
+  },
+  {
+    "title": "High cyclomatic complexity: packages/server/src/agents.AgentRun.run (58)",
+    "source": "complexity-outliers",
+    "description": "\"packages/server/src/agents.AgentRun.run\" has a cyclomatic complexity of 58 — well above the repo average. Highly branched functions are hard to test fully and are frequent defect sites.",
+    "confidence": 0.7,
+    "evidence": [
+      {
+        "file": "packages/server/src/agents/agent.ts",
+        "symbol": "packages/server/src/agents.AgentRun.run",
+        "detail": "cyclomatic complexity 58 at line 128",
+        "line": 128,
+        "fact_id": "e18f970f227f57627f24d15192f547c7"
       }
     ],
     "suggested_actions": [
@@ -4249,46 +4289,6 @@
         "detail": "cyclomatic complexity 53 at line 113",
         "line": 113,
         "fact_id": "b880314659fae6b993400978db9b03e3"
-      }
-    ],
-    "suggested_actions": [
-      "Extract guard clauses and nested branches into helper functions",
-      "Replace deep conditionals with table/strategy dispatch where possible",
-      "Add tests covering the distinct branches before refactoring"
-    ]
-  },
-  {
-    "title": "High cyclomatic complexity: packages/server/src/agents.AgentRun.run (53)",
-    "source": "complexity-outliers",
-    "description": "\"packages/server/src/agents.AgentRun.run\" has a cyclomatic complexity of 53 — well above the repo average. Highly branched functions are hard to test fully and are frequent defect sites.",
-    "confidence": 0.7,
-    "evidence": [
-      {
-        "file": "packages/server/src/agents/agent.ts",
-        "symbol": "packages/server/src/agents.AgentRun.run",
-        "detail": "cyclomatic complexity 53 at line 128",
-        "line": 128,
-        "fact_id": "e18f970f227f57627f24d15192f547c7"
-      }
-    ],
-    "suggested_actions": [
-      "Extract guard clauses and nested branches into helper functions",
-      "Replace deep conditionals with table/strategy dispatch where possible",
-      "Add tests covering the distinct branches before refactoring"
-    ]
-  },
-  {
-    "title": "High cyclomatic complexity: packages/server/src/agents.SessionRuntime.validateLocked (52)",
-    "source": "complexity-outliers",
-    "description": "\"packages/server/src/agents.SessionRuntime.validateLocked\" has a cyclomatic complexity of 52 — well above the repo average. Highly branched functions are hard to test fully and are frequent defect sites.",
-    "confidence": 0.7,
-    "evidence": [
-      {
-        "file": "packages/server/src/agents/runtime.ts",
-        "symbol": "packages/server/src/agents.SessionRuntime.validateLocked",
-        "detail": "cyclomatic complexity 52 at line 704",
-        "line": 704,
-        "fact_id": "9002fd69cfbb1687e7369e232d4adff8"
       }
     ],
     "suggested_actions": [
@@ -4386,8 +4386,8 @@
       {
         "file": "packages/server/src/salesforce/service.ts",
         "symbol": "packages/server/src/salesforce.normalizeDeployResult",
-        "detail": "cyclomatic complexity 42 at line 857",
-        "line": 857,
+        "detail": "cyclomatic complexity 42 at line 909",
+        "line": 909,
         "fact_id": "9f2ff957fe5d4e6e27d899f2ca20322e"
       }
     ],

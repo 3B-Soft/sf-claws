@@ -286,6 +286,28 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
   });
 
   // ---- deploys ----
+  app.get('/sessions/:id/checkpoints', async (req) => {
+    const { session } = access(req);
+    return ctx.repos.harness.list(session.id).map(({ workspace, control, payload, ...summary }) => summary);
+  });
+  app.get('/sessions/:id/checkpoints/:checkpointId', async (req) => {
+    const { session } = access(req);
+    const checkpoint = ctx.repos.harness.get(session.id, (req.params as { checkpointId: string }).checkpointId);
+    if (!checkpoint) throw notFound('Checkpoint');
+    return { checkpoint, attempts: ctx.repos.harness.attempts(session.id, checkpoint.id) };
+  });
+  app.get('/sessions/:id/hydration', async (req) => {
+    const { session } = access(req);
+    return ctx.repos.harness.hydration(session.id) ?? null;
+  });
+  app.post('/sessions/:id/checkpoints/:checkpointId/reconcile', async (req) => {
+    const { user, session } = access(req);
+    if (ctx.runtime.isRunning(session.id)) throw badRequest('Stop the session before reconciling an archived job');
+    const checkpointId = (req.params as { checkpointId: string }).checkpointId;
+    await ctx.runtime.reconcileCheckpoint(session.id, checkpointId);
+    ctx.repos.audit.log({ userId: user.id, action: 'checkpoint.reconciled', target: session.id, details: { checkpointId } });
+    return { ok: true };
+  });
   app.get('/sessions/:id/deploys', async (req) => {
     const { session } = access(req);
     return ctx.repos.deploys.list(session.id);

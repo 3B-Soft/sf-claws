@@ -158,6 +158,12 @@ export class AgentRun {
         });
       }
       observedCompile = compile.checks;
+      if (cfg.promptSections?.some((section) => section.name === 'hydration')) {
+        cfg.promptSections = cfg.promptSections.map((section) =>
+          section.name === 'hydration' ? { ...section, text: ctx.runtime.hydrationPrompt(sessionId) } : section,
+        );
+        cfg.system = cfg.promptSections.map((section) => section.text).join('\n\n');
+      }
       iterations++;
 
       // Ceilings are checked before the call, with what the call is about to cost: enforcing
@@ -822,17 +828,7 @@ function validationSignature(output: unknown): string {
  * Pure reads worth memoising within a run. Deliberately conservative: only calls whose answer
  * cannot change unless something else in the run mutates state.
  */
-const DEDUPABLE_READS = new Set([
-  'describe_sobject',
-  'read_metadata',
-  'list_metadata',
-  'list_metadata_types',
-  'list_sobjects',
-  'search_memory',
-  'read_product_doc',
-  'search_product_docs',
-  'load_skill',
-]);
+const DEDUPABLE_READS = new Set(['search_memory', 'read_product_doc', 'search_product_docs']);
 
 /** Rough token estimate; deliberately conservative so compaction fires slightly early. */
 export function estimateTokens(messages: LlmMessage[]): number {

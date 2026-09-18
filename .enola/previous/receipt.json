@@ -1,10 +1,10 @@
 {
-  "snapshot_id": "sha256:d062f67fea362d5acd2f7d9397a2811f98bd1be6b4db1bee6b100869eb9e29cc",
+  "snapshot_id": "sha256:cf155e3f408d528f238bf986e90e339046d8d4c41c766d7065d3bcdd14947146",
   "format_version": 1,
   "enola_version": "0.4.12",
   "extractor_version": "v259",
-  "generated_at": "2026-09-18T08:02:04Z",
-  "duration": "474.274125ms",
+  "generated_at": "2026-09-18T08:50:41Z",
+  "duration": "484.859042ms",
   "repo_path": "/Users/jamesridge/Documents/MBA - NEW - Dev/sf-claws",
   "git": {
     "ref": "main",
@@ -43,17 +43,17 @@
   "config_hash": "sha256:12cbb6c9d3b099d95fbadb1d4bbe736a4eeace82c3bfc868b4395916ef097edd",
   "ignore_glob_hash": "sha256:7523cc6397a498e151125a682d28fbf6df20c6f51f6dfaf18fd8f5239a20d2d8",
   "output_hashes": {
-    "facts.jsonl": "sha256:606e059776ccb8d8d6b986c1a6b48c00e8729c7a937a2cebb5539451f690bcd5",
-    "insights.json": "sha256:7f5bcf1f3cd9489d621e1d92ba1a319a264d6e2ae9b96c96aababee5660c458e",
-    "llm_context.md": "sha256:57f5204e72a464287750a2adc7e683cb334a0641bdfdc1878a50a4104a2d8fc8"
+    "facts.jsonl": "sha256:f245d4941a15ddc4d0989a4c408db8c0d47aac323edecf3ea484a336f72d80a4",
+    "insights.json": "sha256:d7da19c22a2e56c71f5f326b592472cc11b8a4970fb2a16302bc56e9cd9b9105",
+    "llm_context.md": "sha256:02012a8308256438aaf9f469740154fc82092a5eaa19e6c8059546a675ac17f0"
   },
-  "fact_count": 5859,
-  "insight_count": 90,
+  "fact_count": 5965,
+  "insight_count": 85,
   "quality": {
-    "files_seen": 376,
-    "files_parsed": 245,
-    "files_skipped": 31,
-    "dirs_skipped": 8,
+    "files_seen": 383,
+    "files_parsed": 251,
+    "files_skipped": 35,
+    "dirs_skipped": 9,
     "skipped_sample": [
       ".git/ (glob: **/.git/**)",
       "node_modules/ (glob: **/node_modules/**)",
@@ -66,6 +66,7 @@
       "packages/server/test/agent-behaviour.test.ts (glob: **/*.test.ts)",
       "packages/server/test/api.test.ts (glob: **/*.test.ts)",
       "packages/server/test/client-access.test.ts (glob: **/*.test.ts)",
+      "packages/server/test/compile-control.test.ts (glob: **/*.test.ts)",
       "packages/server/test/completion.test.ts (glob: **/*.test.ts)",
       "packages/server/test/deepseek-provider.test.ts (glob: **/*.test.ts)",
       "packages/server/test/deploy-commit-routes.test.ts (glob: **/*.test.ts)",
@@ -73,22 +74,21 @@
       "packages/server/test/destructive-commit.test.ts (glob: **/*.test.ts)",
       "packages/server/test/gate.test.ts (glob: **/*.test.ts)",
       "packages/server/test/github-service.test.ts (glob: **/*.test.ts)",
-      "packages/server/test/http-hardening.test.ts (glob: **/*.test.ts)",
-      "packages/server/test/knowledge.test.ts (glob: **/*.test.ts)"
+      "packages/server/test/http-hardening.test.ts (glob: **/*.test.ts)"
     ],
     "parse_errors": 0,
-    "heuristic_insights": 89,
+    "heuristic_insights": 84,
     "coverage": {
       "services_total": 0,
       "coverage_gaps": 0,
       "unresolved_edges": 0,
       "extractors_reporting": 1,
-      "extraction_unresolved": 430
+      "extraction_unresolved": 425
     },
     "census": {
-      "files_walked": 407,
-      "parsed": 245,
-      "excluded_by_ignore": 31,
+      "files_walked": 418,
+      "parsed": 251,
+      "excluded_by_ignore": 35,
       "excluded_by_kind": 38,
       "excluded_kinds": {
         "(no extension)": 2,
@@ -102,11 +102,11 @@
         ".yml": 3,
         ".zip": 1
       },
-      "skipped_with_cause": 93,
+      "skipped_with_cause": 94,
       "top_skip_causes": [
         {
           "cause": "claimed by typescript, no facts emitted",
-          "count": 91
+          "count": 92
         },
         {
           "cause": "claimed by manifests, no facts emitted",

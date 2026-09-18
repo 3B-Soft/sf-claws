@@ -516,4 +516,34 @@ CREATE TABLE session_compile_control (
 ALTER TABLE deploy_runs ADD COLUMN scope TEXT NOT NULL DEFAULT 'full';
 `,
   },
+  {
+    name: 'harness_recovery_hydration',
+    sql: `
+ALTER TABLE orgs ADD COLUMN schema_revision INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE validation_checkpoints (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  org_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  deploy_id TEXT NOT NULL REFERENCES deploy_runs(id) ON DELETE CASCADE,
+  status TEXT NOT NULL,
+  comparison_key TEXT NOT NULL,
+  root_count INTEGER,
+  restored_from TEXT,
+  snapshot TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX idx_checkpoints_session ON validation_checkpoints(session_id, created_at);
+CREATE UNIQUE INDEX idx_checkpoints_org_active ON validation_checkpoints(org_id) WHERE status IN ('in_progress','uncertain');
+CREATE TABLE validation_attempts (
+  checkpoint_id TEXT NOT NULL REFERENCES validation_checkpoints(id) ON DELETE CASCADE,
+  attempt INTEGER NOT NULL,
+  state TEXT NOT NULL,
+  PRIMARY KEY (checkpoint_id, attempt)
+);
+CREATE TABLE session_hydration (
+  session_id TEXT PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
+  bundle TEXT NOT NULL
+);
+`,
+  },
 ];
