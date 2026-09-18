@@ -38,6 +38,7 @@ import {
   compileDue,
   compileHash,
   compileSlice,
+  unvalidatableRecords,
   componentKey,
   fileHash,
   missingCompanions,
@@ -825,7 +826,15 @@ export class SessionRuntime {
     const deleted = files
       .filter((f) => f.action === 'deleted' && f.path.startsWith('__destructive__/'))
       .map((f) => ({ type: f.metadataType!, fullName: f.fullName! }));
-    const sourceFiles = files.filter((f) => f.action !== 'deleted').map((f) => ({ path: f.path, content: f.content }));
+    const skipped = new Set(unvalidatableRecords(files).map((f) => f.path));
+    const sourceFiles = files.filter((f) => f.action !== 'deleted' && !skipped.has(f.path)).map((f) => ({ path: f.path, content: f.content }));
+    if (skipped.size)
+      this.bus.emit(sessionId, {
+        type: 'session.status',
+        status: 'running',
+        message: `Validating without ${skipped.size} custom metadata record(s) of a type created in this workspace; Salesforce cannot check-only validate them. They deploy with the type.`,
+      });
+    if (!sourceFiles.length && !deleted.length) throw badRequest('Nothing to validate: only custom metadata records of a not-yet-deployed type are staged.');
     const v = this.app.policy.checkDeploy(rules, org, session.uiMode, sourceFiles.length + deleted.length);
     if (v) throw new HttpError(422, 'POLICY', v.message);
     const members =

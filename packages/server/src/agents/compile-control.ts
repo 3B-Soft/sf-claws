@@ -90,6 +90,19 @@ export function compileSlice(files: WorkspaceFile[], paths: string[]): Workspace
   return files.filter((f) => keys.has(componentKey(f)));
 }
 
+/**
+ * Custom metadata records whose `__mdt` type is created in the same workspace. A check-only deploy
+ * never creates the type, so Salesforce cannot validate these records and fails the whole run with
+ * UNKNOWN_EXCEPTION after every component "succeeded". They are deployed with the real run, which
+ * `rollbackOnError` keeps atomic.
+ */
+export function unvalidatableRecords(files: WorkspaceFile[]): WorkspaceFile[] {
+  const createdTypes = new Set(
+    files.filter((f) => f.metadataType === 'CustomObject' && f.action === 'created' && f.fullName?.endsWith('__mdt')).map((f) => f.fullName),
+  );
+  return files.filter((f) => f.metadataType === 'CustomMetadata' && f.action !== 'deleted' && createdTypes.has(`${f.fullName?.split('.')[0]}__mdt`));
+}
+
 export function missingCompanions(files: WorkspaceFile[]): string[] {
   const paths = new Set(files.map((f) => f.path));
   return files.filter((f) => f.action !== 'deleted' && /\.(cls|trigger)$/.test(f.path) && !paths.has(`${f.path}-meta.xml`)).map((f) => `${f.path}-meta.xml`);

@@ -948,7 +948,7 @@ export function normalizeDeployResult(r: any): DeployOutcome {
       componentType: null,
       fullName: null,
       fileName: null,
-      problem: `${r.errorStatusCode ?? 'Error'}: ${r.errorMessage}`,
+      problem: r.errorStatusCode && !String(r.errorMessage).startsWith(r.errorStatusCode) ? `${r.errorStatusCode}: ${r.errorMessage}` : String(r.errorMessage),
       problemType: 'Error',
       lineNumber: null,
       columnNumber: null,

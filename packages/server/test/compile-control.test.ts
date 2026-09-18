@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { DeployFailure, WorkspaceFile } from '@sf-claws/shared';
-import { applyCompileResult, compileDue, compileSlice, initialCompileState, missingCompanions, rootDiagnostics } from '../src/agents/compile-control.js';
+import {
+  applyCompileResult,
+  compileDue,
+  compileSlice,
+  initialCompileState,
+  missingCompanions,
+  rootDiagnostics,
+  unvalidatableRecords,
+} from '../src/agents/compile-control.js';
 import { createRepos } from '../src/db/repos/index.js';
 import { makeContext, seedClientOrgUser, FakeProvider, disablePlanMode, text, waitForIdle } from './helpers.js';
 import type { DeployOutcome } from '../src/salesforce/service.js';
@@ -156,6 +164,50 @@ describe('compile controller', () => {
       const slice = await ctx.runtime.validate(session.id, { paths: ['classes/A.cls'], testLevel: 'NoTestRun' });
       expect(slice.scope).toBe('slice');
       expect(ctx.runtime.readyToDeploy(session.id).reason).toMatch(/slice/);
+    } finally {
+      ctx.db.close();
+    }
+  });
+
+  it('validates without custom metadata records whose type is created in the same workspace', async () => {
+    const mdt = (action: WorkspaceFile['action']): WorkspaceFile => ({
+      path: 'objects/Reminder__mdt/Reminder__mdt.object-meta.xml',
+      content: '<CustomObject/>',
+      original: null,
+      action,
+      metadataType: 'CustomObject',
+      fullName: 'Reminder__mdt',
+    });
+    const record: WorkspaceFile = {
+      path: 'customMetadata/Reminder.Daily.md-meta.xml',
+      content: '<CustomMetadata/>',
+      original: null,
+      action: 'created',
+      metadataType: 'CustomMetadata',
+      fullName: 'Reminder.Daily',
+    };
+    expect(unvalidatableRecords([mdt('created'), record]).map((f) => f.path)).toEqual([record.path]);
+    expect(unvalidatableRecords([mdt('modified'), record])).toEqual([]);
+    expect(unvalidatableRecords([record])).toEqual([]);
+    const deployed: string[][] = [];
+    const ctx = makeContext({
+      provider: new FakeProvider([]),
+      sf: {
+        deploy: async (_org: string, files: { path: string }[]) => {
+          deployed.push(files.map((f) => f.path));
+          return outcome();
+        },
+      },
+    });
+    try {
+      const { user, org } = await seedClientOrgUser(ctx);
+      const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+      ctx.repos.workspace.upsert(session.id, mdt('created'));
+      ctx.repos.workspace.upsert(session.id, record);
+      const run = await ctx.runtime.validate(session.id, { testLevel: 'NoTestRun' });
+      expect(run.status).toBe('succeeded');
+      expect(deployed).toEqual([[mdt('created').path]]);
+      expect(ctx.runtime.readyToDeploy(session.id).ok).toBe(true);
     } finally {
       ctx.db.close();
     }
