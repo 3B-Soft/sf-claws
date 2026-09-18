@@ -360,6 +360,9 @@ export function createTranscript() {
     get statusMessage() {
       return state.statusMessage;
     },
+    set statusMessage(v) {
+      state.statusMessage = v;
+    },
     get usage() {
       return state.usage;
     },

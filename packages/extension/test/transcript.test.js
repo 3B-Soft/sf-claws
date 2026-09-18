@@ -3,6 +3,14 @@ import { createTranscript } from '../src/lib/transcript.js';
 import { flattenRecord } from '../src/lib/soql.js';
 
 describe('transcript reducer', () => {
+  it('allows resume to set an optimistic status message', () => {
+    const t = createTranscript();
+
+    t.statusMessage = 'Resuming…';
+
+    expect(t.statusMessage).toBe('Resuming…');
+  });
+
   it('merges streamed thinking deltas from one agent into one row', () => {
     const t = createTranscript();
     t.apply({ type: 'assistant.thinking', seq: 1, at: 'now', agentId: 'a', text: 'Let me ' });

@@ -1,15 +1,15 @@
 {
-  "snapshot_id": "sha256:66439c93c7180d1f4a28c56a309a238b838d9e2551656b3d1d9f57739363db67",
+  "snapshot_id": "sha256:d985c245874c458a18dcfe406abb2de4347152faaf1dac51c9da315fc215680b",
   "format_version": 1,
   "enola_version": "0.4.12",
   "extractor_version": "v259",
-  "generated_at": "2026-09-18T12:06:20Z",
-  "duration": "808.855666ms",
+  "generated_at": "2026-09-18T12:48:12Z",
+  "duration": "209.681209ms",
   "repo_path": "/Users/jamesridge/Documents/MBA - NEW - Dev/sf-claws",
   "git": {
     "ref": "main",
-    "commit": "926b926171cd60ec6cfa4ac9bbeef3cd9ac25993",
-    "dirty": true,
+    "commit": "269072b4927fc05956e9629ecb73ba24678ef822",
+    "dirty": false,
     "remote": "github.com/3b-soft/sf-claws"
   },
   "extractors": [
@@ -43,9 +43,9 @@
   "config_hash": "sha256:12cbb6c9d3b099d95fbadb1d4bbe736a4eeace82c3bfc868b4395916ef097edd",
   "ignore_glob_hash": "sha256:7523cc6397a498e151125a682d28fbf6df20c6f51f6dfaf18fd8f5239a20d2d8",
   "output_hashes": {
-    "facts.jsonl": "sha256:294dfa2706533ff65154809e17d227c79c26c94912022bdc9b33ea7235b3967a",
+    "facts.jsonl": "sha256:67b4703300aff5402203efb4a918d0fda86bf7e0d776ed6f9bbd2077140c4d83",
     "insights.json": "sha256:d4ca0244d7971e97f9901a8e55672ea87cdd388a3cdbfb5a767d80b67f6cd467",
-    "llm_context.md": "sha256:318f163817c459a045f6ff796220404437ca96c6d13ef658d4645978188a8acf"
+    "llm_context.md": "sha256:b1f5c264f3f5df677f7173aac7167f573d7f9fca853dc6e74b7ddb5650149589"
   },
   "fact_count": 6097,
   "insight_count": 85,
