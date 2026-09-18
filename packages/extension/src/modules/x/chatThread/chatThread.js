@@ -18,6 +18,7 @@ import {
 } from '../../../lib/sessionController.js';
 import { quickActionsFor } from '../../../lib/context.js';
 import { turnAnswered } from '../../../lib/transcript.js';
+import { validationRequiredToResume } from '../../../lib/sessionRecovery.js';
 import { statusClass, statusLabel, fmtTokens, fmtUsd, roleClass, roleLabel, truncate, fmtRelative } from '../../../lib/format.js';
 
 export default class ChatThread extends LightningElement {
@@ -250,10 +251,16 @@ export default class ChatThread extends LightningElement {
   get resumable() {
     return isResumable(this.session) && !this.offline;
   }
+  get resumeNeedsValidation() {
+    return validationRequiredToResume(this.session);
+  }
   get resumeLabel() {
+    if (this.resumeNeedsValidation) return 'Review validation';
     return this.session.resuming ? 'Resuming…' : 'Resume session';
   }
   get resumeHint() {
+    if (this.resumeNeedsValidation)
+      return `${this.statusMessage || 'Validation stopped the session.'} Review the result in Changes and run a full validation; no model can safely repair a Salesforce platform exception.`;
     return this.statusMessage || 'This session stopped before finishing. The assistant can pick up where it left off.';
   }
   get feedbackHelpful() {
@@ -324,6 +331,10 @@ export default class ChatThread extends LightningElement {
     }
   }
   async onResume() {
+    if (this.resumeNeedsValidation) {
+      setTab('changes');
+      return;
+    }
     try {
       await resume();
     } catch {

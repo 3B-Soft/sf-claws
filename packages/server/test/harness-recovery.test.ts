@@ -164,6 +164,24 @@ describe('durable validation recovery', () => {
     ctx.db.close();
   });
 
+  it('refuses a model resume while manual validation is required', async () => {
+    const provider = new FakeProvider([]);
+    const ctx = makeContext({ provider, sf: { deploy: async () => result() } });
+    const { org, user } = await seedClientOrgUser(ctx);
+    const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+    ctx.repos.workspace.upsert(session.id, field('A__c'));
+    const state = ctx.repos.compileControl.get(session.id);
+    state.stopped = 'Salesforce returned a platform failure without component diagnostics.';
+    ctx.repos.compileControl.set(session.id, state);
+
+    expect(() => ctx.runtime.resume(session.id, user.id)).toThrow(/Open Changes.*full validation/i);
+    expect(provider.requests).toHaveLength(0);
+
+    expect((await ctx.runtime.validate(session.id)).status).toBe('succeeded');
+    expect(ctx.repos.compileControl.get(session.id).stopped).toBeNull();
+    ctx.db.close();
+  });
+
   it('classifies compiler, test, coverage, auth and platform errors independently', () => {
     expect(classifyFailure(result([problem('A__c')]))).toBe('component');
     expect(classifyFailure(new Error('INVALID_SESSION_ID'))).toBe('auth');
