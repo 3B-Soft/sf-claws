@@ -346,10 +346,48 @@ so validate → stage → restart → Deploy is refused like it should be.
 
 ## Observability
 
+Each provider attempt emits persisted `model.started` and `model.finished` events, including
+failed/retried calls, fallback models, forced reports and compaction. They carry a call ID, agent,
+role-derived phase, purpose, elapsed duration, first observable output time and per-call usage
+(null when unknown). Cumulative `session.usage` remains the billing/UI total; do not sum it.
+Provider duration includes prefill/network/hidden reasoning and is not a decoding measurement.
+
+The admin session **Timing** tab uses the shared interval analyzer: parallel model and tool spans
+are unioned, overlap is shown separately, and delegation/question wrappers do not masquerade as
+tool execution. Unattributed time is explicitly unknown rather than inferred idle/model time.
+`GET /sessions/:id/export` streams complete persisted events as NDJSON through a fixed sequence
+watermark under the normal session access checks. Its manifest names the non-persisted streaming
+delta/thinking types; sequence gaps are expected. `tools/audit-long-session.mjs` reads this format
+or older Markdown exports after building `@sf-claws/shared`. Old exports cannot supply missing
+per-call model timing or agent-level token attribution.
+
 `usage_records` per model call (session, user, client, role, provider, model, tokens, cached tokens,
 USD, duration). `tool_invocations` per tool call (tool, ok, duration, result size). `audit_log`
 records logins, approvals, org connections, deploys, commits and configuration changes.
 `/admin/usage/summary`, `/admin/tools/summary` and `/admin/budget` aggregate them for the console.
+
+## Compile controller (first increment)
+
+`session_compile_control` persists dirty paths, content hashes, root diagnostics, the repair allowlist,
+and the no-progress stop across turns, agent replacements and server restarts. Workspace tools enforce
+these gates before writes, including after asynchronous original-file retrieval. Human edits may repair
+a stopped session; a successful manual full validation resets the stop. Validation freezes writes and
+an in-process org queue serializes validation/deployment submissions. This queue is not a distributed
+lease: multiple server processes must not operate the same org concurrently.
+
+A timer and model-boundary checks request a dependency-expanded check-only slice at eight dirty files
+or ten minutes. Apex companion files must be present; an incomplete group blocks new components until
+its companions are supplied. Slice selection currently uses conservative source-name references and
+staged schema, not an AST graph. Slices use Metadata API today; the Tooling API fast path remains open.
+Slice success is explicitly labelled and never satisfies the full-validation deployment gate.
+
+Dependent-class diagnostics are grouped under their named root. While roots remain, agents may edit
+only failing components and their direct staged dependencies, and may not introduce new components.
+Unchanged failed payloads are refused; two subsequent compiles without fewer root components stop all
+agent loops, including paid wrap-up/documentation. Current staged files are preserved, not rolled back.
+Opaque Salesforce failures stop code generation rather than suggesting code repairs. Timed platform
+retries, durable payload checkpoints, rollback, and atomic token reservations are not implemented in
+this increment. Existing full-validation, review, approval and deployment fingerprint gates still apply.
 
 ## Security notes
 

@@ -13,6 +13,31 @@ const base = {
   at: z.string(),
 };
 
+/** A phase is an attribution label, not a claim about model reasoning or decoding. */
+export const WorkPhase = z.enum(['research', 'planning', 'build', 'review', 'documentation']);
+const modelCall = {
+  agentId: z.string(),
+  role: AgentRole,
+  callId: z.string(),
+  modelId: z.string(),
+  provider: z.string(),
+  phase: WorkPhase,
+  purpose: z.enum(['turn', 'wrap_up', 'compaction']),
+  attempt: z.number().int().positive(),
+};
+export const ModelStartedEvent = z.object({ ...base, ...modelCall, type: z.literal('model.started') });
+export const ModelFinishedEvent = z.object({
+  ...base,
+  ...modelCall,
+  type: z.literal('model.finished'),
+  durationMs: z.number().nonnegative(),
+  /** First observable text/thinking/tool callback; null for a non-streaming response. */
+  firstOutputMs: z.number().nonnegative().nullable(),
+  outcome: z.enum(['completed', 'failed', 'cancelled']),
+  /** Per-call usage, never the cumulative session counters. Unknown on provider errors. */
+  usage: z.object({ inputTokens: z.number(), outputTokens: z.number(), cachedInputTokens: z.number() }).nullable(),
+});
+
 /** A sub-agent was spawned by the orchestrator. */
 export const AgentSpawnedEvent = z.object({
   ...base,
@@ -98,6 +123,7 @@ export const WorkspaceFileEvent = z.object({
 });
 
 export const ValidationResultEvent = z.object({
+  scope: z.enum(['full', 'slice']).optional(),
   ...base,
   type: z.literal('deploy.validation'),
   deployId: z.string(),
@@ -323,6 +349,8 @@ export const PlanResolvedEvent = z.object({
 });
 
 export const SessionEvent = z.discriminatedUnion('type', [
+  ModelStartedEvent,
+  ModelFinishedEvent,
   CostLimitEvent,
   PlanSubmittedEvent,
   PlanResolvedEvent,

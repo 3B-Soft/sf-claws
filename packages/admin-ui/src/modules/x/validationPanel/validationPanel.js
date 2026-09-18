@@ -14,7 +14,7 @@ export default class ValidationPanel extends LightningElement {
     return this.d.status === 'pending' || this.d.status === 'in_progress';
   }
   get title() {
-    const kind = this.d.checkOnly === false ? 'Deploy' : 'Validation';
+    const kind = this.d.checkOnly === false ? 'Deploy' : this.d.scope === 'slice' ? 'Slice compile (not deploy-ready)' : 'Validation';
     return `${kind} attempt #${this.d.attempt ?? 1}`;
   }
   get statusLabel() {

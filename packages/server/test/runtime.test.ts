@@ -79,7 +79,11 @@ describe('session runtime', () => {
       () => toolCall('write_workspace_file', { path: 'objects/Account/fields/Renewal_Date__c.field-meta.xml', content: fieldXml }),
       () => toolCall('validate_deployment', {}),
       (req) => {
-        expect(req.messages.at(-1)!.content[0]).toMatchObject({ type: 'tool_result', isError: true });
+        const result = req.messages
+          .flatMap((m) => m.content)
+          .filter((b) => b.type === 'tool_result')
+          .at(-1);
+        expect(result).toMatchObject({ type: 'tool_result', isError: true });
         return toolCall('write_workspace_file', {
           path: 'objects/Account/fields/Renewal_Date__c.field-meta.xml',
           content: fieldXml.replace('Renewal Date', 'Renewal date'),

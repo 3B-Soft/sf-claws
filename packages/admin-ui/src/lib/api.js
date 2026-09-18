@@ -106,6 +106,7 @@ async function request(method, path, body, opts = {}) {
     if (e?.name === 'AbortError') throw e;
     throw new ApiError('Cannot reach the SF Claws server. Check that it is running and the API base URL is correct.', { status: 0, code: 'NETWORK' });
   }
+  if (res.ok && opts.blob) return res.blob();
   const text = await res.text();
   let data = null;
   if (text) {
@@ -232,7 +233,18 @@ export const Api = {
   listSessions: (params) => api.get(`/sessions${qs(params)}`),
   adminSessions: (params) => api.get(`/admin/sessions${qs(params)}`),
   getSession: (id) => api.get(`/sessions/${enc(id)}`),
-  sessionHistory: (id, after) => api.get(`/sessions/${enc(id)}/history${qs({ after })}`),
+  sessionHistory: async (id, after = 0, through) => {
+    const events = [];
+    while (true) {
+      const page = await api.get(`/sessions/${enc(id)}/history${qs({ after, through })}`);
+      events.push(...page);
+      if (page.length < 5000) return events;
+      const next = page[page.length - 1].seq;
+      if (next <= after) return events;
+      after = next;
+    }
+  },
+  exportSession: (id) => api.get(`/sessions/${enc(id)}/export`, { blob: true }),
   sessionWorkspace: (id) => api.get(`/sessions/${enc(id)}/workspace`),
   putWorkspaceFile: (id, body) => api.put(`/sessions/${enc(id)}/workspace/file`, body),
   sessionDeploys: (id) => api.get(`/sessions/${enc(id)}/deploys`),

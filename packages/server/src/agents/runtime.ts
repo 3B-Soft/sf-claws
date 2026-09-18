@@ -10,6 +10,7 @@ import type {
   PageContext,
   SessionSnapshot,
   UiMode,
+  WorkspaceFile,
 } from '@sf-claws/shared';
 import type { AppContext } from '../app-context.js';
 import type { OrgRow, SessionRow } from '../db/repos/index.js';
@@ -28,6 +29,17 @@ import type { CustomAgent } from '@sf-claws/shared';
 import { buildReminders, BUDGET_REMINDER_FRACTIONS } from './reminders.js';
 import { deploySubjects, permissionBlockedMessage, permissionRefusalText } from './policy.js';
 import type { TestLevel, DeployOutcome } from '../salesforce/service.js';
+import {
+  applyCompileResult,
+  compileDue,
+  compileHash,
+  compileSlice,
+  componentKey,
+  fileHash,
+  missingCompanions,
+  COMPILE_INTERVAL_MS,
+  repairComponents,
+} from './compile-control.js';
 
 interface ActiveTurn {
   abort: AbortController;
@@ -95,6 +107,10 @@ export class SessionRuntime {
   private idleSweep: ReturnType<typeof setInterval> | null = null;
   /** Cache-break detection across calls; keyed per session and agent. */
   readonly cacheProbe = new PromptCacheProbe();
+  private orgCommands = new Map<string, Promise<void>>();
+  private compiling = new Set<string>();
+  private pendingCompiles = new Map<string, Promise<DeployRun>>();
+  private compileTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private app!: AppContext;
 
   constructor(app: Omit<AppContext, 'runtime'>) {
@@ -188,6 +204,8 @@ export class SessionRuntime {
       budgetRemindedAt: new Set(),
     };
     this.active.set(sessionId, turn);
+    const dirtyPath = this.app.repos.compileControl.get(sessionId).dirtyPaths[0];
+    if (dirtyPath) this.noteWorkspaceChange(sessionId, dirtyPath);
     turn.promise = this.runTurn(sessionId, text, turn)
       .catch((e) => {
         this.app.log.error({ err: e, sessionId }, 'turn failed');
@@ -195,6 +213,8 @@ export class SessionRuntime {
         this.setStatus(sessionId, 'failed', (e as Error).message);
       })
       .finally(() => {
+        clearTimeout(this.compileTimers.get(sessionId));
+        this.compileTimers.delete(sessionId);
         // Every listener the turn opened goes with it: a completed turn must not keep counting
         // the next turn's tool calls, nor keep a closure alive per turn for the life of the process.
         for (const unsub of turn.unsubscribers.splice(0)) unsub();
@@ -248,6 +268,12 @@ export class SessionRuntime {
     // Documentation guarantee: if meaningful work happened without docs, generate them.
     const workspace = this.app.repos.workspace.list(sessionId);
     const meaningful = workspace.length > 0 || turn.toolCalls >= 4;
+    const compileStop = this.app.repos.compileControl.get(sessionId).stopped;
+    if (compileStop) {
+      this.bus.emit(sessionId, { type: 'assistant.message', agentId: 'orchestrator', role: 'orchestrator', messageId: newId('am'), text: compileStop });
+      this.setStatus(sessionId, 'failed', compileStop);
+      return;
+    }
     if (meaningful && turn.docsWritten === 0 && !turn.abort.signal.aborted) {
       try {
         await this.runSubagent(
@@ -431,6 +457,8 @@ export class SessionRuntime {
   ): Promise<{ agentId: string; report: string; ok: boolean }> {
     const turn = this.active.get(sessionId);
     if (!turn) throw new Error('No active turn');
+    const stopped = this.app.repos.compileControl.get(sessionId).stopped;
+    if (stopped) return { agentId: parentId, report: stopped, ok: false };
     if (role === 'orchestrator' || role === 'summarizer') throw badRequest('Cannot delegate to that role');
     const agentId = newId(role);
     // A researcher's file-read budget scales with the thoroughness the caller asked for: without a
@@ -575,11 +603,118 @@ export class SessionRuntime {
   }
 
   // ------------------------------------------------------------ validation / deploy
-  async validate(sessionId: string, opts: { testLevel?: TestLevel; runTests?: string[]; agentId?: string } = {}): Promise<DeployRun> {
+  /** A single coordinator serializes validation and deployment per org. */
+  private async orgCommand<T>(orgId: string, work: () => Promise<T>): Promise<T> {
+    const previous = this.orgCommands.get(orgId);
+    let release!: () => void;
+    const current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    this.orgCommands.set(orgId, current);
+    await previous;
+    try {
+      return await work();
+    } finally {
+      release();
+      if (this.orgCommands.get(orgId) === current) this.orgCommands.delete(orgId);
+    }
+  }
+
+  workspaceWriteRefusal(sessionId: string, file: Pick<WorkspaceFile, 'path' | 'metadataType' | 'fullName'>, agent = true): string | null {
+    if (this.compiling.has(sessionId) || this.pendingCompiles.has(sessionId))
+      return 'Workspace is frozen while its immutable validation payload is queued or in flight. Wait for the compile result.';
+    // A human can repair a stopped workspace; agents cannot reset the controller by replacing themselves.
+    if (!agent) return null;
+    const state = this.app.repos.compileControl.get(sessionId);
+    if (state.stopped) return state.stopped;
+    const key = componentKey(file);
+    const existing = this.app.repos.workspace.list(sessionId);
+    if (state.roots.length && !existing.some((f) => componentKey(f) === key))
+      return `New components are blocked while ${state.roots.length} compile root error(s) remain. Repair and compile the current slice before adding ${key}.`;
+    if (state.roots.length && !state.repairKeys.includes(key))
+      return `Only failing components and their direct staged dependencies may be edited until compilation is green. Repair: ${state.roots.map((r) => r.key).join(', ')}.`;
+    if (compileDue(state) && !existing.some((f) => componentKey(f) === key))
+      return 'A compile is due (8 changed files or 10 minutes). Complete companion files for the current group and validate before adding another component.';
+    return null;
+  }
+
+  noteWorkspaceChange(sessionId: string, path: string): void {
+    const state = this.app.repos.compileControl.get(sessionId);
+    const file = this.app.repos.workspace.get(sessionId, path);
+    const changed = file ? state.checkedFiles[path] !== fileHash(file) : false;
+    state.dirtyPaths = state.dirtyPaths.filter((p) => p !== path);
+    if (changed) state.dirtyPaths.push(path);
+    state.dirtySince = state.dirtyPaths.length ? (state.dirtySince ?? Date.now()) : null;
+    this.app.repos.compileControl.set(sessionId, state);
+    clearTimeout(this.compileTimers.get(sessionId));
+    if (!this.active.has(sessionId) || state.stopped || state.dirtySince === null) return;
+    const delay = compileDue(state) ? 0 : Math.max(0, state.dirtySince + COMPILE_INTERVAL_MS - Date.now());
+    const timer = setTimeout(() => {
+      void this.autoCompile(sessionId);
+    }, delay);
+    timer.unref();
+    this.compileTimers.set(sessionId, timer);
+  }
+
+  /** Also called at model boundaries so resume/agent replacement cannot evade persisted cadence. */
+  async autoCompile(sessionId: string): Promise<void> {
+    const pending = this.pendingCompiles.get(sessionId);
+    if (pending) {
+      await pending.catch(() => undefined);
+      return;
+    }
+    const state = this.app.repos.compileControl.get(sessionId);
+    const turn = this.active.get(sessionId);
+    if (!turn || turn.abort.signal.aborted || this.compiling.has(sessionId) || state.stopped || !compileDue(state)) return;
+    if (this.app.repos.sessions.byId(sessionId)?.status !== 'running') return;
+    const workspace = this.app.repos.workspace.list(sessionId);
+    if (!workspace.length) return;
+    const slice = compileSlice(workspace, state.dirtyPaths);
+    if (!slice.length || missingCompanions(slice).length) return;
+    try {
+      await this.validate(sessionId, { paths: slice.map((f) => f.path), agentId: 'integrator' });
+    } catch (e) {
+      const latest = this.app.repos.compileControl.get(sessionId);
+      latest.stopped = `Automatic compile stopped: ${(e as Error).message}. Staged work is preserved; resolve the issue and validate manually.`;
+      this.app.repos.compileControl.set(sessionId, latest);
+      this.bus.emit(sessionId, { type: 'session.error', agentId: null, message: latest.stopped, recoverable: true });
+    }
+  }
+
+  validate(sessionId: string, opts: { testLevel?: TestLevel; runTests?: string[]; agentId?: string; paths?: string[] } = {}): Promise<DeployRun> {
+    const session = this.app.repos.sessions.byId(sessionId)!;
+    const pending = this.orgCommand(session.orgId, async () => {
+      if (opts.agentId && this.active.get(sessionId)?.abort.signal.aborted) throw badRequest('Session cancelled before compile submission.');
+      this.compiling.add(sessionId);
+      try {
+        return await this.validateLocked(sessionId, opts);
+      } finally {
+        this.compiling.delete(sessionId);
+      }
+    });
+    this.trackBlocking(sessionId, pending);
+    this.pendingCompiles.set(sessionId, pending);
+    const cleanup = () => {
+      if (this.pendingCompiles.get(sessionId) === pending) this.pendingCompiles.delete(sessionId);
+    };
+    void pending.then(cleanup, cleanup);
+    return pending;
+  }
+
+  private async validateLocked(
+    sessionId: string,
+    opts: { testLevel?: TestLevel; runTests?: string[]; agentId?: string; paths?: string[] },
+  ): Promise<DeployRun> {
     const session = this.app.repos.sessions.byId(sessionId)!;
     const org = this.app.repos.orgs.byId(session.orgId)!;
-    const files = this.app.repos.workspace.list(sessionId);
+    const allFiles = this.app.repos.workspace.list(sessionId);
+    if (opts.paths && (!opts.paths.length || opts.paths.some((p) => !allFiles.some((f) => f.path === p))))
+      throw badRequest('Compile paths must name staged files.');
+    const files = opts.paths ? compileSlice(allFiles, opts.paths) : allFiles;
+    const scope = opts.paths ? ('slice' as const) : ('full' as const);
     if (!files.length) throw badRequest('Workspace is empty; nothing to validate.');
+    const control = this.app.repos.compileControl.get(sessionId);
+    if (opts.agentId && control.stopped) throw badRequest(control.stopped);
     const rules = this.app.policy.effective(session.clientId);
     const hasApex = files.some((f) => f.metadataType === 'ApexClass' || f.metadataType === 'ApexTrigger');
     let testLevel: TestLevel = opts.testLevel ?? (hasApex ? (org.kind === 'production' ? 'RunLocalTests' : 'RunSpecifiedTests') : 'NoTestRun');
@@ -597,7 +732,17 @@ export class SessionRuntime {
     const sourceFiles = files.filter((f) => f.action !== 'deleted').map((f) => ({ path: f.path, content: f.content }));
     const v = this.app.policy.checkDeploy(rules, org, session.uiMode, sourceFiles.length + deleted.length);
     if (v) throw new HttpError(422, 'POLICY', v.message);
-    const run = this.app.repos.deploys.create({ sessionId, orgId: org.id, checkOnly: true, testLevel, attempt: this.app.repos.deploys.nextAttempt(sessionId) });
+    const hash = compileHash(files, { testLevel, runTests: [...runTests].sort() });
+    if (opts.agentId && control.lastFailedHash === hash)
+      throw badRequest('This unchanged payload already failed. Repair its root errors before compiling it again.');
+    const run = this.app.repos.deploys.create({
+      sessionId,
+      orgId: org.id,
+      checkOnly: true,
+      testLevel,
+      attempt: this.app.repos.deploys.nextAttempt(sessionId),
+      scope,
+    });
     this.app.repos.deploys.update(run.id, { status: 'in_progress' });
     let outcome: DeployOutcome;
     try {
@@ -609,6 +754,9 @@ export class SessionRuntime {
         onProgress: (m) => this.bus.emit(sessionId, { type: 'session.status', status: 'running', message: `Validating: ${m}` }),
       });
     } catch (e) {
+      control.stopped =
+        'Salesforce validation could not complete. No compiler diagnosis is available; do not change code based on this failure. Check the platform and validate manually.';
+      this.app.repos.compileControl.set(sessionId, control);
       this.app.repos.deploys.update(run.id, {
         status: 'failed',
         failures: [
@@ -645,10 +793,17 @@ export class SessionRuntime {
       completedAt: new Date().toISOString(),
     })!;
     // What passed validation, recorded now: a later deploy of anything else is not what was checked.
-    if (ok) this.validatedFingerprints.set(sessionId, workspaceFingerprint(files));
+    const next = applyCompileResult(control, files, outcome.failures, ok, hash, scope === 'full');
+    next.repairKeys = repairComponents(next.roots, allFiles);
+    if (!ok && (!next.roots.length || outcome.failures.some((f) => /UNKNOWN_EXCEPTION/i.test(f.problem))))
+      next.stopped =
+        'Salesforce returned a platform or test-level failure without component diagnostics. Stop code generation and inspect the validation result before retrying.';
+    this.app.repos.compileControl.set(sessionId, next);
+    if (ok && scope === 'full') this.validatedFingerprints.set(sessionId, workspaceFingerprint(files));
     else this.validatedFingerprints.delete(sessionId);
     this.bus.emit(sessionId, {
       type: 'deploy.validation',
+      scope,
       deployId: run.id,
       ok,
       attempt: run.attempt,
@@ -667,6 +822,8 @@ export class SessionRuntime {
   readyToDeploy(sessionId: string): { ok: boolean; reason?: string; validation?: DeployRun } {
     const last = this.app.repos.deploys.latest(sessionId, true);
     if (!last) return { ok: false, reason: 'No validation has been run yet.' };
+    if (last.scope === 'slice')
+      return { ok: false, reason: 'The latest check compiled only a slice. Validate the full workspace with tests before deployment.', validation: last };
     if (last.status !== 'succeeded')
       return { ok: false, reason: `Latest validation (attempt ${last.attempt}) failed with ${last.failures.length} problem(s).`, validation: last };
     if (this.workspaceDirty(sessionId)) return { ok: false, reason: 'The workspace changed after the last validation. Validate again.', validation: last };
@@ -775,6 +932,22 @@ export class SessionRuntime {
     sessionId: string,
     userId: string,
     opts: { confirmationId?: string; confirmedBy?: string; approvedFingerprint?: WorkspaceFingerprint | null } = {},
+  ): Promise<{ ok: boolean; message: string; deployId: string; verification?: string }> {
+    const session = this.app.repos.sessions.byId(sessionId)!;
+    return this.orgCommand(session.orgId, async () => {
+      this.compiling.add(sessionId);
+      try {
+        return await this.executeDeployLocked(sessionId, userId, opts);
+      } finally {
+        this.compiling.delete(sessionId);
+      }
+    });
+  }
+
+  private async executeDeployLocked(
+    sessionId: string,
+    userId: string,
+    opts: { confirmationId?: string; confirmedBy?: string; approvedFingerprint?: WorkspaceFingerprint | null },
   ): Promise<{ ok: boolean; message: string; deployId: string; verification?: string }> {
     const ready = this.readyToDeploy(sessionId);
     if (!ready.ok) throw new HttpError(409, 'NOT_VALIDATED', ready.reason!);

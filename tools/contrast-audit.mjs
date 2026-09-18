@@ -80,7 +80,7 @@ const AUDIT = () => {
 };
 
 // The CI environment ships one Chromium at a fixed path; locally fall back to Playwright's own (npx playwright install chromium).
-const executablePath = fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
+const executablePath = process.env.SFCLAWS_BROWSER_PATH || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
 const browser = await chromium.launch(executablePath ? { executablePath } : {});
 const seen = new Map();
 async function audit(label, url, seed) {
@@ -137,6 +137,7 @@ for (const [name, hash] of [
   ['audit', '/audit'],
   ['settings', '/settings'],
   ['session', `/sessions/${demo.sessionId}`],
+  ['timing', `/sessions/${demo.sessionId}?tab=timing`],
 ])
   await audit(name, `http://localhost:8812/#${hash}`, adminSeed);
 

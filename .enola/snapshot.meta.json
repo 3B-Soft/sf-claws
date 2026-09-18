@@ -1,0 +1,2042 @@
+{
+  "repo_path": "/Users/jamesridge/Documents/MBA - NEW - Dev/sf-claws",
+  "repo_label": "sf-claws",
+  "generated_at": "2026-09-18T08:50:41Z",
+  "duration": "484.859042ms",
+  "extractors": [
+    "manifests",
+    "mdintent",
+    "typescript"
+  ],
+  "explainers": [
+    "cycles",
+    "layers",
+    "crossrepo",
+    "coverage",
+    "unused-routes",
+    "domain",
+    "query-loops",
+    "dead-methods",
+    "entry-points",
+    "messaging-coverage",
+    "god-class",
+    "hotspots",
+    "dependency-depth",
+    "exported-surface",
+    "complexity-outliers",
+    "intent",
+    "constraints",
+    "vendored-candidates"
+  ],
+  "renderers": [
+    "llm_context"
+  ],
+  "file_hashes": [
+    {
+      "path": "packages/extension/src/modules/x/emptyState/emptyState.html",
+      "hash": "4b575ea6b03eae5afd84f3aeb6e45813cf320a72666562d8d25448040d8fe482",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/limitsGauge/limitsGauge.html",
+      "hash": "d161203381ed9085c3f657bbaca4198c26854ffceb68a26b82a5ec2c1390d458",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "docs/screenshots/02-panel-changes.png",
+      "hash": "322e0e96f40e28c435f79b6efc91c3eb15b0bf21e987e1fa0ed81d4ee6c372f0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/store/store-icon-128.png",
+      "hash": "ae1f87f9e915930e2b2b5f4f1aef633de9f44ef0b1ddec9c4e6021b397e34d2d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/aiPage/aiPage.html",
+      "hash": "897ff04aad13c0858cfa832d0fd38be18125baa5dd0bf894f5e7bf55499fe573",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/metadataBrowser/metadataBrowser.js",
+      "hash": "6cec969df503925f07f7b384848597675865df5e535c0723fae5b7a9bb51e013",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/test/transcript.types.test.js",
+      "hash": "1dc5d02f247b57d91e1f0cf10cbbae14bac2d019c301af6f6c79b4abe2675ef5",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "skills/55-sf-admin-operating-model.md",
+      "hash": "9511f357e1fb590160fc5bf3365863bb2004f22e2949f8bebfb75e3c88ae7f99",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "tsconfig.base.json",
+      "hash": "acef77998fb188b6f7a94b03c3ebc19880aed9d16e00e5e9740a23fdd81d6c07",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/screenshots/05-admin-sessions.png",
+      "hash": "589881b21ed977b8c530d11a6f953b6056d75bc7f291332bcad235023fa08cce",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/notesPanel/notesPanel.js",
+      "hash": "176e1b3fa1913b39e02204fb6db214be4fd278ce3e3e88ed0290281ac1fb1e01",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/providerCard/providerCard.js",
+      "hash": "2668444035d25a3485af7a4936ecb9815c7d65b33d647a380a95ad48c416e791",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/release/sf-claws.zip",
+      "hash": "6b66734e04eefcd9113c80829963a7925eca5ad292094fbe3ba50bea6b56a610",
+      "mod_time": "2026-09-18T08:49:38Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/chatThread/chatThread.js",
+      "hash": "bcf349fe2a0b720d2c4912bd2da2a4d0a5863aa2c4072733670feac671b537ce",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/server/src/logger.ts",
+      "hash": "1a702c7de8e07dcd3b3a71618c8ed1f88b7cf29a348854fb2ea32dda9dfca050",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "tools/render-icons.mjs",
+      "hash": "6de88bd1d740776151bde43b9aeb7954c5687a8ed994e2b564b42d7e1c421c05",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "LICENSE",
+      "hash": "098dc1cd9ab813d48a1f4ff00e823bc53fef7c4085e267117f964467115ac24a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "package.json",
+      "hash": "e7386d24999bcdf1d621229d915f65947d080c256069bc8a6c8782d488ebeaf4",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/membersTab/membersTab.js",
+      "hash": "eef5b92e4f042d394d57856967f7061b8cbf81a4ffd406c1f16e84ed69245163",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/pairPage/pairPage.js",
+      "hash": "db357eb69622d336e5a4992456e983d44ae1c61225503d12eff6f7de2158d7b8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/chatTab/chatTab.html",
+      "hash": "f365fc219ef72f47cdaa7fff56208f0935e6be2593c2a6765f04c3ed000d2774",
+      "mod_time": "2026-09-15T11:57:53Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/chatTab/chatTab.js",
+      "hash": "fbd0ad783f02df905017b9a569b18a4454812904560341bb0de5470a658bab9c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/dataTable/dataTable.html",
+      "hash": "abd1791d012d4f4a05507697b4c8c3f6b5eda0d34f2db654c290d9d08d264824",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/validationPanel/validationPanel.js",
+      "hash": "e10faf140e7b788c031cb08a11d0f8d4de0d5a2028c6edab5d619bd4ba455cc3",
+      "mod_time": "2026-09-18T08:49:23Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/githubTab/githubTab.js",
+      "hash": "ef73ae4811897e9fdedeebde644b86ff4cc5dae60340833c47d488dd25beb30c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/soqlBuilder/soqlBuilder.js",
+      "hash": "4edea076d56ca3ee68ef6d11011fc89e78d8342b1d4ae5d37b7b90406b5f11b7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/TENANCY.md",
+      "hash": "7a85b70d237ff2b6fb01750aaf435009708f8b2ad3e85901080d4a65fa90e4a1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/app/app.html",
+      "hash": "31d6f994cf2f2cf2a3596e6becefd6824272647ebdcca68465696655df02486f",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/validationPanel/validationPanel.html",
+      "hash": "9d937df7c6e9b9035b61f3bae89c510e6256204d4d010c4dc17d7b5da729486c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "skills/51-sf-security-guest-users.md",
+      "hash": "cd53afffde6db2c891aa59a5c94d581db0e530d652755e5cf4644e5e7f04e1f2",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "_long_session_logs/events_raw.md",
+      "hash": "f019be9735015f24d8c4af3a08d6f0327024314ce53fc74595937b27985fce6c",
+      "mod_time": "2026-09-18T07:47:07Z"
+    },
+    {
+      "path": "skills/40-sf-design-discipline.md",
+      "hash": "ade6cb2d58580470cac48ceb06b786463e176ebf7de351ee80eaba4d4a500c45",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "skills/52-sf-apex-lwc.md",
+      "hash": "6579af01357f4f136359b91aa6de57eef01b98485d1a350d95d0a87c2d686397",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/eventCard/eventCard.js",
+      "hash": "14cd5968a64baa3ec72c9064df98d20d19b03f7dcbbc8aae9c1aca09809c16dd",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/sse.js",
+      "hash": "1f4c92653f3a9c3ba2a63fdcc1625f4cc7a1a8f68de705ab95bc3439c5108d51",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/storage.js",
+      "hash": "07d5d3cc7a82e4d8d56e46856fbf3ef02f765cacee63611f5a2b0401a5d82ecf",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/limitsGauge/limitsGauge.js",
+      "hash": "0a6c5f5bb20649366b4b7b2c5259ba9a4c2c8cf927a5a47bd8adbb837ff3acd4",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/notesTab/notesTab.js",
+      "hash": "1f02dc731b8bdbcf50a748590eb8bed01770ebcc390ef03d8522bcccdc22c6d0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/conversation.ts",
+      "hash": "94e5f52249c2991f930f78ab5287851ac81b119a099bde5e023835aac06a660f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/shared/package.json",
+      "hash": "2b822dd17069350ba88289dd11bb4a7060c2808f9ce0572611a0a5e156c0728c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "skills/30-playbook-new-field.md",
+      "hash": "5c248a22f4fa244b037f23e84e3d3b20286fde285e65a4b251c84b6d0c109e46",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "CLAUDE.md",
+      "hash": "c1200743c9c4a8db511dfa944d7cf7ff63b2e5480a639177fb8b7d466f525c4d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/branchCompare/branchCompare.html",
+      "hash": "5b2d57268060bc1b35f1af0d757934fe2ea8d3ae3328b20ce44dfbec8eba5b7f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/deploysTab/deploysTab.js",
+      "hash": "364c9e5344e469f89ca2ab1c4fc359341a3a3b821d7226f7a10f39b682c4fcc8",
+      "mod_time": "2026-09-18T08:46:19Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/diffViewer/diffViewer.js",
+      "hash": "c52c9dacd2b07498a25669d5a2fb728fd30185c1793e891f629bebce45cbf700",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/jsonTree/jsonTree.js",
+      "hash": "fbf7adecdb2e2531888e3c2986e69efc17735e280f369fe6bc019d2d89056d9c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/loginPage/loginPage.js",
+      "hash": "b177dfded6d9f3c304a929d397e24d47e1ec016e6eaf07e953391f39e46dd67c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/sessionTiming/sessionTiming.js",
+      "hash": "3f8963b2efb7ce7e0e598c9bf44fb4decc322675514b0346eb0225251c052a74",
+      "mod_time": "2026-09-18T08:28:02Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/workspaceTab/workspaceTab.js",
+      "hash": "6a25b53ff90528edd8b60d8caf28a338d68a89eb759a2c1deb4c2b7bd1e87c88",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/db/db.ts",
+      "hash": "ab4ac78c9abc1216d67a05f35c8ec80c1894198236018745fcc9ae2bf63cc7d4",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/shared/src/api.ts",
+      "hash": "8ca6b7dc61fd92fb53684f69477d43fc7c9e52cdce62ce3a5eee273e1c1d6de5",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/shared/src/permissions.ts",
+      "hash": "b405b9fad042c3144eb282cb3571bbebb25bf88ffaeacbe2b750086812566521",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "tools/vite-lwc-plugin.mjs",
+      "hash": "5f4d9f7bbef00e6d1b3ed42d79952d1b87d555524bfc986c4e783a3222843118",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/state.js",
+      "hash": "df97766ccbf053258294bcb33bc9d35c9aaab2c931c15becb58098be126f891a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/shared/src/events.ts",
+      "hash": "3619f6172fc9c370225075ed92bd1bd454fdb9241e816309829cf97cb0be225b",
+      "mod_time": "2026-09-18T08:37:11Z"
+    },
+    {
+      "path": "tools/store-assets.mjs",
+      "hash": "56f8631b1ae97420e53f035cb7a15b5be89a82e7ec7432244a9d2b9a9d5b6ade",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "SECURITY.md",
+      "hash": "f9beb1d78b6a4a12986c3992f5098ca2f7cb793dcddf5923aaad5193d57da337",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/shell/shell.js",
+      "hash": "82d7442efbe708c628f603578799b6dbb992aecfa3b23dba01c13a4eb3bc65a9",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/toolCard/toolCard.js",
+      "hash": "8fa112dc269b9bc806f5718c258e56d9a6e61701b1865bab5a49998cf374f964",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/context.js",
+      "hash": "c25daf18c5f217518f490110964d1b9d824ecf34b4cc8408b1cccef0c0e9ef2d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/lib/crypto.ts",
+      "hash": "5d528454cc1e9d1ffe9f051e5adba364b793d02328c60973688e9fd7731565cb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/shared/src/index.ts",
+      "hash": "5faf8523485df61e35463acc90cd69dae1376619adb1bb082662028f2bfeed11",
+      "mod_time": "2026-09-18T08:17:58Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/constants.js",
+      "hash": "96808a9a0dc1197f05c83f5ec570374e84f6b7481e93f844dc70ab05317b1541",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/confirmDialog/confirmDialog.js",
+      "hash": "57b0dd051fca57730913880597e04396bdce05a551e7591239d3f2c0a470a4c1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/pageHeader/pageHeader.js",
+      "hash": "cbb72053f73523a5f3cc4c73fd128e79638f926e2e1905de519493e94537ae99",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/icons/icon-16.png",
+      "hash": "61d753c1290c32dd02a0da6cf9befbf82e321df7dd07e2b0f785ca5c584dacb8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/format.js",
+      "hash": "812d79c696be418abcfa32dae24d389f2fcb6a5da6a8805fc4b6a1fd07570030",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/coerce.ts",
+      "hash": "94cf044fbf75482224bb100d2d99e5a220efb5cbba1326af9b860d03b1c01f91",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/db/repos/ai.ts",
+      "hash": "39408d84d67fd2163fe6e2b02ceb5639a1afbe6915b78d5c9cbe42aac33ce6f6",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/db/repos/auth.ts",
+      "hash": "0f80c01da6d3c1de8a372ab0635b9def072d92f986235df84cd70077e0180fec",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/store/screenshot-3-explore.png",
+      "hash": "b1843c1ecceebf2ebe11c74c7489da413b262c1b69f88e06524fea0ca4387194",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/sse.js",
+      "hash": "131a9df62b1a00499f5952f5d75a3aabb3d85b36ff9d57c42f5c7224c4bed55e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/instructionsTab/instructionsTab.html",
+      "hash": "2f30818dd19b116ef94fa2e5da6ed1fbb18854e9f118faf8eba5e402b7766bfb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/validationPanel/validationPanel.html",
+      "hash": "58255b23a3847e2ade8d9331e578742f43d72e9f16d9278254234f56b9eb82c2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/transcript.js",
+      "hash": "f0ed69becfbd87e1f75a0353b66f0e9fb674b2fe4ace7936af7cc107a80886ba",
+      "mod_time": "2026-09-18T08:46:19Z"
+    },
+    {
+      "path": "packages/server/src/db/repos/index.ts",
+      "hash": "5cba0d5129bdc3f26679820cb14cf24d49116ec2b5f312e696cca3a51b77a7a4",
+      "mod_time": "2026-09-18T08:37:11Z"
+    },
+    {
+      "path": "packages/server/src/http/routes/projects.ts",
+      "hash": "c54806d237b1185265a94fd36c868185526009aacdcf48c5138cd05a2f9d0131",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/knowledge/repo-store.ts",
+      "hash": "1ed768fdabb84bd44f9dea6fa49f201da1b6a79f304ba4f6624870059c8cdfa4",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/agentSwarm/agentSwarm.html",
+      "hash": "891493188b9913c896b1ba916693182ff6adfe15d4f78c556e7e6520426cd7ca",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/changesTab/changesTab.js",
+      "hash": "a61955cb9e5ac8631f69aa3f15e9101275e64882d7713a6d43332f44296fa1d2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/githubTab/githubTab.html",
+      "hash": "34a1479337fd3e3ad6058eeb5a437c69dd7ad3a3396d31d5faaca75f243c1c48",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/toolStep/toolStep.html",
+      "hash": "a62ecd4a8d6b1b36a6d025c14966b976ba3141b5ed3703fe1e2ce069d3b27458",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/extension/src/styles.css",
+      "hash": "41732fcb9914fb3a190d908466a49c0f319aabf8be52bde8c83dc9c93e8ca4f3",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/shared/src/session-timing.ts",
+      "hash": "e84eb38a3186708bb9c740eb5bdfcf0c6e9c974dd5df07fd4c4530bec0697749",
+      "mod_time": "2026-09-18T08:23:04Z"
+    },
+    {
+      "path": "docs/PUBLISHING.md",
+      "hash": "2d6a77056f10a52816a7c23766ad62a831d0fe68c624383d961cfa6137748453",
+      "mod_time": "2026-09-15T06:41:00Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/api.js",
+      "hash": "5e4b1b73a27fdfbd189fbeb36b374a9dc48b467ce07988f213430a9906de2c5e",
+      "mod_time": "2026-09-18T08:19:53Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/markdown/markdown.html",
+      "hash": "add59deb3bd9d8f721524eaa9ec78ecdfa285d84142e9b1e8e572f52813f9805",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/scripts/postbuild.mjs",
+      "hash": "a34f3dd83dfd235fe6d15d722e74368d167861bf7b55b3aca7b1757beae8e82f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/loginScreen/loginScreen.js",
+      "hash": "c2ed4840049ef7f89684be9fb4af212a6b07cd9f1c80c3bcd1458fd8328add4b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/transcriptItem/transcriptItem.html",
+      "hash": "2e5079d8bd69f2fce8c665cb8b2a364851b9cbe7b24c8f797a97d561bff3887c",
+      "mod_time": "2026-09-15T11:57:53Z"
+    },
+    {
+      "path": "docs/store/screenshot-1-panel.png",
+      "hash": "b51cf776efee66bf9ab14659cea1c1aceb4dc827ff54268be2b879a6391649b8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/branchCompare/branchCompare.js",
+      "hash": "afb8eb42f287c164889865e0d1b2ced8841cf223b32bc75bf6d86638cd40cd92",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/sessionTiming/sessionTiming.html",
+      "hash": "66106870c07973e197ce2913688d6b763a7cab2828b57a78924563c2bef359e1",
+      "mod_time": "2026-09-18T08:25:09Z"
+    },
+    {
+      "path": "packages/extension/src/lib/bridge.js",
+      "hash": "fff7c4d0fe8f95d75ce799426bb3e3fc508489045da14fba1f6590841635e8bd",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/optionsApp/optionsApp.js",
+      "hash": "a322ed66cb9862615ef561c95cbd7be1d7fc45ac8df61c8287af4f22f4825550",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/dataTable/dataTable.js",
+      "hash": "03876f8a374f57cd47230be572b5c7b609c365309b46873c6cf5ea2a22c993a1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/policyTab/policyTab.js",
+      "hash": "330e442b21617edf9f86ad78cfef846227e0e428a673910ff96162866f4da17c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/sidebar/sidebar.html",
+      "hash": "8d67cd82c5a2220e8a5537c3cd79ea3455aaf804cb24696abdfea9cdd2226c10",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/toast/toast.html",
+      "hash": "d0779d1268fd232b86802e37962539d69c8c9c82e6d50ea3555327cdd6f4bd1d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/.env.example",
+      "hash": "651360e6c768b21592b70b7cb96d474e0cc99fdf57e78a68a6309feed4309808",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/server/src/agents/runtime.ts",
+      "hash": "05e99d4fec0821a91d205a50d932801649ea2f936e9d1c471f07270a1cc0c405",
+      "mod_time": "2026-09-18T08:49:23Z"
+    },
+    {
+      "path": "packages/extension/src/background.js",
+      "hash": "860398d9e84e1714250bfb029d8616965e47d7582ca78faf107eada53d513829",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/api.js",
+      "hash": "738b53709906aa159f38c1bd4f3482c89cf72e962e92a612a73be1ae6d09e575",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/confirmationCard/confirmationCard.html",
+      "hash": "9f4ce878c599f51503edd7adab9273e17a1ac3c54f30ef71346076044447ab89",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/ai/types.ts",
+      "hash": "2817578912c6471588ab71c347dde134f14f3b19af0a14b4f90cfee366d11daf",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/auth/service.ts",
+      "hash": "5aca0645d9f8c882e7a6591099f60834b578ea2b2dde685d972e3b7a0c86bf2a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/vitest.config.ts",
+      "hash": "09185f42fc15a9e212949fb703ffca4760fc9fb1de2e4cd935516fd2aeafcfc7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/sidebar/sidebar.js",
+      "hash": "6da17de3492d8afbbe5203ac90968a0cebe7aa592492a2c2b6db96aca1e23774",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/statCard/statCard.js",
+      "hash": "cf731eedacc2174f69b282bb203f8259ffda0b824180a5603249fb646aaec7a6",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/chatThread/chatThread.html",
+      "hash": "1fa5fb62d1de87a89d0a8e583cf32c0f6b62007ed88f2440cc9ea573d559e7c9",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/loginScreen/loginScreen.html",
+      "hash": "484ab7d39cb4b870e74d06bcbf5214feca12a53282c0bf0a44ae933ea662a64e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/test/transcript.test.js",
+      "hash": "a417ab5c289927c099de0f67413ca879c7e598b088bf9e37d47f4eca35824611",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/server/src/db/repos/projects.ts",
+      "hash": "44caabb286f5231a27f092d48e81725351f5ce109456f2837297fdc97bcda7ef",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": ".nvmrc",
+      "hash": "f14b4987904bcb5814e4459a057ed4d20f58a633152288a761214dcd28780b56",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/diffViewer/diffViewer.html",
+      "hash": "5cffe83103fa064dbd097b95699b93eb722d73bfb45773f3341a333522fb9a5b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/sessionsPage/sessionsPage.html",
+      "hash": "4a6bf0842d1167cb857ac7f87c907af75ad9c6791c0b7e947a66e6d85047707a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/options.html",
+      "hash": "6a897c78737e56b547d308649017029bb30b30624d6456890e85890bd68507b2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/optionsApp/optionsApp.html",
+      "hash": "bc6d2f6c56332b8d44cbf69b07a953593fefff5aacf6ceebe9ab10a7d3381137",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/scheduler.ts",
+      "hash": "e0eaab77de734bdf03aff4aa10b19607afd2becd535743b3a8e52824298a6949",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/http/routes/clients.ts",
+      "hash": "a62cab322586b32e5c2296cd6d52ddfd6581b2eead84350b8081b5028e055152",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "docs/screenshots/06-admin-instructions.png",
+      "hash": "9e42baf0bbffa574d7e920fdf01ef27422ff93654afb8259428a9ba4f1b39bc4",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/README.md",
+      "hash": "70336108d45587f98f6fb57700db1718ddee79eaceeb6c8b383ea034eee37af0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/github/service.ts",
+      "hash": "46f63b7caa203d52dad10820a7913c1e1fedbae6abc59218c8fc5a27f1d7d1eb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/screenshots/07-admin-policy.png",
+      "hash": "d672a479f5bc27c8c704100a5e06cf167aa9534db9039ab5cd4bbbe98a1e6c39",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/deploysTab/deploysTab.html",
+      "hash": "feb6592f478fe5b897b5ff532ea01e2e4ede49f63a16668c4b683afabc30f2ad",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/metadataVisual/metadataVisual.html",
+      "hash": "59ac616781195566faf953caefa457c8ab2e405d7ef9663268d29d74d5b450e7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/budget.ts",
+      "hash": "7f7a244b9073966b6eb6550275f4523a75dadb93add92d947ace35d1896349d1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/ai/registry.ts",
+      "hash": "5a18b7c3058571d41024b60feab5ff4366ec03c7ed8894e5b4e234fa7df35557",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "docs/HARNESS-TIMING-BASELINE.md",
+      "hash": "6dadce184fbbf6c07d5ddc8a1dd5fc2a73fe4a38b31c407b4bee59dc63afba30",
+      "mod_time": "2026-09-18T08:25:09Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/format.js",
+      "hash": "f8453e7d30384fa6be7659893a00de90d473e6b2003f7b3a6664c1a339279a7f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/skillsList/skillsList.js",
+      "hash": "0ab2940aad212c92b860df487636fff88cfc46db63e4a7449eb7cb383572e24e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/usageRecordsTab/usageRecordsTab.html",
+      "hash": "26964812b6ba4159955a85836d71a8e576ba8bdc633317b754569d496db3c5c0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/eval/cases.ts",
+      "hash": "b3dcc8c70d42e0b8c2c2b0c8752668101f590a747951ce99c33bd088cb0d4d55",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/server/src/agents/apex-classify.ts",
+      "hash": "dc3b03b66f0e837bf4e0ed963e12795556c2dd41cbc6934ea1848e872761ccaf",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/compile-control.ts",
+      "hash": "952662b44f3dfab31401e67bd450387c6fc718b8361fbe7fd609584a1e350506",
+      "mod_time": "2026-09-18T08:48:30Z"
+    },
+    {
+      "path": "packages/server/src/ai/deepinfra.ts",
+      "hash": "39fe38da2dec5655088fde3ba820b7616c1241737c5011f4bf822039a1681ce8",
+      "mod_time": "2026-09-15T11:59:03Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/sessionDetailPage/sessionDetailPage.html",
+      "hash": "98cc1541c6acf33692d37b6dcf24e7ab6d17ee5dad643c3fe543a8e8398ed710",
+      "mod_time": "2026-09-18T08:19:53Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/skillsList/skillsList.html",
+      "hash": "d6e76c63fb93a52e21b16cc79854a1dfac4be4f1d95ee18e7f4f3ac8adaa51bf",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/toast/toast.js",
+      "hash": "346a1ae6f0f3bf14b2a4def80ef3c8e374c118feaa3215c42182ec7b2298af4a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/styles.css",
+      "hash": "5c39fdbd7355e5c93a28ac392dbd13061aa6abb0b5780481d9c59525574a9e23",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/appHeader/appHeader.html",
+      "hash": "608e98ac90cbaa68b57b0f0e2868eb625d3fc2395c90b9061274c0774b52f334",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/server/src/http/routes/orgs.ts",
+      "hash": "8f3d6d8735ce79e43d7f29b29a55476cf9acd51dafad7453fde57fea4f023775",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "packages/server/src/lib/errors.ts",
+      "hash": "ee65c0106e8f19f3f71ca0b5017642204a6c4f7f28f1166e81357ff6b876edb4",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/REVIEW-2026-09.md",
+      "hash": "d9cc464774b06fba0203f6a224ba2bca15e40568dbc6d35e5b5ac0560e136f80",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/screenshots/08-admin-usage.png",
+      "hash": "1d2b77fd003593e65699c079a30fbcc69a3788cc6299b900a0fe8271997e65b1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/manifest.json",
+      "hash": "6a04001772aa315dca1a7a0fa4746a311e2989fdd9133b5ffeaa6fe03d24221e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/app/app.js",
+      "hash": "387024bcd36076d727ed72fc51f24658fe12996c8da8918400f538879da3e60e",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/shared/src/domain.ts",
+      "hash": "41d79d614953fec877641b3e47b084b4a74953e1823b5e1edb99b80c7da81a18",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "hash": "8b790f65246ff878077be34dfc6d12ae9db2e5939ea965f03466754e79e1850d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "hash": "f6d0683029b635ccaac77c6dbf6b98aa6d6486d60eaf784b55729a044041a55e",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/clientDetailPage/clientDetailPage.html",
+      "hash": "c5931cf984d193a0a76f936be2059ac178e4d88ac05ca46e6dfdb7393ac6a0a1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/policyPage/policyPage.html",
+      "hash": "fb9dc12353c05a148617d6d910521d696f7b1f653a4f0465357110b954f195ad",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/todoPanel/todoPanel.html",
+      "hash": "69e30bd583abc79f409b30bb428825124cfdb59e67b8ba574d0fea864d38a08d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/cache.js",
+      "hash": "8f76d1ae87c7e79d8717ceeff9836f9907611e7efc1ae3f549b34e0813c6429a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/salesforce/metadata-xml.ts",
+      "hash": "11f9049c5fc75965d17def10e8da99a8ff5c4637dea983fa43926c46a0f0307d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "tools/audit-long-session.mjs",
+      "hash": "8d92e56eeb0562f70ba1608f7a52063a69f976095f18b9478a54d8e706c33f51",
+      "mod_time": "2026-09-18T08:23:04Z"
+    },
+    {
+      "path": "docs/ADMIN-GUIDE.md",
+      "hash": "0aed114c7bd943f6b6bdb2b5f280ef05172e6939b196d88919ef9d606c04ec36",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/app/app.html",
+      "hash": "b4ad67644483e5839cb79039ed39d0785d949d30e55a2cab4610b677114db0ed",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/clientsPage/clientsPage.js",
+      "hash": "72644fe71db81a8553744783f941aa944d87864a81f369a09120a0a933fe544f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/usagePage/usagePage.js",
+      "hash": "bea3c0503e1a1c0fcc46cf61f1b738895a2a488ae92bab2b3156e1836cb9c3d1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "skills/05-least-resistance.md",
+      "hash": "7c1f465c5c4277f44f4769d1d274ddb7067849679e647b59079defe17d0e2b44",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/transcript.js",
+      "hash": "998c9def9837e06a698492e30572f56247bc43d0c86152633bb86c5c2e4845de",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/main.js",
+      "hash": "671a8ec731bd73f1ee560f495be7b5db913fd54217a7173756363b52b8075b4c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/dashboardPage/dashboardPage.js",
+      "hash": "91c6b4a92e92072ef0842af468f9f823031b65d535f5af660de12af3f1a47acb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/icon/icon.js",
+      "hash": "4f866d088c7eaa58b6ee2d4d05268db43b811fa0693470c7099f548f9a2b5fdb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/options.js",
+      "hash": "84a7b896ecad179fdea5ed10913d0d4f66d46168d35c481b11f1add77ae9e6a9",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/test/transcript.local-user.test.js",
+      "hash": "65b269a341cd0c0a85e4fe3797f2c52b15e21cee8f7a9e50aae15fc0483982da",
+      "mod_time": "2026-09-15T11:58:00Z"
+    },
+    {
+      "path": "packages/shared/src/metadata.ts",
+      "hash": "8ee74713d13acc8e09378d746b981d111528b1c4f97564b1f55cc3bbba8f49fa",
+      "mod_time": "2026-09-18T08:37:11Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/store.js",
+      "hash": "02c23a5502960bc9e32d35db35d815ee4ff8a1688582b81bf6c25ff7fd059bb0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/usersPage/usersPage.js",
+      "hash": "d5da0b25759da4c0b1f4e146ccafbe7d90fc6056c7a61da5c15f973f644857f8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/sidepanel.html",
+      "hash": "79da7980193431a888a054a7cfe731c666df0b40ac6a2b9babf33fffac3eed6b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/setupScreen/setupScreen.html",
+      "hash": "a38184071bf4417346ca7295b10894558765a0ef78f370c3c93bc2122221598f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/http/context.ts",
+      "hash": "612a64c11865c687e1b1ec575691b1232993049c27a3be5b56ad114251713d84",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/confirmationCard/confirmationCard.js",
+      "hash": "9370e1c7b31af54de05089c1be4c2060583d8290c7b36f4433731c4c294daae7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/knowledge/pattern-guard.ts",
+      "hash": "febac666985a9a0e7bb7665d36263788b66a5932a37d30b35b121f14c77f6688",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/salesforce/sdr.ts",
+      "hash": "82502a8afe3f7b73d28f65985cd38f07a6d9dc3e8137fd7cf136e391074984e2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "skills/50-sf-flows.md",
+      "hash": "d8b1d2eadb5b475eca5e402aaf95bd351b4df1b7d1d4f1bde8592ddc1bd5151e",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "docs/store/screenshot-2-changes.png",
+      "hash": "0e2ed64383f7f270e953a01084e17d1f6fa536385b52712e950dcf8cd1a98eab",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/index.html",
+      "hash": "e0eb2ea3edc188ef3a360e7a49baa8ee9ad19d2cbb6a528587695995773f1076",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/modal/modal.html",
+      "hash": "f4c8f714ebaf387053f7e3822d7993c94fd8a99da10515dfd0294a31fdf60334",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/oauthResultPage/oauthResultPage.html",
+      "hash": "1f9b32a7e2279dd2b9af994680e527c41e60525aba577a6c2971b79b57ee7d81",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/store.js",
+      "hash": "a7a01e92678616670c41cb2f7eb72b05713f6441ebb01910bca55e87507126a8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/todoPanel/todoPanel.html",
+      "hash": "daa181657bee959e77a34d319095f751a0217478633cdbc3c3e6234c1b97cf10",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/extension/test/transcript.turn-answered.test.js",
+      "hash": "4a359956b136f9972b36d058d67a9bb14f380f75b6b8e8e695304c8e09351f29",
+      "mod_time": "2026-09-15T14:58:41Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/clientDetailPage/clientDetailPage.js",
+      "hash": "adb9c7ee1e669c2f7b947e6125ae036a674042783fdbadca73922fd62314b200",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/icons/icon-128.png",
+      "hash": "ae1f87f9e915930e2b2b5f4f1aef633de9f44ef0b1ddec9c4e6021b397e34d2d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/metadataParse.js",
+      "hash": "839cdc29be76fdff630ab9a72ba5bcb615ca9f02d645b851111f87ce273fe1e0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/markdownView/markdownView.js",
+      "hash": "76760e5cbc69bf838151ce42fd1b9f5520e7682481575e6c20e9322316c28e2c",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/server/src/db/repos/compile-control.ts",
+      "hash": "c7d9ef217d077d8d0306f5ef109a4dc6ad5667054750eef5145525995b5daf73",
+      "mod_time": "2026-09-18T08:47:45Z"
+    },
+    {
+      "path": "packages/server/test/helpers.ts",
+      "hash": "1e54d52578521653e26d9c04526fab4dc82e1f283b4e9e428250686471930d49",
+      "mod_time": "2026-09-18T08:47:44Z"
+    },
+    {
+      "path": "packages/server/tsconfig.json",
+      "hash": "ea03f1dd4a041bc972a391606e66727662e24abb12e18fa6b6daaeb5ef9323e2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/screenshots/01-side-panel.png",
+      "hash": "fa3c12ad11ba883ee7411e065e82269758eb0f9be9ed1447bf3e2595e3a9be3a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/errorState/errorState.js",
+      "hash": "e63afaa4b39794ea97f26e89b87ea6b0656db3625592cf364d7baed592ffe053",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/jsonTree/jsonTree.html",
+      "hash": "2561205147ef9960fdabbcd8a431bd7b2ac0288b7bfc309aa3b5cb3f68c4d0ad",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/soql.js",
+      "hash": "be2bc867a1e1347ba35874b5681dbb9256d3435f9a0034250601cb5b6a1faf21",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/server/src/agents/model-timing.ts",
+      "hash": "f1cdab0cda8954167723d7e7b3a828ea6e0d0dec2f0c4cb15f82bbbd1100bc5f",
+      "mod_time": "2026-09-18T08:23:04Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/loginPage/loginPage.html",
+      "hash": "48b81486d54e7abd035b76538ab7bbfe3d7d30183c61b6839a5d1ab083ea77a3",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/skeleton/skeleton.html",
+      "hash": "c79a36557f03cdfc027ac63d37f56606ea478c421dfc93da5cfe59549ad071e6",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "skills/31-playbook-debug-flow-error.md",
+      "hash": "18270dcdee52f581a39d1681ce6634defeceae062757f38a368f757e31c226fb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/confirmDialog/confirmDialog.html",
+      "hash": "9da1df0e3799db79509c5a3a985d339539cd0b6a534bf6355324d0e61e5069f0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/tabs/tabs.js",
+      "hash": "f1f33f6ab730eecefff59a86f01c445a50b4aba9c3ac49d2b8f3525c0728c830",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/usageRecordsTab/usageRecordsTab.js",
+      "hash": "c4f18e4e0a4426e53bfaf256d4df12234d5010cf617ac634d0c4346484341a59",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/usersPage/usersPage.html",
+      "hash": "3e61d2815e9fbcfa9a6b6350db71461fa28a941ea8c23218dc500f658417cf89",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/exploreTab/exploreTab.js",
+      "hash": "fa853b82932bd7e277babaab974993984cee689b48e1d6df2f02f113a7d37412",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/http/app.ts",
+      "hash": "7c55f5da2ba28a8bafa68ccc2c92a943eba6083a926705c29a8ee193a137a7e1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/store/promo-marquee-1400x560.png",
+      "hash": "baab2f2198c01d7680e098d709714b59e82518f5e7066d6e27f703a49e361391",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/badge/badge.js",
+      "hash": "78279d41bcae210d07064dde95761f53aff7dbe188ffb19e64af7c30f5b00124",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/notesTab/notesTab.html",
+      "hash": "e6bc5a2a0e2a1ec235dd6c26af742d152807787c4ddc92fbfc548cfc9278bb60",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/vitest.eval.config.ts",
+      "hash": "c1d48797a659e042a733eb4202925a9a6b65f78c6122d2ff2b0fa1fdf38a46af",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "docker-compose.yml",
+      "hash": "ae90b3aa63c5d0ae86bd8c6e207a2508e18e594783c6450c7a2ac1134e646107",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/aiPage/aiPage.js",
+      "hash": "36b960a6f008d03ecbafa85591d64327f6c492ab8b9e4286593ac3e9696daf1a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/limitsGauge/limitsGauge.html",
+      "hash": "78c340779580da99ebe3af1f5db6f451fa461647b476f17bc2d3946cd812b4e8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/settingsPage/settingsPage.js",
+      "hash": "af8205cbb073ba389467ffefb010e8ee7c8a3d1f03c036234a3f139e4bd3f3f0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/setupScreen/setupScreen.js",
+      "hash": "59ddb4df8ba3690c58dca2b1199ec7668ed6a52533e5aa3ddde077b7c6aa75bc",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/agent.ts",
+      "hash": "14062b092e8ce34ed0c9d4b1fc2cf9fb2ee404083b77bcafe1a2863650f8baf1",
+      "mod_time": "2026-09-18T08:48:30Z"
+    },
+    {
+      "path": "packages/server/src/db/migrations.ts",
+      "hash": "fb5a718cb0596055cb927a613234a60160166718f8c2e47d40f4083c2bc69561",
+      "mod_time": "2026-09-18T08:37:11Z"
+    },
+    {
+      "path": "packages/server/src/http/access.ts",
+      "hash": "c4f49e2e4819cf58a6e8182d0f948e6d65a66cd8cb54a5a8d0fcfcccf5cc287e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/store/screenshot-5-policy.png",
+      "hash": "8af1ef373c84e6f6b865b1d37bf5d8392ad9ce26d3790834372271b6f1875728",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/icon/icon.html",
+      "hash": "a87a7054b26f5d1c2b8b52ce5176aa0332ff9e47299592f8e9c672ecc6c342e3",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/skeleton/skeleton.js",
+      "hash": "887505cd1b8036b38f73d9a3edeb02feef0ab9f21df08e4523816e034c7a88fd",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/reminders.ts",
+      "hash": "d15e0ea6c7fff7e94c8ed0586633c35c58d5efd926196806e7be0431dc83917e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/http/routes/admin.ts",
+      "hash": "166d67797098917f2533b2c3d6c676c992c5927bdd4741f0ac6b03540293870c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "skills/20-managed-package-template.md",
+      "hash": "dfafcddd5d78a78734f66f95a0bdd7a1d4d37369dbcc6687d55e3e1178d230d0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "hash": "a74a75309b7d93eadcb9ceec20f14e128a6b40c4476443ade59bc0addca13dca",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/HARNESS-OPTIMIZATION-PLAN.md",
+      "hash": "2782c8695f4983be22442ef28d3ea6056e7166f104105256af920dbf48b7b288",
+      "mod_time": "2026-09-18T08:14:17Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/docsTab/docsTab.js",
+      "hash": "30bd9a59123c5a6e399813c29c7c2d502169506cb49cd0044468765f4bf40c90",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/limitsGauge/limitsGauge.js",
+      "hash": "69b9934f2ff2d5ba95b3c93a57df6271bc3708032eeb5788dafe553726698d8e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/events.ts",
+      "hash": "6a9a499f9ef4a18ea8fcc9f5e3d10b914716f962bcc78feeec1f0e05594004ce",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/shared/tsconfig.json",
+      "hash": "4e2a2df09afd84ca46030b3d028e096867bb031dfe479464c65a0c5b8d7f5c3a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/screenshots/README.md",
+      "hash": "a083c7a57cc2028f44d1c9b775f9cc7295a343f5c65a6034f0c6e7549853e6df",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/package.json",
+      "hash": "9c41590c39f2219dd99597b086c9335d85fb3ab75bd3549ffa0a031e170cd915",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/orgsTab/orgsTab.html",
+      "hash": "808de5f2ea1696e89a98f01289b52e24ceb24e2beecfc7c897fa2a66cae6379f",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/skillEditor/skillEditor.js",
+      "hash": "738995b3d00d7d15caa0fda7c7f0ec626096df526c20d7788f150279e9c55c41",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/usagePage/usagePage.html",
+      "hash": "1ecabc2fd027e91239c411f670ed14738e0bf072b3f85706fab62ede55bf7891",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/icons/icon-32.png",
+      "hash": "353eef3cbf802c88beaad629861f7f46fdfc97cca300fdaed265db7234af0702",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/markdown.js",
+      "hash": "97f4047a2ffadc1dc70ce8a9859da8d2a06706c321cb8136cc4cf7bad520d5d6",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/emptyState/emptyState.js",
+      "hash": "7c6a4ab1d607cc43b9dbab87fb44151a7e426cb99ce0dfd22c8a0be5a95d4aee",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/store/promo-small-440x280.png",
+      "hash": "48bdf864060e0319a8510d3b40c9215708ea6829b298e0ac0347f0c74e8a677c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/confirmationCard/confirmationCard.html",
+      "hash": "49783d4d8c8b862c5f512f86bfa06ddf8925b07122183cf67b14681f568decf2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/githubTab/githubTab.js",
+      "hash": "98f0c2d63b2a82ed0553d067f4e0178388d5eddecdfcd5d8d6dc4fce9bae1664",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/knowledgePage/knowledgePage.js",
+      "hash": "ab0ca33ed7cf67e912406b53d7259d0660c7240450ae8a7ad3674e4fa82aac31",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/oauthResultPage/oauthResultPage.js",
+      "hash": "374167e1a2509dd30ac2cdf2bc7bfd21bc592656f95e71d4381ac77c65784fe1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/README.md",
+      "hash": "5fb634f3ef248380131b991577a578e046debbb30b99f1920f0e5f7317858fff",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/cache-probe.ts",
+      "hash": "56fb708c049c7909e9c89d1357800933605b627c4465e72310e9d75bdf850b2d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/config.ts",
+      "hash": "8ddc161f346b89ec525487766631abb1c2d4cea01439eff3fd7888f42acb644b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/usageChart/usageChart.js",
+      "hash": "1b1bc39eb21148f2ba3f0e393bd0e8fccaf0d341c57455e74ee2b5a0a925e070",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/validationPanel/validationPanel.js",
+      "hash": "8795734db6cb59178c5ef35bf10cb87fb05cb25a7d9cd8d819d74228f10de653",
+      "mod_time": "2026-09-18T08:46:19Z"
+    },
+    {
+      "path": "packages/server/src/ai/deepseek.ts",
+      "hash": "6118b854a97b4cdf094fb4d4783b351d9dbc581cb9b8ddf59fcd35f2112cabcf",
+      "mod_time": "2026-09-15T11:59:03Z"
+    },
+    {
+      "path": "packages/server/src/ai/openai.ts",
+      "hash": "884302e378b87225ba25c3dcceb5818a638326523b4cdae9dedd74f0efac9e52",
+      "mod_time": "2026-09-15T12:00:30Z"
+    },
+    {
+      "path": "packages/server/src/http/routes/github.ts",
+      "hash": "742accded029cec3c47a59088e4ae534643fec63c7de8b4a8369697940468de1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/http/routes/skills.ts",
+      "hash": "b6a87dd3f4b1e1673cfe16377d57fd8c5bc1b90e710aaf9c5dff96ac219aafc7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/http/validate.ts",
+      "hash": "bdbe30bcea768f242579ddaddc236a85c0c515a4529d91cb57f9659d38f14bbb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/salesforce/connection.ts",
+      "hash": "f8bc0383315d9716dbec038338b5a9bdb0739d751fb13068978561cc849a33a8",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/markdown.js",
+      "hash": "f6cefd71365cea5114909051e680ba72ed0846bec79ad54388581042dda4d251",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/docsTab/docsTab.html",
+      "hash": "005b1f95f5d466dfaac57c4a46cbf1be6ef4f7cce66b08b8c154253e2c2de70b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/modal/modal.js",
+      "hash": "cfd6b90c84d1a8429b12d44a9e5a5cda0383c58c52f389ae0b7822adcc8c55d7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/modelForm/modelForm.html",
+      "hash": "50a207a0eed2df08b8b591e32bc757d3d04f69f2cc94d639fd45b59d53099bc6",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/notesPanel/notesPanel.html",
+      "hash": "5073f72d4e71562f9eec8e693fe820702ca22ccf3e10ea3565bf4690649aa540",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/sessionsPage/sessionsPage.js",
+      "hash": "fa75052001ab1fb813d08a71d96168029fa43b45426611fd0d48b8b3c6c6af50",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/skillsPage/skillsPage.js",
+      "hash": "96626dc56d65f1c0bf9ac8fd9d9eb8a79179df40626adfa69af6d13700cdcb8f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/ai/anthropic.ts",
+      "hash": "248b309bd284328933590fc188fa264c4515d307bc1511e2a020364464fe0fac",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/screenshots/09-admin-session-detail.png",
+      "hash": "24cd9e7ef8ee14838d164daf4852dae21245e6485aa4550be38a2913243a53e1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/auditPage/auditPage.js",
+      "hash": "e17b8e7eed3908f0dbb45d021fe55cd24964a4a9fd6526ef15c75d25f0237d2f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/emptyState/emptyState.html",
+      "hash": "101a8d9da8122a1ccd20f8f3e7f5772452f0ad4055e5b1d1110bd5830ec48dfb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/statCard/statCard.html",
+      "hash": "1e772cba53bdcb786dab74477704ea51d394ae46f7fcdfac98738077eefec6f5",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/vite.config.mjs",
+      "hash": "8979ca5d670a871eb23c02eb6d1a75bf52d758efe9b5949ea07c27b7f1a373ac",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/content.js",
+      "hash": "d5f8a391af67206fe4a4c1fb4dadeda5ae553036acf564169b058efc187dd7f5",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "Dockerfile",
+      "hash": "0eabb4baf732b95f50af0c7098870ccef40b270a0dd9799abec2b5ef2632a39d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/screenshots/03-panel-explore.png",
+      "hash": "d81ce2f3532f6e00bb9c95bf349f01f0d482e419df23a9ff37dfb946b22ac9ef",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/pairPage/pairPage.html",
+      "hash": "b981e64cb673cced0b6eafcf90bdfc91a8cfd18080909dd0154abe4e2dbcb418",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/icons/icon-48.png",
+      "hash": "00c911a02ddae3b69cd504c97ce48aca645292cca95fe68bcbfc600764f89e34",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/dataTable/dataTable.js",
+      "hash": "310dfc94966870dd4873070e65d988a1eeccc363c974343af287e1c04f4c637e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/soqlBuilder/soqlBuilder.html",
+      "hash": "f2c65c59d1ff9b78dfd2df8dbd828e414bddf470946be6c62f8e6f64e8640c19",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/config.yml",
+      "hash": "1e67124823787213e867420a79ba4802fbf0cb1108b63b73bcb04c8137308e3a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "_long_session_logs/transcript.md",
+      "hash": "211099c7bde77d9c95be7dd844051a636bc82319d7424fb1dfa68f950be82181",
+      "mod_time": "2026-09-18T07:49:01Z"
+    },
+    {
+      "path": "docs/store/screenshot-4-audit.png",
+      "hash": "00b4ad985c9ba72a20b513387e3d364df82f8361fe4b858d4f38bfb59ed355f5",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "package-lock.json",
+      "hash": "73bcde4b4af323f61986e4d874a53c11a528db03edfb6b0b671ec6f37b5e9317",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/roleBindings/roleBindings.js",
+      "hash": "3b2c34a4f23a0d4a09afa8b81df14cebe661204c7fe8aa1e846b8795d7369957",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/knowledge/service.ts",
+      "hash": "6986c72dab321715a3cfc180fb5a88aecd9cd7e7f8b28baffbd1c4a97b92f2c1",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "skills/00-agency-policy.md",
+      "hash": "e3cd6c057f52024eaa919aadd90b6d11d2945c5e291256e1b01e37d112879936",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/USER-GUIDE.md",
+      "hash": "19919854822b8e36a7ebfea50aecf1685f400035008c9d43cdb51ca385be20dc",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "docs/screenshots/04-admin-dashboard.png",
+      "hash": "15db35c7071f138d84510386699d11c80e4ea9fa5d54a43969add4e251ed748c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/agentSwarm/agentSwarm.js",
+      "hash": "9f22c09e56490876f580afb4492eb7e9258517422d85e6d3ca3353b5c6a5176d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/instructionsTab/instructionsTab.js",
+      "hash": "9ed21028ce2f72d1f092c4b02a519fbdea9f31a5995e62bc8de1bb63b19ed26d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/orgsTab/orgsTab.js",
+      "hash": "c3e8fe435adef31da9c4da33fd0cdc7acd888589b2fa6c3ca930ac8bad13f45b",
+      "mod_time": "2026-09-15T11:19:30Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/pageHeader/pageHeader.html",
+      "hash": "28d8ca31d5744b88f17b04c1846d352a05151ac96cb0a5c6f77e54d2c4519220",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/policyPage/policyPage.js",
+      "hash": "d314112f5b7c00bbfaaaa10a880f61a935e622f41b3dddfc0fc01345c415cb57",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/policyTab/policyTab.html",
+      "hash": "8f36b3aac3001151771f911cc81e5d270adfe5d47181056d77481e8f06ffaf8c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "hash": "e3f496bbc67febc93aed1256170e319801ee9a3be18d70db281b76fc1fc1b751",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/shell/shell.html",
+      "hash": "1bb6c76dfcf8ffbf5ac055adedb424b2e1cbbcd7f53a64abd246a57cf4737055",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/tabs/tabs.html",
+      "hash": "5f52aabc92e231469a3b54974174df1ac6037a5289153cc0e125ea4518ffd1df",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/toolCard/toolCard.html",
+      "hash": "a34a003f5066e3fdab531adf9ea9fbd840e451a943a626d86c57435de750cace",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/transcript/transcript.html",
+      "hash": "7be1ca083c106b12178d87d2ebc4edd40a58e8146bd24afc97bd610b5f6bbfe7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/sessionController.js",
+      "hash": "f7f92c208f7dc10645315a93b9851bc0769656d291c193aff23bc46203819b02",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/markdownView/markdownView.html",
+      "hash": "4ae3fd72d014a39ea4f0e5d59e42840c6cc546ce59c38ac1a21047dca9707ae4",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/metadataVisual/metadataVisual.js",
+      "hash": "87839466f9303d5e8ddf5aac29284c9f33e3b5ca48a24093dda85aea046dac6a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/router.js",
+      "hash": "057ecaaa049e0ef2b18601e66b48e37a11c9700e1cbeace22a813a81f28a922e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/badge/badge.html",
+      "hash": "20295cb958eb4305ef0f7604799e4216f7951a7fda937df1fa04a6466592c95b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/workspaceTab/workspaceTab.html",
+      "hash": "b1d24ca167f21b103e95642b12436ff7f703510177148f150dc3340959c361cf",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/icons/logo.svg",
+      "hash": "9c240098712e88105488dd0bc57c9d0c9456e51e6b32085ee02779279a99a57b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/recorder.js",
+      "hash": "1c28d07f43c57dadf5662ca23c4d5715467ec0cc6ef909c1dcbefa953e97f71b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/sidepanel.js",
+      "hash": "5c6762bf4660156105dd417dcdd4c4eab9b8f9e8b1f7ab48446979dbad74db77",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/policy.ts",
+      "hash": "03aa965f40e49943dd50d512a16e0165ba125c5077dad4b1af89b954d7ffa07c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/prompts.ts",
+      "hash": "b0d80d8e3f551d99bbdab2a2c51616d63f3a6667e6c4a3b340cdd97503a29a1e",
+      "mod_time": "2026-09-18T08:46:19Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/app/app.js",
+      "hash": "f7ba4df577a88a580f8d5bf7db5d4afc56e7f01fabe40a0cc08a2a4f63f8d8ec",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/eventCard/eventCard.html",
+      "hash": "fae73afeba643b20a3c636a5d60ed5cbba3597615d775440a9e15538adf7db3d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/githubTab/githubTab.html",
+      "hash": "d157b2efdd6d51f4a7c15e4d1bc378a4c24083534aff07365fbafcd467ee36e0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/appHeader/appHeader.js",
+      "hash": "64f78f3fdf9dbbe8d8a2d3ab99b41ba356a2f2d1e7d79b5b09788963cad6c7a6",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/fileDiff/fileDiff.html",
+      "hash": "f6f6c30bd34ade8252a310aa6d386a8190b949644b1ff8c8394f7cb83b7cd780",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/eval/skills.eval.ts",
+      "hash": "0ced8e4bbfe5ec5ad406a1b2ab85951b42fd14d4d6f25620406dbf6bbaaa51d8",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/server/src/agents/backoff.ts",
+      "hash": "488963586b089899f3062a3b560823b6b8008a0c8fcc2ea2e8b01cc95030d1d8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/agents/tools.ts",
+      "hash": "2e6839fc6f8c1e0e25063df1e7da5f4c5e0b2f2c17c1427640cb3d34a1957746",
+      "mod_time": "2026-09-18T08:47:45Z"
+    },
+    {
+      "path": ".gitignore",
+      "hash": "153a3d7652208ceff68dedffb4ce83fb77398e6344e98b002b65146504752783",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "docs/PRIVACY.md",
+      "hash": "20fa7fe571b8b42ac438db5f7789f7f9eb1f174ae9d7364de301a742bde83294",
+      "mod_time": "2026-09-15T06:41:00Z"
+    },
+    {
+      "path": "packages/admin-ui/README.md",
+      "hash": "4c1e2f384be081a6569adc8a5138565f0c455eeb23482f216a2299d59eae4478",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/formField/formField.html",
+      "hash": "6604bf3aa39187c28fd9852b4c8bde3ccfb48d17784cd088cc84549bd33f5834",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/roleBindings/roleBindings.html",
+      "hash": "55c75988557a02e83bfa10beb5aaca7de18a02dc63bcf0bffc1a3309724c0281",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/topbar/topbar.js",
+      "hash": "980dbe0ee94643e9b7edbfd376e9c1a995d05da84a11aeac9e977c5586182cc9",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/lib/diff.js",
+      "hash": "54d5d66f2365ba926acfd88537a9425d06ecea3083131c24ab63cc94df02ab5d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/sessionList/sessionList.html",
+      "hash": "b2b53857f68fa7b1316f45fc7f3a5e5046cec0390df84ea5cac116c8f9c12acc",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "biome.json",
+      "hash": "60cf314d3a6d40bd4d8f1eb9be05e066ec4dfb98dd7c9c8f9bef26c6b49c37da",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/formField/formField.js",
+      "hash": "abc697a6fb5307d289d68f9c846d5523eee1d6a6fc9c468565c73aad5771853c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/sessionDetailPage/sessionDetailPage.js",
+      "hash": "06708141d00393b5ad529bd0b3c475f101cafb9b83854c04c13246e94deb3162",
+      "mod_time": "2026-09-18T08:19:53Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/exploreTab/exploreTab.html",
+      "hash": "c55077a47335cca64cd802eb5c24da2de59dc3837ca2325b6d23d8d76f67138e",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/app-context.ts",
+      "hash": "61ec3fa9f2a17311c827b0cf5ffd41032be7c1a9cd0b8def89665f196f3c93d5",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/db/repos/knowledge.ts",
+      "hash": "ba55ed7870588a9ca4f260817fd451ea0e9cfadd4ba5e0a317b72162d38c66d0",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/db/repos/sessions.ts",
+      "hash": "8dde2cda6fe19a1758d2308b028b55248f0910b789ca2be746d611797721b94a",
+      "mod_time": "2026-09-18T08:47:45Z"
+    },
+    {
+      "path": "tools/contrast-audit.mjs",
+      "hash": "0a7dff8c59a5289fb0b400522ebd829a33d88a19e9cdf135d22e9b42a658d7e1",
+      "mod_time": "2026-09-18T08:27:38Z"
+    },
+    {
+      "path": "README.md",
+      "hash": "0e46517cde8d606a994a297b90d5204262e1b1542b34581354d5296d9b87a8d7",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/markdown/markdown.js",
+      "hash": "a80d394c8057d3770fc98e370b056e293eb4414bbdbe4dab379d9a93ca845771",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/transcriptItem/transcriptItem.js",
+      "hash": "04e34133b22d84301739873b527969fb3469052c2a78303478c52dab28574cd7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/package.json",
+      "hash": "43f6bc72628f76db0fc9762f667c81df9685c55dca1710eb4aebb9c6e4c6b2f3",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/server/src/agents/cost.ts",
+      "hash": "4fc51c7fee8f69317ed6f6c6cff9bdb36e8fc7af5810ff4c7f1097bdf999b912",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/skills/service.ts",
+      "hash": "fd46fdd9c713e62750020182d8ede1e5b3d7490df89d5c1d5cd370ae8e142e33",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "skills/32-playbook-why-diagnoses.md",
+      "hash": "d80a628fc651219a7ca98d5c981f9456b61be05be9346fe61342f1f4a8b7957b",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "skills/53-sf-data-model-deployment.md",
+      "hash": "71428df07f8a031c4901398b3f532f7470b8e03c9d1fe160a1c74003da46d279",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/confirmationCard/confirmationCard.js",
+      "hash": "a5a405c5c6b5577f5d1067f524215a5e2af1ad11eed2d6a56c56a996c1bc15d2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/settingsPage/settingsPage.html",
+      "hash": "97b9c1936fccae086ff08a198ff1751e8076ccc90d9b93b73f0e7e607b724abe",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/todoPanel/todoPanel.js",
+      "hash": "37433c8ac7475ac81cb00db313796231d81c03ca9072a6624af7365bf7db0feb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/db/repos/clients.ts",
+      "hash": "810cb6ed4f382311c973d853dfed2e5ea0f43bb819ff46fe4e6546b50a81f65e",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "packages/server/src/salesforce/service.ts",
+      "hash": "0d0e7c179e509ed42b909132fa29df7ce59007efe480d1d01df3de85f148e35a",
+      "mod_time": "2026-09-15T11:19:01Z"
+    },
+    {
+      "path": "skills/54-sf-events-integration-email.md",
+      "hash": "ce5b2ddf791d5c5774ad7a82666ebb7cf4c538f5bb7a66a2ea46e963e6505135",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "docs/DEPLOYMENT.md",
+      "hash": "b0097fd56bd0f1b783bf6a7fa0a9926a550198f7e0ad351d107736b2bb5f0d5c",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/errorState/errorState.html",
+      "hash": "2feeb7e1fc37d4a9b78579cb18b0c5ee9744c15ca1bed2b6ab6bfe918086c099",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/membersTab/membersTab.html",
+      "hash": "1142a87ba3a8e754391e2914e640dddedd003d7eb4fb465011133415c6569443",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/skillEditor/skillEditor.html",
+      "hash": "735869941cff7dc02bd1e370c83a4f79e7c799cd60f0c544f15802a0b22e7786",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/usageChart/usageChart.html",
+      "hash": "dddd683bc8cb18ef89295f99c6bcc59e3fcc86c9f064f5dc433ab167ef3005a1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/fileDiff/fileDiff.js",
+      "hash": "3cd0b822ce48aef84a49623c282d6d07b8a598dff8457bb6d2b1d433cbadd64f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/http/routes/auth.ts",
+      "hash": "79ecfad870688e8a166ef585d4c6ccc6ab91a0b4a3136b1bd9766ca686045945",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "tools/screenshots.mjs",
+      "hash": "cf114af3c25d39a76d00757132bd1f0bb38c85f86ad7b8633e09bde600917991",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "hash": "f205fe4f73d4b8fe969af31d4f5ed1cc3d9f9c05a7bae2eea36da6808f897cad",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/dashboardPage/dashboardPage.html",
+      "hash": "44430fe5114b6937b1d32cca113a79736ea8ddb2bf5c60c06217de53bb4bae5a",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/dataTable/dataTable.html",
+      "hash": "64512704d9392b64a217cb341902e970c53dc6e4ffa5d5225dce17d7e17d6567",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/xmlView/xmlView.js",
+      "hash": "4502f37c6c47d6f17319ecbbd94637b641d4e0982c1289a88fd22a9319a4d73d",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "hash": "cd9d8709cf278748a9ef09302601543253118305286541e1a99248d1734af7a6",
+      "mod_time": "2026-09-15T10:34:39Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/todoPanel/todoPanel.js",
+      "hash": "2eac02af043e53a0704ae6fb27addf7ef378d56f05967bdfe62c1f9aceba2b27",
+      "mod_time": "2026-09-15T14:50:55Z"
+    },
+    {
+      "path": "packages/server/src/index.ts",
+      "hash": "87877508fb4f7da8510e32bc5bcb0f97664448cfd5797d82550182342945eead",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "tools/demo-server.mjs",
+      "hash": "eacde21e8cacb45a3d9ffeb4e3eefff47a5dc58d44892b9c8da9d0c008d619f5",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/knowledgePage/knowledgePage.html",
+      "hash": "5dd5cd7cd3579273f71ddee678d5c913f95d6a9e719faf8a79a43f032f7e9d5b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/projectsTab/projectsTab.html",
+      "hash": "8b84b63189cbc9320fa91a66772469bf11cece1e7ce0a730a535dc952ae24500",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/skillsPage/skillsPage.html",
+      "hash": "3b66d7f6395dd562c0955145922ea0f369995f7829ec4a84754e5c8d1216978c",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/changesTab/changesTab.html",
+      "hash": "d912c31b6030712b3075ca1c2fc64b218a80a3befbfb7eb7e38a748bb45727cb",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/sessionList/sessionList.js",
+      "hash": "00db5d5ccaa0078abcbb3385f9341e851728cac386477611a5293c55f579f13d",
+      "mod_time": "2026-09-15T16:21:30Z"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "hash": "834afa8eec4dbcdd15e9330a717dc08deebc16acfd4893ae4d4416462a51fa0e",
+      "mod_time": "2026-09-18T08:48:53Z"
+    },
+    {
+      "path": "skills/10-quality-standards.md",
+      "hash": "60539e3bce0a0664a433609f4f2e163a0d6f57695ed8aca28bc6cf70006d7612",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/diff.js",
+      "hash": "f15d94cf3457beab354cd6a85251f6b8b625ec364bd7a31ada7151ed9516c02f",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/lib/rbac.js",
+      "hash": "55401c8646a3590f7f56e0e5cb1298e5b425af2d5e90f24ffa43adce3ce6b4c2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/auditPage/auditPage.html",
+      "hash": "89f18255a9e32421f0cce6b21b8e509de684db1e1c2fb8f18fc9e99edf14fcca",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/clientsPage/clientsPage.html",
+      "hash": "73463723efee29d0821f6e580ad8d37aa2a26f4ffac11d30518924fc489dceb1",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/modelForm/modelForm.js",
+      "hash": "c936b0511baf6fef72a05c6962e48ce65e2eb2ef37b8cafe8a7916ed61aa7de6",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/metadataBrowser/metadataBrowser.html",
+      "hash": "20ca7c9a3aa273aebc19ec7d4a68a7cd5c0e4bd7f7a07e7d73741716b6163f69",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/toolStep/toolStep.js",
+      "hash": "cc68357b4c20fb0310bba77568fb2084ceb56ae212f4751d962661ebefc4b1b7",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/src/modules/x/xmlView/xmlView.html",
+      "hash": "9d8ad474eb0a860b5c4607d6b3e06528d8dba58bd6414b6ce5c9ba8472fe0f16",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "hash": "7f4abeb7480881d5b862a53d1c8efd7dcf65f6abc101f97ff326abb3ae8deb29",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "docs/store/README.md",
+      "hash": "6c7c06e31fe6171e95a9d61577d83562db5ff8fc14edf477b436f0496a2b8a95",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/emptyState/emptyState.js",
+      "hash": "c4c86954550b8fa939e163dbb50b64d2bc95ce89308d12d43811fe2bcb319323",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/providerCard/providerCard.html",
+      "hash": "0f96d33e64b42f19b07503c7494b617984eff957f06fc36c37b3b546877f3519",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/topbar/topbar.html",
+      "hash": "fb8ca768897fa38a206a1d478e17bef4e335b35eab5d207618c3301c4fe4598b",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/transcript/transcript.js",
+      "hash": "3b4b467a62c5627a74a46470056e8a943c015ea9bd54ace06dea42c24b23c8c8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/vite.config.mjs",
+      "hash": "38609779758ebfe8dac86d53701b0a53acda17075f7514aea8536d0ad44082e9",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/server/src/http/routes/sessions.ts",
+      "hash": "9ccee7a8afa5e2a17362f1fa303e947f003e4ede02e956bbf734989458c4aad4",
+      "mod_time": "2026-09-18T08:43:56Z"
+    },
+    {
+      "path": "packages/admin-ui/src/modules/x/projectsTab/projectsTab.js",
+      "hash": "eefadfddc577775b40c3c598255fc1378e72348841f1dd1001b1f357e990b0c8",
+      "mod_time": "2026-09-15T06:27:48Z"
+    },
+    {
+      "path": "packages/extension/package.json",
+      "hash": "74b63b3b2035b134180eaa2256cd85898e5e1e6eaa73680e266922a53b3936c2",
+      "mod_time": "2026-09-15T06:27:48Z"
+    }
+  ],
+  "fact_count": 5965,
+  "insight_count": 85,
+  "enola_version": "0.4.12",
+  "snapshot_id": "sha256:cf155e3f408d528f238bf986e90e339046d8d4c41c766d7065d3bcdd14947146",
+  "git": {
+    "ref": "main",
+    "commit": "76df54275e70f75fddca1ff29a1eb0af03939807",
+    "dirty": true,
+    "remote": "github.com/3b-soft/sf-claws"
+  },
+  "config_hash": "sha256:12cbb6c9d3b099d95fbadb1d4bbe736a4eeace82c3bfc868b4395916ef097edd",
+  "extractor_version": "v259",
+  "files_seen": 383,
+  "files_parsed": 251,
+  "source_bytes": 9457575,
+  "files_skipped": 35,
+  "dirs_skipped": 9,
+  "skipped_sample": [
+    ".git/ (glob: **/.git/**)",
+    "node_modules/ (glob: **/node_modules/**)",
+    "packages/admin-ui/dist/ (glob: **/dist/**)",
+    "packages/extension/dist/ (glob: **/dist/**)",
+    "packages/extension/node_modules/ (glob: **/node_modules/**)",
+    "packages/server/dist/ (glob: **/dist/**)",
+    "packages/server/node_modules/ (glob: **/node_modules/**)",
+    "packages/server/test/admin-api.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/agent-behaviour.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/api.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/client-access.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/compile-control.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/completion.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/deepseek-provider.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/deploy-commit-routes.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/deploy-integrity.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/destructive-commit.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/gate.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/github-service.test.ts (glob: **/*.test.ts)",
+    "packages/server/test/http-hardening.test.ts (glob: **/*.test.ts)"
+  ],
+  "ignore_glob_hash": "sha256:7523cc6397a498e151125a682d28fbf6df20c6f51f6dfaf18fd8f5239a20d2d8",
+  "heuristic_insights": 84,
+  "coverage": {
+    "services_total": 0,
+    "coverage_gaps": 0,
+    "unresolved_edges": 0,
+    "extractors_reporting": 1,
+    "extraction_unresolved": 425
+  },
+  "census": {
+    "files_walked": 418,
+    "parsed": 251,
+    "excluded_by_ignore": 35,
+    "excluded_by_kind": 38,
+    "excluded_kinds": {
+      "(no extension)": 2,
+      ".css": 2,
+      ".example": 1,
+      ".gitignore": 1,
+      ".json": 5,
+      ".nvmrc": 1,
+      ".png": 21,
+      ".svg": 1,
+      ".yml": 3,
+      ".zip": 1
+    },
+    "skipped_with_cause": 94,
+    "top_skip_causes": [
+      {
+        "cause": "claimed by typescript, no facts emitted",
+        "count": 92
+      },
+      {
+        "cause": "claimed by manifests, no facts emitted",
+        "count": 2
+      }
+    ]
+  },
+  "output_hashes": {
+    "facts.jsonl": "sha256:f245d4941a15ddc4d0989a4c408db8c0d47aac323edecf3ea484a336f72d80a4",
+    "insights.json": "sha256:d7da19c22a2e56c71f5f326b592472cc11b8a4970fb2a16302bc56e9cd9b9105",
+    "llm_context.md": "sha256:02012a8308256438aaf9f469740154fc82092a5eaa19e6c8059546a675ac17f0"
+  },
+  "unseen": {
+    "files_excluded_by_ignore": 35,
+    "dirs_excluded_by_ignore": 9,
+    "outside_graph": {
+      "imports": 510
+    },
+    "dead_exemptions": 0,
+    "dynamic_feature_classes": 0
+  }
+}

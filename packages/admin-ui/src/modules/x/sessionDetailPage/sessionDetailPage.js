@@ -7,7 +7,7 @@ import { fmtUsd, fmtTokens, fmtDate } from '../../../lib/format.js';
 import { setQuery } from '../../../lib/router.js';
 import { isAdmin } from '../../../lib/rbac.js';
 
-const LIVE = new Set(['running', 'awaiting_confirmation']);
+const LIVE = new Set(['running', 'awaiting_confirmation', 'awaiting_plan']);
 
 /**
  * Session detail: header, transcript (SSE-live while running), workspace/deploys/docs/notes/usage tabs,
@@ -56,7 +56,7 @@ export default class SessionDetailPage extends LightningElement {
     try {
       this.detail = await Api.getSession(this.sessionId);
       const side = [
-        Api.sessionHistory(this.sessionId)
+        Api.sessionHistory(this.sessionId, 0, this.detail.lastSeq)
           .then((r) => {
             this.events = asList(r, 'events');
           })
@@ -321,6 +321,7 @@ export default class SessionDetailPage extends LightningElement {
       { id: 'deploys', label: 'Deploys', count: this.deploys.length },
       { id: 'docs', label: 'Docs', count: this.docs.length },
       { id: 'notes', label: 'Notes', count: this.model.notes.length || undefined },
+      { id: 'timing', label: 'Timing' },
     ];
     if (isAdmin(this.user)) t.push({ id: 'usage', label: 'Usage' });
     if (this.proMode) t.push({ id: 'events', label: 'Events (raw)', count: this.events.length });
@@ -343,6 +344,9 @@ export default class SessionDetailPage extends LightningElement {
   }
   get isUsage() {
     return this.tab === 'usage' && isAdmin(this.user);
+  }
+  get isTiming() {
+    return this.tab === 'timing';
   }
   get isEvents() {
     return this.tab === 'events' && this.proMode;

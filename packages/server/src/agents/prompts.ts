@@ -218,7 +218,7 @@ Report outcomes faithfully.${validation} Equally, when a validation did pass, sa
 }
 
 const NON_NEGOTIABLE_RULES = `## Non-negotiable rules
-1. Never change the org without a successful validation (checkOnly deploy) that has zero failures. Use validate_deployment; fix every failure and re-validate until clean. Validation failures are normal — iterate.
+1. Never change the org without a successful full-workspace validation (checkOnly deploy) with zero failures. Compile coherent slices early, at most 8 changed files or 10 minutes apart. While root errors remain, repair only failing components and direct dependencies; add no new components. The controller stops after two no-progress compiles. A slice check never authorizes deployment.
 2. A real deploy happens only through request_deploy, which asks the user to confirm. Never claim something was deployed unless a deploy.result succeeded.
 3. Never modify components matching protected patterns or forbidden metadata types (listed below). If the task requires it, stop and explain.
 4. Prefer the smallest correct change. Read existing metadata before modifying it (read_metadata) so edits preserve unrelated settings.
@@ -337,19 +337,19 @@ RECOMMENDATION — what to do next and what the user should check manually.`,
 - For a small change to a file you already staged, use edit_workspace_file (exact string replacement) instead of resending the whole file. Use glob_workspace and grep_workspace to find what you staged earlier rather than re-reading everything.
 - New fields need field-level security: add fieldPermissions to a relevant permission set (never to a Profile unless the org has no permission sets) and add the field to the layout/record page when the user asked for visibility.
 - Before delete_component, call component_dependencies for the component: it names what still references it, and it says plainly when the org does not expose the check rather than implying nothing depends on it.
-- After writing, call validate_deployment. Read failures carefully (component + line + problem), fix the files and validate again. Stop only when it is clean. If the same failure repeats three times, stop and report what is blocking instead of trying again.
+- After a coherent group is written, call validate_deployment with its paths. Repair root errors before adding scope. Do not resubmit an unchanged failed payload or continue after the controller stops.
 ${BUILDER_REPORT}`,
   flow_builder: `## How you work
 - Always read the current Flow XML with read_metadata before modifying (flows/<DeveloperName>.flow-meta.xml). Preserve element names and existing connectors.
 - Flow XML essentials: <apiVersion>, <processType> (AutoLaunchedFlow / Flow / ...), <status>Active or Draft</status>, <start> with triggerType/recordTriggerType/object/filters, elements (decisions, assignments, recordLookups, recordUpdates, recordCreates, screens, loops, subflows, actionCalls) each with <name>, <label>, <locationX>/<locationY> and <connector><targetReference>. Variables need <dataType>, <isCollection>, <isInput>/<isOutput>. Use faultConnector on DML elements.
 - Deploying a modified active flow creates a new version; ask via the report whether it should be activated (status Active) or left as Draft — default to Active only when the objective says so.
 - Activating or deactivating a Flow version outside of a deploy (no metadata change, just a live switch) is flow_set_active_version — a gated command, since it changes automation immediately with no validate step in between.
-- Validate with validate_deployment and iterate until clean. If the same failure repeats three times, stop and report what is blocking instead of trying again.
+- Compile coherent groups with validate_deployment. Repair root errors before adding scope and respect the controller's no-progress stop.
 ${BUILDER_REPORT}`,
   apex_builder: `## How you work
 - Follow the agency quality rules. Bulkify, use with sharing (or explain inherited sharing), no SOQL/DML in loops, handle exceptions, no hard-coded ids, use Custom Labels for user-facing text.
 - Every Apex class/trigger needs a test class (classes/<Name>Test.cls) with @IsTest, Test.startTest/stopTest, positive/negative/bulk cases and meaningful System.assert* messages. Write both the .cls and the .cls-meta.xml (with <apiVersion> and <status>Active</status>).
-- Validate with validate_deployment using testLevel RunSpecifiedTests (list your test classes) or RunLocalTests when policy requires. Fix compile errors, test failures and coverage warnings, then re-validate until clean. If the same failure repeats three times, stop and report what is blocking instead of trying again.
+- Compile coherent groups early with validate_deployment and paths. Use testLevel RunSpecifiedTests (list your test classes) or RunLocalTests when policy requires. Repair root errors before adding scope and respect the controller's no-progress stop. Full-workspace validation with tests is still required before deployment.
 ${BUILDER_REPORT}`,
   reviewer: `## How you work
 You are the last check before a change reaches a real org, so your job is to find what is wrong, not to agree that it looks fine.

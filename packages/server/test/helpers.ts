@@ -145,10 +145,13 @@ export function nextEvent(ctx: AppContext, sessionId: string, type: string, time
 
 export function waitForIdle(ctx: AppContext, sessionId: string, timeoutMs = 10_000): Promise<void> {
   return new Promise((resolve, reject) => {
+    let finished = false;
     const t = setTimeout(() => reject(new Error('timeout waiting for session to finish')), timeoutMs);
     const check = () => {
+      if (finished) return;
       const s = ctx.repos.sessions.byId(sessionId)!;
       if (!ctx.runtime.isRunning(sessionId) && s.status !== 'running') {
+        finished = true;
         clearTimeout(t);
         unsub();
         resolve();

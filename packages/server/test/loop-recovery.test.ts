@@ -75,6 +75,9 @@ describe('fallback model', () => {
     const usage = ctx.repos.usage.bySession(session.id);
     expect(usage).toHaveLength(1);
     expect(usage[0].modelId).toBe(fallback.modelId);
+    const timing = ctx.repos.events.listAfter(session.id).filter((e) => e.type === 'model.finished');
+    expect(timing.map((e) => e.outcome)).toEqual(['failed', 'failed', 'failed', 'failed', 'completed']);
+    expect(timing.at(-1)!.modelId).toBe(fallback.modelId);
     expect(usage[0].costUsd).toBeCloseTo((100 * fallback.inputCostPerM + 20 * fallback.outputCostPerM) / 1_000_000, 10);
     // The raw content is tagged with the fallback, so the primary never replays its signatures.
     const assistant = ctx.repos.messages.list(session.id, 'orchestrator').find((m) => m.role === 'assistant')!;
@@ -134,6 +137,7 @@ describe('compaction', () => {
     expect(ctx.repos.artifacts.bytesForSession(session.id)).toBeGreaterThan(0);
     // The summariser call was accounted for.
     expect(ctx.repos.usage.bySession(session.id).some((u) => u.role === 'summarizer')).toBe(true);
+    expect(ctx.repos.events.listAfter(session.id).some((e) => e.type === 'model.finished' && e.purpose === 'compaction' && e.role === 'summarizer')).toBe(true);
     // The compacted conversation was persisted in a shape the next turn can load.
     provider.script = [() => text('second turn')];
     ctx.runtime.startTurn(session.id, user.id, 'and again');
@@ -251,8 +255,9 @@ describe('stuck-loop detection on validation failures', () => {
     await waitForIdle(ctx, session.id);
     expect(validations).toBe(3);
     expect(calls).toBe(0);
-    const errors = ctx.repos.events.listAfter(session.id).filter((e) => e.type === 'session.error') as { message: string }[];
-    expect(errors.some((e) => e.message.includes('same errors 3 times'))).toBe(true);
+    expect(ctx.repos.compileControl.get(session.id).stopped).toContain('two compiles without a smaller root-error set');
+    expect(provider.requests).toHaveLength(6); // no paid wrap-up or documentation after the hard stop
+    expect(ctx.repos.sessions.byId(session.id)!.status).toBe('failed');
   });
 });
 
@@ -282,6 +287,7 @@ describe('forced wrap-up', () => {
     ctx.runtime.startTurn(session.id, user.id, 'go');
     await waitForIdle(ctx, session.id);
     expect(report).toContain('FINDINGS: the workspace is empty');
+    expect(ctx.repos.events.listAfter(session.id).some((e) => e.type === 'model.finished' && e.purpose === 'wrap_up' && e.role === 'analyst')).toBe(true);
   });
 });
 

@@ -162,10 +162,10 @@ export class EventsRepo {
   hasType(sessionId: string, type: SessionEvent['type']): boolean {
     return !!this.db.prepare('SELECT 1 FROM session_events WHERE session_id=? AND type=? LIMIT 1').get(sessionId, type);
   }
-  listAfter(sessionId: string, after = 0, limit = 5000): SessionEvent[] {
+  listAfter(sessionId: string, after = 0, limit = 5000, through = Number.MAX_SAFE_INTEGER): SessionEvent[] {
     return this.db
-      .prepare('SELECT payload FROM session_events WHERE session_id=? AND seq>? ORDER BY seq LIMIT ?')
-      .all(sessionId, after, limit)
+      .prepare('SELECT payload FROM session_events WHERE session_id=? AND seq>? AND seq<=? ORDER BY seq LIMIT ?')
+      .all(sessionId, after, through, limit)
       .map((r: any) => JSON.parse(r.payload));
   }
 }
@@ -238,18 +238,29 @@ export class DeploysRepo {
   latest(sessionId: string, checkOnly?: boolean): DeployRun | undefined {
     const r =
       checkOnly === undefined
-        ? this.db.prepare('SELECT * FROM deploy_runs WHERE session_id=? ORDER BY created_at DESC LIMIT 1').get(sessionId)
-        : this.db.prepare('SELECT * FROM deploy_runs WHERE session_id=? AND check_only=? ORDER BY created_at DESC LIMIT 1').get(sessionId, checkOnly ? 1 : 0);
+        ? this.db.prepare('SELECT * FROM deploy_runs WHERE session_id=? ORDER BY created_at DESC, attempt DESC LIMIT 1').get(sessionId)
+        : this.db
+            .prepare('SELECT * FROM deploy_runs WHERE session_id=? AND check_only=? ORDER BY created_at DESC, attempt DESC LIMIT 1')
+            .get(sessionId, checkOnly ? 1 : 0);
     return r ? toDeploy(r) : undefined;
   }
   nextAttempt(sessionId: string): number {
     return ((this.db.prepare('SELECT COALESCE(MAX(attempt),0) a FROM deploy_runs WHERE session_id=?').get(sessionId) as any).a as number) + 1;
   }
-  create(input: { sessionId: string; orgId: string; checkOnly: boolean; testLevel: DeployRun['testLevel']; attempt: number }): DeployRun {
+  create(input: {
+    sessionId: string;
+    orgId: string;
+    checkOnly: boolean;
+    testLevel: DeployRun['testLevel'];
+    attempt: number;
+    scope?: 'full' | 'slice';
+  }): DeployRun {
     const id = newId('dep');
     this.db
-      .prepare(`INSERT INTO deploy_runs (id, session_id, org_id, check_only, status, attempt, test_level, created_at) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)`)
-      .run(id, input.sessionId, input.orgId, input.checkOnly ? 1 : 0, input.attempt, input.testLevel, nowIso());
+      .prepare(
+        `INSERT INTO deploy_runs (id, session_id, org_id, check_only, status, attempt, test_level, created_at, scope) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
+      )
+      .run(id, input.sessionId, input.orgId, input.checkOnly ? 1 : 0, input.attempt, input.testLevel, nowIso(), input.scope ?? 'full');
     return this.byId(id)!;
   }
   update(id: string, patch: Partial<Omit<DeployRun, 'id' | 'sessionId' | 'orgId' | 'checkOnly' | 'attempt' | 'createdAt'>>): DeployRun | undefined {

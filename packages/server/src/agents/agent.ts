@@ -13,6 +13,7 @@ import { CostCeilingError, projectCallCostUsd } from './cost.js';
 import { budgetTurnResults } from './budget.js';
 import { formatReminders } from './reminders.js';
 import { describeCacheBreak, type PromptSection } from './cache-probe.js';
+import { measuredCompletion, workPhase } from './model-timing.js';
 
 export interface AgentConfig {
   agentId: string;
@@ -46,6 +47,7 @@ export type StopReason =
   | 'cancelled' // user cancelled / abort signal
   | 'cost_ceiling' // a spend ceiling would be crossed
   | 'stuck_loop' // the same failing action repeated with no progress
+  | 'compile_blocked' // persisted compile controller requires human repair
   | 'context_exhausted' // compaction could not make the conversation fit
   | 'awaiting_user'; // paused for a structured question / plan approval
 
@@ -131,9 +133,31 @@ export class AgentRun {
     let iterations = 0;
     let lastText = '';
     const llmTools = toLlmTools(cfg.tools);
+    let observedCompile = -1;
 
     while (iterations < cfg.maxIterations) {
       if (ctx.signal.aborted) return this.finish(lastText, false, iterations, 'cancelled');
+      await ctx.runtime.autoCompile(sessionId);
+      const compile = ctx.app.repos.compileControl.get(sessionId);
+      if (compile.stopped) return this.finish(compile.stopped, false, iterations, 'compile_blocked');
+      if (compile.checks !== observedCompile && compile.checks > 0) {
+        this.push({
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Compile controller: ${compile.roots.length} unresolved root components. ${compile.roots
+                .map((r) => `${r.key}: ${r.problems[0]}`)
+                .join('\n')
+                .slice(
+                  0,
+                  6000,
+                )}\nRepair only failing components or direct dependencies; do not add scope while roots remain. A slice check is not full deployment validation.`,
+            },
+          ],
+        });
+      }
+      observedCompile = compile.checks;
       iterations++;
 
       // Ceilings are checked before the call, with what the call is about to cost: enforcing
@@ -224,6 +248,9 @@ export class AgentRun {
 
       const calls = resp.content.filter((b): b is Extract<LlmBlock, { type: 'tool_use' }> => b.type === 'tool_use');
       if (!calls.length) {
+        await ctx.runtime.autoCompile(sessionId);
+        const stopped = ctx.app.repos.compileControl.get(sessionId).stopped;
+        if (stopped) return this.finish(stopped, false, iterations, 'compile_blocked');
         if (resp.stopReason === 'max_tokens' && this.outputRecoveries < MAX_OUTPUT_RECOVERIES) {
           // Widen the slot and tell the model to resume. Continuing silently would replay the
           // truncated message as a prefill; asking it to "be more concise" throws work away.
@@ -243,6 +270,8 @@ export class AgentRun {
 
       const results = await this.execBatch(calls);
       this.push({ role: 'user', content: results });
+      const compileStop = ctx.app.repos.compileControl.get(sessionId).stopped;
+      if (compileStop) return this.finish(compileStop, false, iterations, 'compile_blocked');
       if (ctx.signal.aborted) return this.finish(lastText, false, iterations, 'cancelled');
       if (this.validationStuck()) {
         const msg = `Stopped: validation failed with the same errors ${STUCK_VALIDATION_LIMIT} times in a row. The edits between attempts did not address them; report what is blocking.`;
@@ -280,6 +309,8 @@ export class AgentRun {
    */
   private async wrapUp(reason: string): Promise<string> {
     const { cfg, ctx } = this;
+    await ctx.runtime.autoCompile(ctx.session.id);
+    if (ctx.app.repos.compileControl.get(ctx.session.id).stopped) return '';
     if (ctx.signal.aborted) return '';
     this.push({
       role: 'user',
@@ -293,7 +324,7 @@ export class AgentRun {
     if (this.checkCeiling(this.projectedCost(cfg.model, []))) return '';
     try {
       const started = Date.now();
-      const { resp, model } = await this.complete([], newId('am'), () => {});
+      const { resp, model } = await this.complete([], newId('am'), () => {}, 'wrap_up');
       this.recordUsage(model, resp.usage, started);
       const text = resp.content
         .filter((b): b is Extract<LlmBlock, { type: 'text' }> => b.type === 'text')
@@ -310,31 +341,50 @@ export class AgentRun {
   }
 
   /** One completion with bounded retry, jittered backoff and a single fallback-model attempt. */
-  private async complete(llmTools: LlmTool[], messageId: string, onDelta: (d: string) => void): Promise<{ resp: LlmResponse; model: AiModel }> {
+  private async complete(
+    llmTools: LlmTool[],
+    messageId: string,
+    onDelta: (d: string) => void,
+    purpose: 'turn' | 'wrap_up' = 'turn',
+  ): Promise<{ resp: LlmResponse; model: AiModel }> {
     const { cfg, ctx } = this;
     const bus = ctx.runtime.bus;
     let usingFallback = false;
     for (let attempt = 1; ; attempt++) {
+      const stopped = ctx.app.repos.compileControl.get(ctx.session.id).stopped;
+      if (stopped) throw new Error(stopped);
       const model = usingFallback && cfg.fallback ? cfg.fallback.model : cfg.model;
       const provider = usingFallback && cfg.fallback ? cfg.fallback.provider : cfg.provider;
       try {
-        const resp = await provider.complete({
-          model,
-          system: cfg.system,
-          // Thinking signatures are bound to the model that produced them; replaying them on a
-          // different model is a hard 400, so strip them when we fall back.
-          messages: usingFallback ? stripProviderRaw(this.messages) : this.messages,
-          tools: llmTools,
-          effort: cfg.effort,
-          signal: ctx.signal,
-          maxTokens: this.outputSlot(model),
-          onText: (d) => {
-            onDelta(d);
-            bus.emit(ctx.session.id, { type: 'assistant.delta', agentId: cfg.agentId, role: cfg.role, messageId, delta: d });
+        const resp = await measuredCompletion(
+          bus,
+          ctx.session.id,
+          {
+            agentId: cfg.agentId,
+            role: cfg.role,
+            purpose,
+            attempt,
+            phase: workPhase(cfg.role, !!ctx.app.repos.sessions.byId(ctx.session.id)?.planApprovedAt),
           },
-          onThinking: (d) => bus.emit(ctx.session.id, { type: 'assistant.thinking', agentId: cfg.agentId, role: cfg.role, text: d }),
-          onToolCall: llmTools.length ? (call) => this.startEarly(call) : undefined,
-        });
+          provider,
+          {
+            model,
+            system: cfg.system,
+            // Thinking signatures are bound to the model that produced them; replaying them on a
+            // different model is a hard 400, so strip them when we fall back.
+            messages: usingFallback ? stripProviderRaw(this.messages) : this.messages,
+            tools: llmTools,
+            effort: cfg.effort,
+            signal: ctx.signal,
+            maxTokens: this.outputSlot(model),
+            onText: (d) => {
+              onDelta(d);
+              bus.emit(ctx.session.id, { type: 'assistant.delta', agentId: cfg.agentId, role: cfg.role, messageId, delta: d });
+            },
+            onThinking: (d) => bus.emit(ctx.session.id, { type: 'assistant.thinking', agentId: cfg.agentId, role: cfg.role, text: d }),
+            onToolCall: llmTools.length ? (call) => this.startEarly(call) : undefined,
+          },
+        );
         return { resp, model };
       } catch (e) {
         if (ctx.signal.aborted) throw e;
@@ -479,6 +529,7 @@ export class AgentRun {
    * the results the model sees are unchanged; only the start time moves.
    */
   private startEarly(call: { id: string; name: string; input: unknown }): void {
+    if (this.ctx.app.repos.compileControl.get(this.ctx.session.id).stopped) return;
     if (this.earlyStartWindowClosed || this.ctx.signal.aborted) return;
     const def = this.cfg.tools.find((t) => t.name === call.name);
     if (!def?.readOnly || def.earlyStart === false || !isConcurrencySafe(def, call.input, this.ctx)) {
@@ -507,7 +558,7 @@ export class AgentRun {
         return def ? isConcurrencySafe(def, call.input, this.ctx) : false;
       },
       limit: 6,
-      shouldStop: () => this.ctx.signal.aborted,
+      shouldStop: () => this.ctx.signal.aborted || !!this.ctx.app.repos.compileControl.get(this.ctx.session.id).stopped,
       onSkipped: (call) => syntheticToolResults([call.id])[0],
       run: (call) => this.earlyStarts.get(call.id) ?? this.execTool(call),
     });
@@ -685,15 +736,27 @@ export class AgentRun {
     const ceiling = this.checkCeiling(projectCallCostUsd(summarize.model, Math.ceil((prompt.length + transcript.length) / 4), COMPACTION_OUTPUT_TOKENS));
     if (ceiling) throw ceiling;
     const started = Date.now();
-    const r = await summarize.provider.complete({
-      model: summarize.model,
-      system: prompt,
-      messages: [{ role: 'user', content: [{ type: 'text', text: transcript }] }],
-      tools: [],
-      effort: 'low',
-      maxTokens: COMPACTION_OUTPUT_TOKENS,
-      signal: this.ctx.signal,
-    });
+    const r = await measuredCompletion(
+      this.ctx.runtime.bus,
+      this.ctx.session.id,
+      {
+        agentId: this.cfg.agentId,
+        role: 'summarizer',
+        purpose: 'compaction',
+        attempt: 1,
+        phase: workPhase(this.cfg.role, !!this.ctx.app.repos.sessions.byId(this.ctx.session.id)?.planApprovedAt),
+      },
+      summarize.provider,
+      {
+        model: summarize.model,
+        system: prompt,
+        messages: [{ role: 'user', content: [{ type: 'text', text: transcript }] }],
+        tools: [],
+        effort: 'low',
+        maxTokens: COMPACTION_OUTPUT_TOKENS,
+        signal: this.ctx.signal,
+      },
+    );
     const cost = this.ctx.app.ai.cost(summarize.model, r.usage);
     this.ctx.app.repos.usage.add({
       sessionId: this.ctx.session.id,

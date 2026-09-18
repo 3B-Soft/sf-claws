@@ -506,4 +506,14 @@ ALTER TABLE orgs ADD COLUMN consumer_key TEXT;
 ALTER TABLE orgs ADD COLUMN consumer_secret_enc TEXT;
 `,
   },
+  {
+    name: 'compile_control',
+    sql: `
+CREATE TABLE session_compile_control (
+  session_id TEXT PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
+  state TEXT NOT NULL
+);
+ALTER TABLE deploy_runs ADD COLUMN scope TEXT NOT NULL DEFAULT 'full';
+`,
+  },
 ];

@@ -102,6 +102,8 @@ export const DeployFailure = z.object({
 export type DeployFailure = z.infer<typeof DeployFailure>;
 
 export const DeployRun = z.object({
+  /** A successful slice compile never authorizes a full-workspace deployment. */
+  scope: z.enum(['full', 'slice']).optional(),
   id: z.string(),
   sessionId: z.string(),
   orgId: z.string(),

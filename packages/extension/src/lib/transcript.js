@@ -9,6 +9,8 @@
  * is simply never delivered.
  */
 export const SESSION_EVENT_TYPES = [
+  'model.started',
+  'model.finished',
   'agent.spawned',
   'agent.finished',
   'assistant.delta',
@@ -196,7 +198,7 @@ export function createTranscript() {
           kind: 'validation',
           seq: ev.seq,
           at,
-          ...pick(ev, ['deployId', 'ok', 'attempt', 'componentsTotal', 'componentsFailed', 'testsTotal', 'testsFailed', 'codeCoverage', 'failures']),
+          ...pick(ev, ['deployId', 'scope', 'ok', 'attempt', 'componentsTotal', 'componentsFailed', 'testsTotal', 'testsFailed', 'codeCoverage', 'failures']),
         });
         break;
       case 'confirmation.requested': {

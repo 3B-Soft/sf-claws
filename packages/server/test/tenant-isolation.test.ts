@@ -29,6 +29,7 @@ const TENANT_TABLES: Record<string, string[]> = {
   tool_artifacts: ['session_id', 'id'],
   session_todos: ['session_id'],
   session_notes: ['session_id', 'id'],
+  session_compile_control: ['session_id'],
   session_permissions: ['session_id'],
   org_limits: ['org_id'],
   orgs: ['client_id', 'id'],

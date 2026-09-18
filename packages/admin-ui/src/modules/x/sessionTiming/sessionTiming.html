@@ -1,0 +1,30 @@
+<template>
+  <section class="card p-5 space-y-4">
+    <div class="flex items-center justify-between gap-4">
+      <h2 class="text-lg font-semibold text-content">Session timing</h2>
+      <button class="btn-secondary btn-sm" onclick={download} disabled={exporting}>Download events (NDJSON)</button>
+    </div>
+    <p class="text-sm text-content">{summary}</p>
+    <template lwc:if={missingTelemetry}><p class="text-sm text-content-muted">This session has no model timing records. Model time and tokens per agent cannot be reconstructed from cumulative usage.</p></template>
+    <template lwc:if={incomplete}><p class="text-sm text-content-muted">Some calls have no recorded finish. Their durations are bounded by the observed run; usage may be incomplete.</p></template>
+    <p class="text-xs text-content-muted">Bars show agent lifetimes, including waits. Model time includes provider and network latency, not just decoding. Overlapping calls are counted once in the summary. Unattributed time is not necessarily idle. Token totals below exclude calls with unknown usage.</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead><tr class="text-content-muted"><th class="p-2">Agent</th><th class="p-2 w-1/3">Timeline</th><th class="p-2">Model</th><th class="p-2">Tools</th><th class="p-2">Output tokens</th></tr></thead>
+        <tbody><template for:each={rows} for:item="row"><tr key={row.agentId} class="border-t border-line">
+          <td class="p-2" title={row.agentId}>{row.role}</td>
+          <td class="p-2"><div class="bg-surface-sunken h-3 overflow-hidden rounded"><div class="bg-brand-500 h-3 rounded" style={row.barStyle} title={row.label}></div></div></td>
+          <td class="p-2">{row.modelTime}</td><td class="p-2">{row.toolTime}</td><td class="p-2">{row.output}</td>
+        </tr></template></tbody>
+      </table>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead><tr class="text-content-muted"><th class="p-2">Agent</th><th class="p-2">Phase</th><th class="p-2">Purpose</th><th class="p-2">Input</th><th class="p-2">Output</th><th class="p-2">Cached input</th><th class="p-2">Unknown usage calls</th></tr></thead>
+        <tbody><template for:each={phases} for:item="row"><tr key={row.id} class="border-t border-line">
+          <td class="p-2 font-mono text-xs">{row.agentId}</td><td class="p-2">{row.phase}</td><td class="p-2">{row.purpose}</td><td class="p-2">{row.input}</td><td class="p-2">{row.output}</td><td class="p-2">{row.cached}</td><td class="p-2">{row.unknownUsageCalls}</td>
+        </tr></template></tbody>
+      </table>
+    </div>
+  </section>
+</template>

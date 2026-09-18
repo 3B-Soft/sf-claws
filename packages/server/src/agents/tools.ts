@@ -155,8 +155,10 @@ export async function stageWorkspaceFile(
   const path = normalizePath(input.path);
   if (!path || path.includes('..')) return { text: 'Invalid path', ok: false };
   const inferred = inferComponentFromPath(path);
-  const metadataType = input.metadataType ?? inferred?.metadataType ?? null;
-  const fullName = input.fullName ?? inferred?.fullName ?? null;
+  const metadataType = inferred?.metadataType ?? input.metadataType ?? null;
+  const fullName = inferred?.fullName ?? input.fullName ?? null;
+  const refusal = ctx.runtime.workspaceWriteRefusal(ctx.session.id, { path, metadataType, fullName });
+  if (refusal) return { text: refusal, ok: false };
   if (path.endsWith('.xml')) {
     const err = validateXml(input.content);
     if (err) return { text: `XML is not well-formed: ${err}`, ok: false };
@@ -177,7 +179,10 @@ export async function stageWorkspaceFile(
   }
   const action: WorkspaceFile['action'] = existing ? existing.action : original !== null ? 'modified' : 'created';
   const file: WorkspaceFile = { path, content: input.content, original, metadataType, fullName, action };
+  const lateRefusal = ctx.runtime.workspaceWriteRefusal(ctx.session.id, file);
+  if (lateRefusal) return { text: lateRefusal, ok: false };
   ctx.app.repos.workspace.upsert(ctx.session.id, file);
+  ctx.runtime.noteWorkspaceChange(ctx.session.id, path);
   ctx.runtime.bus.emit(ctx.session.id, { type: 'workspace.file', path, action: existing ? 'modified' : action, metadataType, fullName });
   return {
     text: `Staged ${action}: ${path}${metadataType ? ` (${metadataType} ${fullName})` : ''}. Remember to validate_deployment.`,
@@ -1016,7 +1021,11 @@ export const TOOLS: ToolDef[] = [
     roles: [...BUILDERS, 'orchestrator'],
     run: async (input, ctx) => {
       const path = normalizePath(input.path);
+      const existing = ctx.app.repos.workspace.get(ctx.session.id, path);
+      const refusal = ctx.runtime.workspaceWriteRefusal(ctx.session.id, existing ?? { path, metadataType: null, fullName: null });
+      if (refusal) return { text: refusal, ok: false };
       ctx.app.repos.workspace.remove(ctx.session.id, path);
+      ctx.runtime.noteWorkspaceChange(ctx.session.id, path);
       ctx.runtime.bus.emit(ctx.session.id, { type: 'workspace.file', path, action: 'deleted', metadataType: null, fullName: null });
       return { text: `Unstaged ${path}` };
     },
@@ -1035,6 +1044,8 @@ export const TOOLS: ToolDef[] = [
       const decision = ctx.app.policy.checkCommand(ctx.rules, 'delete_component', [componentSubject(input.type, input.fullName)]);
       if (decision.effect !== 'allow') return { text: permissionRefusalText('delete_component', decision), ok: false };
       const path = `__destructive__/${input.type}/${input.fullName}`;
+      const refusal = ctx.runtime.workspaceWriteRefusal(ctx.session.id, { path, metadataType: input.type, fullName: input.fullName });
+      if (refusal) return { text: refusal, ok: false };
       ctx.app.repos.workspace.upsert(ctx.session.id, {
         path,
         content: '',
@@ -1044,6 +1055,7 @@ export const TOOLS: ToolDef[] = [
         action: 'deleted',
       });
       ctx.runtime.bus.emit(ctx.session.id, { type: 'workspace.file', path, action: 'deleted', metadataType: input.type, fullName: input.fullName });
+      ctx.runtime.noteWorkspaceChange(ctx.session.id, path);
       return { text: `Staged deletion of ${input.type} ${input.fullName}.` };
     },
   },
@@ -1052,19 +1064,25 @@ export const TOOLS: ToolDef[] = [
     readOnly: false,
     interruptBehavior: 'block',
     description:
-      'Validate the whole workspace against the org with a checkOnly deploy (nothing is saved in the org). Returns component failures, test failures and coverage. Iterate until it returns ok=true.',
+      'Check staged files against the org without saving them. Optional paths compile a dependency-expanded slice, which does not authorize deployment. Repair reported roots only; unchanged failed payloads and two no-progress compiles are blocked. Full validation with tests is required before deployment.',
     inputSchema: obj({
+      paths: { type: 'array', items: { type: 'string' }, description: 'Optional staged paths for an early slice compile' },
       testLevel: { type: 'string', enum: ['NoTestRun', 'RunSpecifiedTests', 'RunLocalTests', 'RunAllTestsInOrg'] },
       runTests: { type: 'array', items: { type: 'string' }, description: 'Test classes for RunSpecifiedTests' },
     }),
     roles: [...BUILDERS, 'orchestrator', 'reviewer'],
     run: async (input, ctx) => {
-      const run = await ctx.runtime.validate(ctx.session.id, { testLevel: input.testLevel, runTests: input.runTests, agentId: ctx.agent.id });
+      const run = await ctx.runtime.validate(ctx.session.id, {
+        testLevel: input.testLevel,
+        runTests: input.runTests,
+        agentId: ctx.agent.id,
+        paths: input.paths,
+      });
       const ok = run.status === 'succeeded';
       const text = ok
         ? `VALIDATION OK: ${run.componentsTotal} components, ${run.testsTotal} tests (${run.testsFailed} failed), coverage ${run.codeCoverage ?? 'n/a'}%.`
         : `VALIDATION FAILED (attempt ${run.attempt}): ${run.componentsFailed} component failures, ${run.testsFailed} test failures.\n${run.failures.map((f) => `- [${f.componentType ?? '?'}] ${f.fullName ?? f.fileName ?? ''}${f.lineNumber ? ` line ${f.lineNumber}` : ''}: ${f.problem}`).join('\n')}`;
-      return { text, output: run, ok };
+      return { text: `${run.scope === 'slice' ? 'SLICE COMPILE ONLY — full validation still required.\n' : ''}${text}`, output: run, ok };
     },
   },
   {

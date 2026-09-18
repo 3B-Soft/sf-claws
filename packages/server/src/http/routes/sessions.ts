@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { Readable } from 'node:stream';
 import { z } from 'zod';
 import {
   BrowserCaptureResponse,
@@ -161,8 +162,37 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
 
   app.get('/sessions/:id/history', async (req) => {
     const { session } = access(req);
-    const q = parse(z.object({ after: z.coerce.number().int().default(0) }), req.query);
-    return ctx.repos.events.listAfter(session.id, q.after);
+    const q = parse(z.object({ after: z.coerce.number().int().min(0).default(0), through: z.coerce.number().int().min(0).optional() }), req.query);
+    return ctx.repos.events.listAfter(session.id, q.after, 5000, q.through);
+  });
+
+  /** Lossless persisted-event export, bounded to a watermark captured before streaming. */
+  app.get('/sessions/:id/export', async (req, reply) => {
+    const { session } = access(req);
+    const throughSeq = ctx.repos.events.lastSeq(session.id);
+    reply
+      .type('application/x-ndjson')
+      .header('Cache-Control', 'no-store')
+      .header('Content-Disposition', `attachment; filename="session-${session.id.replace(/[^a-zA-Z0-9_-]/g, '_')}.ndjson"`);
+    async function* lines() {
+      yield JSON.stringify({
+        type: 'export.manifest',
+        version: 1,
+        sessionId: session.id,
+        throughSeq,
+        exportedAt: new Date().toISOString(),
+        excludedEphemeralTypes: ['assistant.delta', 'assistant.thinking'],
+      }) + '\n';
+      let after = 0;
+      while (!reply.raw.destroyed) {
+        const page = ctx.repos.events.listAfter(session.id, after, 500, throughSeq);
+        if (!page.length) break;
+        for (const event of page) yield JSON.stringify(event) + '\n';
+        after = page[page.length - 1].seq;
+        if (after >= throughSeq) break;
+      }
+    }
+    return reply.send(Readable.from(lines()));
   });
 
   /** Server-Sent Events stream; replays events after ?after= then streams live. */
@@ -220,6 +250,8 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
     const v = ctx.policy.checkComponent(rules, inferred?.metadataType ?? null, inferred?.fullName ?? null);
     if (v) throw forbidden(v.message, 'POLICY');
     const existing = ctx.repos.workspace.get(session.id, path);
+    const refusal = ctx.runtime.workspaceWriteRefusal(session.id, { path, metadataType: null, fullName: null }, false);
+    if (refusal) throw badRequest(refusal);
     ctx.repos.workspace.upsert(session.id, {
       path,
       content: body.content,
@@ -229,6 +261,7 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
       action: existing?.action ?? 'created',
     });
     ctx.runtime.markWorkspaceDirty(session.id);
+    ctx.runtime.noteWorkspaceChange(session.id, path);
     ctx.runtime.bus.emit(session.id, {
       type: 'workspace.file',
       path,
@@ -243,7 +276,10 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
     const { session } = access(req);
     if (ctx.runtime.isRunning(session.id)) throw badRequest('Cannot edit files while the session is running');
     const q = parse(z.object({ path: z.string() }), req.query);
+    const refusal = ctx.runtime.workspaceWriteRefusal(session.id, { path: normalizePath(q.path), metadataType: null, fullName: null }, false);
+    if (refusal) throw badRequest(refusal);
     ctx.repos.workspace.remove(session.id, normalizePath(q.path));
+    ctx.runtime.noteWorkspaceChange(session.id, normalizePath(q.path));
     ctx.runtime.markWorkspaceDirty(session.id);
     ctx.runtime.bus.emit(session.id, { type: 'workspace.file', path: normalizePath(q.path), action: 'deleted', metadataType: null, fullName: null });
     return { ok: true };

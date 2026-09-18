@@ -9,7 +9,7 @@ export default class DeploysTab extends LightningElement {
       .map((d) => ({
         ...d,
         when: fmtDate(d.createdAt),
-        kind: d.checkOnly ? 'Validation (check only)' : 'Deploy',
+        kind: d.checkOnly ? (d.scope === 'slice' ? 'Slice compile (not deploy-ready)' : 'Validation (check only)') : 'Deploy',
         panel: { ...d, ok: d.status === 'succeeded' },
       }));
   }

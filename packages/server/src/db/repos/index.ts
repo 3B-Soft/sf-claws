@@ -4,6 +4,7 @@ import { ClientsRepo, ClientMembersRepo, OrgsRepo, GithubReposRepo, OAuthStatesR
 import { ProvidersRepo, ModelsRepo, BindingsRepo, SkillsRepo, PoliciesRepo } from './ai.js';
 import { ProjectsRepo, TasksRepo } from './projects.js';
 import { KnowledgeSourcesRepo, CustomAgentsRepo } from './knowledge.js';
+import { CompileControlRepo } from './compile-control.js';
 import {
   SessionsRepo,
   EventsRepo,
@@ -21,6 +22,7 @@ import {
 } from './sessions.js';
 
 export interface Repos {
+  compileControl: CompileControlRepo;
   users: UsersRepo;
   tokens: TokensRepo;
   deviceCodes: DeviceCodesRepo;
@@ -57,6 +59,7 @@ export interface Repos {
 
 export function createRepos(db: Db): Repos {
   return {
+    compileControl: new CompileControlRepo(db),
     users: new UsersRepo(db),
     tokens: new TokensRepo(db),
     deviceCodes: new DeviceCodesRepo(db),
