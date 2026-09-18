@@ -113,6 +113,29 @@ describe('DeepSeek provider', () => {
     await expect(dead.complete(request(model()))).rejects.toMatchObject({ provider: 'deepseek', retryable: true });
   });
 
+  it('omits a reasoning-only assistant turn when replaying conversation history', async () => {
+    const ep = fakeEndpoint([chunk({ content: 'continued' }), chunk({}, 'stop')]);
+    open.push(ep.server);
+    const p = new DeepseekProvider('sk-test', await ep.url);
+
+    await p.complete(
+      request(model(), {
+        messages: [
+          { role: 'user', content: [{ type: 'text', text: 'Explain the design.' }] },
+          { role: 'assistant', content: [{ type: 'thinking', text: 'Long private reasoning that exhausted the output slot.' }] },
+          { role: 'user', content: [{ type: 'text', text: 'Continue from where you stopped.' }] },
+        ],
+      }),
+    );
+
+    expect(ep.bodies[0].messages).toEqual([
+      { role: 'system', content: 'sys' },
+      { role: 'user', content: 'Explain the design.' },
+      { role: 'user', content: 'Continue from where you stopped.' },
+    ]);
+    expect(ep.bodies[0].messages).not.toContainEqual({ role: 'assistant', content: null });
+  });
+
   it('is reachable through the registry once a key is stored, and ships disabled in the catalogue', async () => {
     const ctx = makeContext();
     ctx.ai.seedDefaults();

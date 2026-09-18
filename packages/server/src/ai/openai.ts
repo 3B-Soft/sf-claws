@@ -254,6 +254,12 @@ function toOpenAiMessages(m: LlmMessage): OpenAI.Chat.ChatCompletionMessageParam
       .map((b: any) => b.text)
       .join('\n');
     const calls = m.content.filter((b) => b.type === 'tool_use') as Extract<LlmBlock, { type: 'tool_use' }>[];
+    // Compatible endpoints cannot replay our provider-neutral `thinking` blocks. If thinking is
+    // all this turn contains, omitting the turn is the only valid representation: sending an
+    // assistant message with both `content: null` and no tool_calls is rejected by DeepSeek.
+    // This occurs when a reasoning model reaches its output limit before emitting visible text;
+    // the following user continuation message still tells it how to proceed.
+    if (!text && !calls.length) return [];
     const msg: OpenAI.Chat.ChatCompletionAssistantMessageParam = { role: 'assistant', content: text || null };
     if (calls.length) msg.tool_calls = calls.map((c) => ({ id: c.id, type: 'function', function: { name: c.name, arguments: JSON.stringify(c.input ?? {}) } }));
     return [msg];

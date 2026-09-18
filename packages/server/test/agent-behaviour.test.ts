@@ -339,6 +339,8 @@ describe('provider failure handling', () => {
     await waitForIdle(ctx, session.id);
     const errors = ctx.repos.events.listAfter(session.id).filter((e) => e.type === 'session.error');
     expect(errors.some((e) => (e as { message: string }).message.includes('API key is invalid'))).toBe(true);
+    const statuses = ctx.repos.events.listAfter(session.id).filter((e) => e.type === 'session.status');
+    expect(statuses.at(-1)).toMatchObject({ status: 'failed', message: 'Stopped: the AI provider request failed.' });
     expect(ctx.repos.sessions.byId(session.id)!.status).toBe('failed');
   });
 });

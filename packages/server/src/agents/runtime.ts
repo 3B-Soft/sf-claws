@@ -2356,7 +2356,7 @@ function stopReasonMessage(reason: string): string {
     case 'refusal':
       return 'Stopped: the model declined the request.';
     case 'provider_error':
-      return 'Stopped: the AI provider could not be reached.';
+      return 'Stopped: the AI provider request failed.';
     case 'cancelled':
       return 'Cancelled.';
     case 'cost_ceiling':
