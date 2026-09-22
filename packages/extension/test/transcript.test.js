@@ -64,4 +64,13 @@ describe('thread grouping', () => {
     expect(g[1].running).toBeUndefined();
     expect(g[3].running).toBe(true);
   });
+
+  it('drops a finished group that holds only lifecycle events', () => {
+    const g = groupThread([
+      { key: 'a1', kind: 'assistant', text: 'Done.' },
+      { key: 's1', kind: 'status', status: 'completed' },
+      { key: 'x1', kind: 'unknown', type: 'model.finished' },
+    ]);
+    expect(g.map((x) => x.key)).toEqual(['a1']);
+  });
 });

@@ -464,5 +464,6 @@ export function groupThread(items = [], running = false) {
   }
   const last = out[out.length - 1];
   if (last?.activity && running) last.running = true;
-  return out;
+  // A group of nothing but lifecycle noise (status flips, model.started…) has no card to show.
+  return out.filter((g) => !g.activity || g.running || g.items.some((i) => i.kind !== 'status' && i.kind !== 'unknown'));
 }

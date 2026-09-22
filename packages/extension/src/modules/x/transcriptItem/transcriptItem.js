@@ -130,7 +130,9 @@ export default class TranscriptItem extends LightningElement {
     return this.agentSpawned ? `spawned ${roleLabel(this.role)}` : `${roleLabel(this.role)} ${this.item?.ok ? 'finished' : 'failed'}`;
   }
   get agentDetail() {
-    return this.agentSpawned ? this.item?.objective : this.item?.summary;
+    // The server caps `summary` at 500 chars and the sub-agent's full message is its own
+    // expandable row just above, so this line is a one-line footnote, not the findings.
+    return truncate(String(this.agentSpawned ? this.item?.objective : this.item?.summary || '').replace(/\s+/g, ' '), 120);
   }
   get agentDotCls() {
     return `h-1.5 w-1.5 rounded-full ${this.agentSpawned ? 'bg-brand-400' : this.item?.ok ? 'bg-emerald-400' : 'bg-rose-400'}`;

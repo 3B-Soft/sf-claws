@@ -19,7 +19,7 @@
       <div class="rounded-xl border border-line bg-surface">
         <button class="flex w-full items-center gap-2 px-2.5 py-1.5 text-left" onclick={onToggle}>
           <span class={roleCls}>{roleText}</span>
-          <template lwc:if={subOpen}><span class="text-[11px] text-content-subtle">agent message</span></template>
+          <template lwc:if={subOpen}><span class="text-[11px] text-content-subtle">full message</span></template>
           <template lwc:else><span class="min-w-0 flex-1 truncate text-[11px] text-content-muted">{subPreview}</span></template>
           <template lwc:if={streaming}><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
           <span class="ml-auto text-[11px] text-content-subtle">{toggleGlyph}</span>
