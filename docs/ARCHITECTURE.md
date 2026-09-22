@@ -13,7 +13,7 @@ running when the panel closes, and the panel reconnects to the event stream and 
 
 ### Control plane (`packages/server`)
 
-One Node.js process (Fastify 5, TypeScript, ESM). State in SQLite (WAL) via better-sqlite3 — a
+One Bun process (Fastify 5, TypeScript, ESM). State in SQLite (WAL) via bun:sqlite — a
 single file under `DATA_DIR`, migrations in `src/db/migrations.ts`, append-only. Secrets are
 AES-256-GCM encrypted: client-owned secrets under that client's own data key, wrapped by
 `MASTER_KEY` (`lib/crypto.ts`). Passwords use scrypt. JWTs (HS256, `jose`) carry a `jti` stored in
@@ -98,7 +98,7 @@ so changing it first is not a style preference — it is what keeps them from dr
 
 Both UIs share one palette: semantic tokens (`surface`, `content`, `line`, `brand`) defined per
 package in `styles.css` from the Salesforce Lightning colours, so the side panel does not read as a
-foreign object docked beside the org. `tools/contrast-audit.mjs` (`npm run contrast`) checks every
+foreign object docked beside the org. `tools/contrast-audit.mjs` (`bun run contrast`) checks every
 text node on every screen against its real composited background and fails anything below WCAG AA.
 
 LWC Open Source with light-DOM components and Tailwind v4, built with Vite through

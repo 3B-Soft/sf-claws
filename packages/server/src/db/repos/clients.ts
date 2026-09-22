@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from 'bun:sqlite';
 import type { Client, ClientMember, ClientMemberRole, SalesforceOrg, GithubRepo, OrgKind, OrgConnectionStatus } from '@sf-claws/shared';
 import { type Db, nowIso, rowToObj } from '../db.js';
 import { newId } from '../../lib/crypto.js';
@@ -203,7 +204,7 @@ export class OrgsRepo {
       instructions: 'instructions',
     };
     const sets: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);

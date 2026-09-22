@@ -6,19 +6,19 @@ a reviewable change looks like.
 ## Getting set up
 
 ```bash
-npm install
-npm run build -w @sf-claws/shared          # the contract package; UIs read its dist/
+bun install
+bun run --filter @sf-claws/shared build          # the contract package; UIs read its dist/
 cp packages/server/.env.example packages/server/.env
 # fill MASTER_KEY, JWT_SECRET
-npm run dev:server                          # http://localhost:8787
-npm run dev:admin                           # http://localhost:5173
-npm run build -w @sf-claws/extension        # load packages/extension/dist as an unpacked extension
+bun run dev:server                          # http://localhost:8787
+bun run dev:admin                           # http://localhost:5173
+bun run --filter @sf-claws/extension build        # load packages/extension/dist as an unpacked extension
 ```
 
 Before pushing:
 
 ```bash
-npm run lint && npm run typecheck && npm test
+bun run lint && bun run typecheck && bun run test
 ```
 
 CI runs exactly these. A red build is not a review comment away from green — fix it first.
@@ -77,7 +77,7 @@ palette so the UI does not look foreign beside the org it manages. A `bg-slate-9
 the entire cost of it. Status hues (emerald, rose, amber…) keep their names, because "this is an
 error" is a meaning, not a colour choice.
 
-Run `npm run contrast` after any styling change. It walks every text node on every screen against
+Run `bun run contrast` after any styling change. It walks every text node on every screen against
 its real composited background and fails anything under WCAG AA. A theme change breaks text in ways
 a screenshot review does not catch — a label at #94a3b8 is still visible on #0f172a and invisible on
 white — and the audit is faster than looking.

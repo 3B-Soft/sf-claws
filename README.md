@@ -15,7 +15,7 @@ safe enough to point at a production org.
 
 ```
 ┌──────────────────────┐   HTTPS/SSE   ┌─────────────────────────────┐   OAuth / Metadata API   ┌────────────────┐
-│ Chrome side panel    │ ───────────── │ Control plane (Node.js)     │ ──────────────────────── │ Salesforce org │
+│ Chrome side panel    │ ───────────── │ Control plane (Bun)         │ ──────────────────────── │ Salesforce org │
 │ (LWC OSS + Tailwind) │               │ Fastify + SQLite            │                          └────────────────┘
 └──────────────────────┘               │ • users, approvals, tokens  │   Git Data API           ┌────────────────┐
 ┌──────────────────────┐               │ • orgs, GitHub per client   │ ──────────────────────── │ GitHub repo    │
@@ -68,7 +68,7 @@ before each model call, with a reserve so hitting a limit never leaves work stag
 | Standing instructions: a CLAUDE.md per client and per org, read on every session | Permission rules: what agents may attempt, scoped to what they may touch |
 
 [More in `docs/screenshots`](docs/screenshots/), including the super-admin view of a whole session.
-They are generated against a real server — `npm run demo` then `npm run screenshots` — so they
+They are generated against a real server — `bun run demo` then `bun run screenshots` — so they
 cannot drift from the UI they document.
 
 ## Safety and isolation
@@ -91,14 +91,17 @@ guarantee, and how to run one instance per client when a client requires it.
 
 ## Quick start
 
+Install [Bun](https://bun.sh) 1.3.12 or newer (the version in `.bun-version` is used in CI and Docker).
+Use `bun run test` to run the Vitest suite, and `bun run eval` for the separate, paid model evaluations.
+
 ```bash
-npm install
-npm run build -w @sf-claws/shared
+bun install
+bun run --filter @sf-claws/shared build
 cp packages/server/.env.example packages/server/.env   # fill MASTER_KEY, JWT_SECRET; provider/GitHub keys are optional
-npm run dev:server        # http://localhost:8787  (API + serves the admin UI build when present)
-npm run dev:admin         # http://localhost:5173
-npm run build -w @sf-claws/extension   # then load packages/extension/dist as an unpacked extension
-npm test
+bun run dev:server        # http://localhost:8787  (API + serves the admin UI build when present)
+bun run dev:admin         # http://localhost:5173
+bun run --filter @sf-claws/extension build   # then load packages/extension/dist as an unpacked extension
+bun run test
 ```
 
 The first user to register becomes the super admin. Everyone after that is pending until an admin
@@ -109,7 +112,7 @@ approves them.
 | Package | What it is |
 |---|---|
 | `packages/shared` | The contract: zod schemas for entities, REST routes, session events, SFDX source-format helpers. |
-| `packages/server` | Control plane and agent runtime (Fastify, better-sqlite3, jsforce, Octokit, Anthropic + OpenAI + Gemini + DeepSeek + DeepInfra). |
+| `packages/server` | Control plane and agent runtime (Fastify, bun:sqlite, jsforce, Octokit, Anthropic + OpenAI + Gemini + DeepSeek + DeepInfra). |
 | `packages/admin-ui` | Admin console (LWC OSS + Tailwind + Vite). |
 | `packages/extension` | Chrome MV3 side panel (LWC OSS + Tailwind + Vite). |
 | `skills/` | Default markdown skills seeded on first boot (policy, quality, playbooks). |

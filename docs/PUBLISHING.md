@@ -6,8 +6,8 @@ so the only manual steps are the listing text and the upload itself.
 ## 1. Build the upload
 
 ```
-npm run build -w @sf-claws/shared
-npm run build:store -w @sf-claws/extension
+bun run --filter @sf-claws/shared build
+bun run --filter @sf-claws/extension build:store
 ```
 
 `build:store` differs from `build` in two ways, both in `scripts/postbuild.mjs`:
@@ -152,9 +152,9 @@ For managed rollout, `ExtensionInstallForcelist` works against an unlisted item 
 
 ## 9. Submission checklist
 
-- [ ] `npm run lint && npm run typecheck && npm test` clean
+- [ ] `bun run lint && bun run typecheck && bun run test` clean
 - [ ] Version bumped in `packages/extension/package.json`
-- [ ] `npm run build:store -w @sf-claws/extension`, upload `release/sf-claws-store-<version>.zip`
+- [ ] `bun run --filter @sf-claws/extension build:store`, upload `release/sf-claws-store-<version>.zip`
 - [ ] Name, short and detailed description from section 3
 - [ ] Single purpose from section 4
 - [ ] All eight permission justifications from section 5

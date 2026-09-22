@@ -2,7 +2,8 @@
   "name": "sf-claws",
   "version": "0.0.1",
   "private": true,
-  "description": "Salesforce-focused agentic harness for implementation admins: Chrome side-panel plugin + Node.js control plane.",
+  "packageManager": "bun@1.3.12",
+  "description": "Salesforce-focused agentic harness for implementation admins: Chrome side-panel plugin + Bun control plane.",
   "license": "Apache-2.0",
   "workspaces": [
     "packages/shared",
@@ -11,19 +12,19 @@
     "packages/extension"
   ],
   "engines": {
-    "node": ">=20.0.0"
+    "bun": ">=1.3.12"
   },
   "scripts": {
-    "build": "npm run build -w @sf-claws/shared && npm run build -w @sf-claws/server && npm run build -w @sf-claws/admin-ui && npm run build -w @sf-claws/extension",
-    "dev:server": "npm run dev -w @sf-claws/server",
-    "dev:admin": "npm run dev -w @sf-claws/admin-ui",
-    "dev:extension": "npm run dev -w @sf-claws/extension",
-    "test": "npm run test --workspaces --if-present",
-    "eval": "npm run eval -w @sf-claws/server",
-    "typecheck": "npm run build -w @sf-claws/shared && npm run typecheck --workspaces --if-present",
-    "demo": "node tools/demo-server.mjs",
-    "screenshots": "node tools/screenshots.mjs",
-    "contrast": "node tools/contrast-audit.mjs",
+    "build": "bun run --filter @sf-claws/shared build && bun run --filter @sf-claws/server build && bun run --filter @sf-claws/admin-ui build && bun run --filter @sf-claws/extension build",
+    "dev:server": "bun run --filter @sf-claws/server dev",
+    "dev:admin": "bun run --filter @sf-claws/admin-ui dev",
+    "dev:extension": "bun run --filter @sf-claws/extension dev",
+    "test": "bun run --filter '*' test",
+    "eval": "bun run --filter @sf-claws/server eval",
+    "typecheck": "bun run --filter @sf-claws/shared build && bun run --filter '*' typecheck",
+    "demo": "bun tools/demo-server.mjs",
+    "screenshots": "bun tools/screenshots.mjs",
+    "contrast": "bun tools/contrast-audit.mjs",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "format": "biome format . --write"

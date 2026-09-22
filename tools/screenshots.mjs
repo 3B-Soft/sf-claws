@@ -6,8 +6,8 @@
  * panel runs as a plain page here (it detects the absence of `chrome` and falls back to
  * localStorage), which is the same code path the extension uses minus the tab plumbing.
  *
- *   node tools/demo-server.mjs --port 8799 > /tmp/demo.json &
- *   node tools/screenshots.mjs --demo /tmp/demo.json --out docs/screenshots
+ *   bun tools/demo-server.mjs --port 8799 > /tmp/demo.json &
+ *   bun tools/screenshots.mjs --demo /tmp/demo.json --out docs/screenshots
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -46,7 +46,7 @@ for (const [name, dir] of [
   ['admin-ui', adminRoot],
 ])
   if (!fs.existsSync(path.join(dir, name === 'extension' ? 'sidepanel.html' : 'index.html')))
-    throw new Error(`${name} is not built: run npm run build -w @sf-claws/${name}`);
+    throw new Error(`${name} is not built: run bun run --filter @sf-claws/${name} build`);
 const panelServer = await serve(extRoot, 8801);
 const adminServer = await serve(adminRoot, 8802);
 

@@ -1,0 +1,3 @@
+[run]
+# Run Node-shebang tools (Vite, Vitest, TypeScript) with the project runtime.
+bun = true

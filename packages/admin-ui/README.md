@@ -5,9 +5,9 @@ Central admin console for the SF Claws control plane. Single-page app built with
 ## Run
 
 ```bash
-npm run dev -w @sf-claws/admin-ui     # http://localhost:5173, proxies /api and /oauth to :8787
-npm run build -w @sf-claws/admin-ui   # dist/ (served by the server when PUBLIC_URL / static hosting is configured)
-npx vite preview --port 4174     # serve dist/ locally
+bun run --filter @sf-claws/admin-ui dev     # http://localhost:5173, proxies /api and /oauth to :8787
+bun run --filter @sf-claws/admin-ui build   # dist/ (served by the server when PUBLIC_URL / static hosting is configured)
+bunx --bun vite preview --port 4174     # serve dist/ locally
 ```
 
 API base URL: same origin by default. Override with `window.SF_CLAWS_API_BASE` (set before `main.js` runs) or `localStorage['sfclaws.apiBase']` (editable on the Settings page). The JWT lives in `sessionStorage['sfclaws.token']` (per tab, gone when the tab closes; a token an older build left in `localStorage` is migrated once and removed); UI prefs (sidebar) in `localStorage['sfclaws.prefs']`.
@@ -74,4 +74,4 @@ Live updates: while the session is `running`/`awaiting_confirmation` (or `runnin
 
 ## Verification
 
-`npm run build -w @sf-claws/admin-ui` from the repo root. Headless render checks (playwright-core, Chromium at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, `--no-sandbox`) against `npx vite preview` cover the login/register screens, a fake token with the API unreachable (offline state with retry), the full shell on every route with only `/health` + `/auth/me` mocked (every page degrades to inline error states, no console errors besides failed fetches), role gating for `user`, and a mocked session with every event type rendered. Test scripts live outside the package.
+`bun run --filter @sf-claws/admin-ui build` from the repo root. Headless render checks (playwright-core, Chromium at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, `--no-sandbox`) against `bunx --bun vite preview` cover the login/register screens, a fake token with the API unreachable (offline state with retry), the full shell on every route with only `/health` + `/auth/me` mocked (every page degrades to inline error states, no console errors besides failed fetches), role gating for `user`, and a mocked session with every event type rendered. Test scripts live outside the package.

@@ -138,7 +138,7 @@ const refs = [
 fs.mkdirSync(path.join(dist, 'icons'), { recursive: true });
 for (const size of [16, 32, 48, 128]) {
   const src = path.join(root, 'src/icons', `icon-${size}.png`);
-  if (!fs.existsSync(src)) throw new Error(`missing icon asset: ${src} — run node tools/render-icons.mjs`);
+  if (!fs.existsSync(src)) throw new Error(`missing icon asset: ${src} — run bun tools/render-icons.mjs`);
   fs.copyFileSync(src, path.join(dist, 'icons', `icon-${size}.png`));
 }
 for (const r of refs) if (!fs.existsSync(path.join(dist, r))) throw new Error(`manifest references missing file: ${r}`);

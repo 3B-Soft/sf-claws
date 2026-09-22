@@ -6,13 +6,13 @@
 
 ## How it was verified
 
-<!-- `npm run lint && npm run typecheck && npm test` is the baseline, not the answer.
+<!-- `bun run lint && bun run typecheck && bun run test` is the baseline, not the answer.
      What did you actually exercise? For agent behaviour, what did you expect the model to do
      differently, and how did you check? -->
 
 ## Checklist
 
-- [ ] `npm run lint && npm run typecheck && npm test` pass
+- [ ] `bun run lint && bun run typecheck && bun run test` pass
 - [ ] Contract changes went into `packages/shared` first, and shared was rebuilt
 - [ ] Any schema change is a **new** migration entry, not an edit to an applied one
 - [ ] Any tool that touches a Salesforce org goes through `runtime.gate()` and takes a `reason`

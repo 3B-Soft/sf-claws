@@ -9,7 +9,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { chromium } from 'playwright';
 
-// Usage: node tools/demo-server.mjs --port 8799 > /tmp/demo.json &  then  node tools/contrast-audit.mjs --demo /tmp/demo.json
+// Usage: bun tools/demo-server.mjs --port 8799 > /tmp/demo.json &  then  bun tools/contrast-audit.mjs --demo /tmp/demo.json
 const demoArg = process.argv.indexOf('--demo');
 const demo = JSON.parse(fs.readFileSync(demoArg >= 0 ? process.argv[demoArg + 1] : '/tmp/demo.json', 'utf8'));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png' };
@@ -79,7 +79,7 @@ const AUDIT = () => {
   return out;
 };
 
-// The CI environment ships one Chromium at a fixed path; locally fall back to Playwright's own (npx playwright install chromium).
+// The CI environment ships one Chromium at a fixed path; locally fall back to Playwright's own (bunx --bun playwright install chromium).
 const executablePath = process.env.SFCLAWS_BROWSER_PATH || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
 const browser = await chromium.launch(executablePath ? { executablePath } : {});
 const seen = new Map();

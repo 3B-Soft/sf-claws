@@ -8,7 +8,7 @@
  * left it. That keeps the screenshots honest: if a component renders wrong here, it renders wrong
  * in production too.
  *
- *   node tools/demo-server.mjs [--port 8799]
+ *   bun tools/demo-server.mjs [--port 8799]
  *
  * Prints the credentials and the ids it created, then stays up until interrupted.
  */

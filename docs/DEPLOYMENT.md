@@ -25,12 +25,15 @@ For environment-driven local setup, set any of `ANTHROPIC_API_KEY`, `OPENAI_API_
 
 ## 4. Server
 
+Requires Bun 1.3.12 or newer. CI and Docker pin 1.3.12. The server uses Bun's built-in SQLite driver;
+the database path and migration history are unchanged.
+
 ```bash
-npm ci
-npm run build
+bun install --frozen-lockfile
+bun run build
 cd packages/server
 cp .env.example .env    # set PUBLIC_URL, MASTER_KEY, JWT_SECRET, CORS_ORIGINS
-NODE_ENV=production node dist/index.js
+NODE_ENV=production bun dist/index.js
 ```
 
 `ADMIN_UI_DIST=../admin-ui/dist` (default) serves the admin console from the same origin, including `/pair?code=` for extension pairing and the OAuth result page. Put the server behind TLS (nginx/Caddy/Cloud Run/etc.); SSE requires proxies to disable response buffering (`X-Accel-Buffering: no` is set).
@@ -89,7 +92,7 @@ To upgrade, run `git pull && docker build -t sf-claws:latest .` in the checkout,
 
 ## 5. Chrome extension
 
-Build: `npm run build -w @sf-claws/extension`. Distribute `packages/extension/release/sf-claws.zip` via the Chrome Web Store (private/unlisted) or enterprise policy (`ExtensionInstallForcelist`), or load `packages/extension/dist` unpacked for development. On first run each admin enters the server URL, requests permission for that origin, and pairs the device: the panel shows a code, the admin console approves it (the user must already be approved by the super admin).
+Build: `bun run --filter @sf-claws/extension build`. Distribute `packages/extension/release/sf-claws.zip` via the Chrome Web Store (private/unlisted) or enterprise policy (`ExtensionInstallForcelist`), or load `packages/extension/dist` unpacked for development. On first run each admin enters the server URL, requests permission for that origin, and pairs the device: the panel shows a code, the admin console approves it (the user must already be approved by the super admin).
 
 ## 6. Environment reference
 
@@ -126,8 +129,8 @@ docker build -t sf-claws:latest .
 1. Run commands to re-generate the extension package
 
 ```
-npm run build -w @sf-claws/shared
-npm run build -w @sf-claws/extension
+bun run --filter @sf-claws/shared build
+bun run --filter @sf-claws/extension build
 ```
 
 - Loaded unpacked: open chrome://extensions, click reload on SF Claws, then close and reopen the side panel.

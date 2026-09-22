@@ -1,16 +1,16 @@
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { MIGRATIONS } from './migrations.js';
 
-export type Db = Database.Database;
+export type Db = Database;
 
 export function openDb(dbPath: string): Db {
   if (dbPath !== ':memory:') fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-  const db = new Database(dbPath);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  db.pragma('busy_timeout = 5000');
+  const db = new Database(dbPath, { strict: true });
+  db.exec('PRAGMA journal_mode = WAL');
+  db.exec('PRAGMA foreign_keys = ON');
+  db.exec('PRAGMA busy_timeout = 5000');
   migrate(db);
   return db;
 }

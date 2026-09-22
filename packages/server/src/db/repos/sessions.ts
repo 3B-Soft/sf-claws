@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from 'bun:sqlite';
 import type {
   Session,
   SessionStatus,
@@ -31,7 +32,7 @@ export class SessionsRepo {
     filter: { userId?: string; clientId?: string; orgId?: string; status?: SessionStatus; helpful?: boolean; from?: string; to?: string; limit?: number } = {},
   ): SessionRow[] {
     const where: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     if (filter.userId) {
       where.push('user_id=?');
       vals.push(filter.userId);
@@ -128,11 +129,11 @@ export class SessionsRepo {
       pageContext: 'page_context',
     };
     const sets: string[] = ['updated_at=?'];
-    const vals: unknown[] = [nowIso()];
+    const vals: SQLQueryBindings[] = [nowIso()];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);
-      vals.push(k === 'pageContext' ? (v === null ? null : JSON.stringify(v)) : typeof v === 'boolean' ? (v ? 1 : 0) : v);
+      vals.push(k === 'pageContext' ? (v === null ? null : JSON.stringify(v)) : typeof v === 'boolean' ? (v ? 1 : 0) : (v as SQLQueryBindings));
     }
     this.db.prepare(`UPDATE sessions SET ${sets.join(', ')} WHERE id=?`).run(...vals, id);
     return this.byId(id);
@@ -277,11 +278,11 @@ export class DeploysRepo {
       completedAt: 'completed_at',
     };
     const sets: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);
-      vals.push(k === 'failures' ? JSON.stringify(v) : v);
+      vals.push(k === 'failures' ? JSON.stringify(v) : (v as SQLQueryBindings));
     }
     if (sets.length) this.db.prepare(`UPDATE deploy_runs SET ${sets.join(', ')} WHERE id=?`).run(...vals, id);
     return this.byId(id);

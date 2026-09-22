@@ -6,17 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**/*.ts",
-      "**/*.js",
-      "**/*.mjs",
-      "**/*.json",
-      "!**/dist/**",
-      "!**/release/**",
-      "!**/node_modules/**",
-      "!**/__lwr_cache__/**",
-      "!package-lock.json"
-    ]
+    "includes": ["**/*.ts", "**/*.js", "**/*.mjs", "**/*.json", "!**/dist/**", "!**/release/**", "!**/node_modules/**", "!**/__lwr_cache__/**", "!bun.lock"]
   },
   "formatter": {
     "enabled": true,

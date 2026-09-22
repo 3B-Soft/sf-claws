@@ -157,8 +157,8 @@ and route to them however you already route.
 
 ```bash
 # One directory per isolated client, sharing nothing.
-DATA_DIR=/srv/sf-claws/acme     PORT=8801 MASTER_KEY=<acme key>     PUBLIC_URL=https://acme.example.com   npm start
-DATA_DIR=/srv/sf-claws/globex   PORT=8802 MASTER_KEY=<globex key>   PUBLIC_URL=https://globex.example.com npm start
+DATA_DIR=/srv/sf-claws/acme     PORT=8801 MASTER_KEY=<acme key>     PUBLIC_URL=https://acme.example.com   bun run start
+DATA_DIR=/srv/sf-claws/globex   PORT=8802 MASTER_KEY=<globex key>   PUBLIC_URL=https://globex.example.com bun run start
 ```
 
 With `docker compose`, give each client its own service, its own named volume for `DATA_DIR`, and its

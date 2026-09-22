@@ -6,9 +6,9 @@
  * the captions the store listing needs. Nothing here draws a UI that does not exist: if a panel
  * screenshot is missing the run fails rather than inventing a picture of the product.
  *
- *   node tools/demo-server.mjs --port 8799 > /tmp/demo.json &
- *   node tools/screenshots.mjs --demo /tmp/demo.json --out docs/screenshots
- *   node tools/store-assets.mjs --shots docs/screenshots --out docs/store
+ *   bun tools/demo-server.mjs --port 8799 > /tmp/demo.json &
+ *   bun tools/screenshots.mjs --demo /tmp/demo.json --out docs/screenshots
+ *   bun tools/store-assets.mjs --shots docs/screenshots --out docs/store
  */
 import fs from 'node:fs';
 import path from 'node:path';

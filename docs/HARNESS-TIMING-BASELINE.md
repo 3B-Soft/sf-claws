@@ -1,7 +1,7 @@
 # WP0: measured baseline and telemetry delivery
 
-Reproduction: `npm run build -w @sf-claws/shared`, then
-`node tools/audit-long-session.mjs _long_session_logs/events_raw.md`.
+Reproduction: `bun run --filter @sf-claws/shared build`, then
+`bun tools/audit-long-session.mjs _long_session_logs/events_raw.md`.
 The same script accepts the new session NDJSON export or a JSON event array.
 
 The supplied historical export yields 103m 24.331s active time and 19m 11.303s in explicit

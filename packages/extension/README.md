@@ -4,7 +4,7 @@ Manifest V3 side-panel extension for Salesforce admins. It follows the active Sa
 
 ## Install (unpacked)
 
-1. From the repo root: `npm run build -w @sf-claws/extension`
+1. From the repo root: `bun run --filter @sf-claws/extension build`
    - produces `packages/extension/dist/` (`manifest.json`, `sidepanel.html`, `options.html`, `background.js`, `content.js`, `assets/`, `icons/`)
    - and `packages/extension/release/sf-claws.zip` (same content, for distribution).
 2. Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** and pick `packages/extension/dist`.
@@ -44,9 +44,9 @@ Opening a session loads `GET /sessions/:id/snapshot`, stores it in IndexedDB (`s
 ## Development
 
 ```
-npm run dev -w @sf-claws/extension          # vite build --watch (reload the extension in Chrome after changes)
-npm run build -w @sf-claws/extension        # production build + postbuild (manifest, icons, zip)
-npm run build:store -w @sf-claws/extension  # the Chrome Web Store upload — see docs/PUBLISHING.md
+bun run --filter @sf-claws/extension dev          # vite build --watch (reload the extension in Chrome after changes)
+bun run --filter @sf-claws/extension build        # production build + postbuild (manifest, icons, zip)
+bun run --filter @sf-claws/extension build:store  # the Chrome Web Store upload — see docs/PUBLISHING.md
 ```
 
 - Stack: LWC (light DOM) + Tailwind v4 + Vite 7; components under `src/modules/x/`, plain modules under `src/lib/`.

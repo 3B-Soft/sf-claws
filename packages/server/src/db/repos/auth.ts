@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from 'bun:sqlite';
 import type { User, UserRole, UserStatus, UiMode, AuditEntry } from '@sf-claws/shared';
 import { type Db, nowIso, rowToObj } from '../db.js';
 import { newId } from '../../lib/crypto.js';
@@ -58,7 +59,7 @@ export class UsersRepo {
       passwordHash: 'password_hash',
     };
     const sets: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);
