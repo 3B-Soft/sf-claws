@@ -1,3 +1,4 @@
 [run]
-# Run Node-shebang tools (Vite, Vitest, TypeScript) with the project runtime.
-bun = true
+# Respect Node shebangs for tools such as Vite. Bun remains the package runner,
+# while scripts that require the Bun runtime invoke `bun` explicitly.
+bun = false

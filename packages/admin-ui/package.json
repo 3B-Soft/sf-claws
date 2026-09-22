@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "bun --bun vite build",
-    "dev": "bun --bun vite",
+    "dev": "vite",
     "typecheck": "echo 'admin-ui: JS-only LWC modules'",
     "test": "bun --bun vitest run --pool forks --passWithNoTests"
   },

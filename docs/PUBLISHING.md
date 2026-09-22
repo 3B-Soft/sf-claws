@@ -12,9 +12,9 @@ bun run --filter @sf-claws/extension build:store
 
 `build:store` differs from `build` in two ways, both in `scripts/postbuild.mjs`:
 
-- it strips `http://localhost/*` from `optional_host_permissions`, because that origin is only ever
-  useful to someone running the control plane on their own machine from an unpacked build, and the
-  store shows every optional origin on the install prompt;
+- it strips `http://*/*` from `optional_host_permissions`, because plain HTTP is only supported for
+  unpacked builds talking to a control plane on localhost or the local network, and the store shows
+  every optional origin on the install prompt;
 - it writes `release/sf-claws-store-<version>.zip` instead of `release/sf-claws.zip`, so a store
   upload can never be confused with a development build.
 

@@ -17,3 +17,8 @@ packages/server/eval/output/
 packages/server/scripts/seed-3b.ts
 packages/server/src/seed/three-b.ts
 packages/server/test/three-b-seed.test.ts
+
+# Private development
+PRIVATE_README.md
+# Local HTTPS certificates and private keys
+packages/admin-ui/certs/

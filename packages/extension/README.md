@@ -16,6 +16,9 @@ To update after a rebuild, click the reload icon on the extension card.
 
 On first open the panel asks for the **server URL** of your SF Claws control plane (e.g. `https://harness.example.com`). It is stored in `chrome.storage.sync`. Chrome then prompts for permission to reach that host (`optional_host_permissions`), and the panel runs a health check (`GET /api/v1/health`). The URL can also be changed from the **Options** page (extension card → Details → Extension options, or the avatar menu → Options).
 
+Unpacked development builds also accept plain-HTTP servers on localhost or the local network (for
+example `http://192.168.1.20:8787`). Store builds remain HTTPS-only.
+
 ## Sign in (device pairing)
 
 1. The panel requests a pairing code (`POST /auth/device/start`) and shows it.
