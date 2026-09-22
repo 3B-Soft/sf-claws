@@ -106,7 +106,7 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
     const configured = new Map(ctx.repos.providers.list().map((p) => [p.provider, p]));
     return AiProvider.options.map((p) => ({
       provider: p,
-      hasKey: configured.has(p),
+      hasKey: ctx.ai.hasKey(p),
       baseUrl: configured.get(p)?.baseUrl ?? null,
       updatedAt: configured.get(p)?.updatedAt ?? null,
     }));

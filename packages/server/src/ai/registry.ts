@@ -7,6 +7,7 @@ import { AnthropicProvider } from './anthropic.js';
 import { OpenAiProvider } from './openai.js';
 import { DeepseekProvider } from './deepseek.js';
 import { DeepinfraProvider } from './deepinfra.js';
+import { GeminiProvider } from './gemini.js';
 import { HttpError } from '../lib/errors.js';
 
 /** Default catalogue seeded on first boot (prices in USD per 1M tokens; OpenAI and DeepSeek values are placeholders admins should verify). */
@@ -95,6 +96,30 @@ export const DEFAULT_MODELS: Omit<AiModel, 'id' | 'createdAt'>[] = [
     contextWindow: 128_000,
     supportsThinking: true,
   },
+  {
+    provider: 'gemini',
+    modelId: 'gemini-2.5-pro',
+    label: 'Gemini 2.5 Pro',
+    enabled: false,
+    inputCostPerM: 1.25,
+    outputCostPerM: 10,
+    cachedInputCostPerM: 0.31,
+    maxOutputTokens: 65536,
+    contextWindow: 1_048_576,
+    supportsThinking: true,
+  },
+  {
+    provider: 'gemini',
+    modelId: 'gemini-2.5-flash',
+    label: 'Gemini 2.5 Flash',
+    enabled: false,
+    inputCostPerM: 0.3,
+    outputCostPerM: 2.5,
+    cachedInputCostPerM: 0.075,
+    maxOutputTokens: 65536,
+    contextWindow: 1_048_576,
+    supportsThinking: true,
+  },
 ];
 
 /** Default role bindings by provider model id (resolved to db ids on seed). */
@@ -119,6 +144,8 @@ function makeProvider(p: AiProvider, key: string, baseUrl: string | null | undef
       return new DeepseekProvider(key, baseUrl);
     case 'deepinfra':
       return new DeepinfraProvider(key, baseUrl);
+    case 'gemini':
+      return new GeminiProvider(key, baseUrl);
     default:
       return new OpenAiProvider(key, baseUrl);
   }
@@ -134,6 +161,7 @@ export class AiRegistry {
     private repos: Repos,
     private secrets: SecretBox,
     private log: Logger,
+    private environmentKeys: Partial<Record<AiProvider, string>> = {},
   ) {}
 
   /** Drop cached clients. Pass a user id to rotate only that user's key. */
@@ -146,10 +174,14 @@ export class AiRegistry {
   }
 
   seedDefaults(): void {
-    if (this.repos.models.list().length === 0) {
-      for (const m of DEFAULT_MODELS) this.repos.models.create(m);
-      this.log.info('Seeded default AI model catalogue');
+    let seeded = 0;
+    for (const m of DEFAULT_MODELS) {
+      if (!this.repos.models.byProviderModel(m.provider, m.modelId)) {
+        this.repos.models.create(m);
+        seeded++;
+      }
     }
+    if (seeded) this.log.info({ models: seeded }, 'Seeded default AI model catalogue');
     if (this.repos.bindings.list().length === 0) {
       const bindings: RoleModelBinding[] = [];
       for (const b of DEFAULT_BINDINGS) {
@@ -167,12 +199,18 @@ export class AiRegistry {
    */
   provider(p: AiProvider, userId?: string): LlmProvider {
     const cred = (userId ? this.repos.providers.get(p, userId) : undefined) ?? this.repos.providers.get(p);
-    if (!cred) throw new HttpError(503, 'PROVIDER_NOT_CONFIGURED', `No API key configured for ${p}. A super admin must add one in the admin console.`);
-    const cacheKey = `${cred.userId ?? 'global'}|${p}`;
+    const environmentKey = this.environmentKeys[p]?.trim();
+    if (!cred && !environmentKey)
+      throw new HttpError(
+        503,
+        'PROVIDER_NOT_CONFIGURED',
+        `No API key configured for ${p}. A super admin must add one in the admin console or server environment.`,
+      );
+    const cacheKey = `${cred?.userId ?? (cred ? 'global' : 'environment')}|${p}`;
     const cached = this.providers.get(cacheKey);
     if (cached) return cached;
-    const key = this.secrets.decrypt(cred.apiKeyEnc);
-    const inst = makeProvider(p, key, cred.baseUrl);
+    const key = cred ? this.secrets.decrypt(cred.apiKeyEnc) : environmentKey!;
+    const inst = makeProvider(p, key, cred?.baseUrl);
     this.providers.set(cacheKey, inst);
     return inst;
   }
@@ -231,8 +269,8 @@ export class AiRegistry {
     }
   }
 
-  private hasKey(p: AiProvider, userId?: string): boolean {
-    return !!((userId && this.repos.providers.get(p, userId)) || this.repos.providers.get(p));
+  hasKey(p: AiProvider, userId?: string): boolean {
+    return !!((userId && this.repos.providers.get(p, userId)) || this.repos.providers.get(p) || this.environmentKeys[p]?.trim());
   }
 
   cost(model: AiModel, u: LlmUsage): number {

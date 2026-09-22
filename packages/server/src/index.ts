@@ -23,8 +23,14 @@ export async function createContext(overrides: Parameters<typeof loadConfig>[0] 
   const secrets = new SecretBox(config.MASTER_KEY, repos.tenantKeys);
   const auth = new AuthService(repos, config);
   const sf = new SalesforceService(repos, config, secrets, log);
-  const github = new GithubService(repos, secrets, log);
-  const ai = new AiRegistry(repos, secrets, log);
+  const github = new GithubService(repos, secrets, log, config.GITHUB_TOKEN);
+  const ai = new AiRegistry(repos, secrets, log, {
+    anthropic: config.ANTHROPIC_API_KEY,
+    openai: config.OPENAI_API_KEY,
+    gemini: config.GEMINI_API_KEY,
+    deepseek: config.DEEPSEEK_API_KEY,
+    deepinfra: config.DEEPINFRA_API_KEY,
+  });
   const skills = new SkillsService(repos, log);
   const policy = new PolicyService(repos);
   const knowledge = new KnowledgeService(repos, secrets, log);

@@ -16,7 +16,10 @@ export async function githubRoutes(app: FastifyInstance, ctx: AppContext) {
     return id;
   };
 
-  app.get('/clients/:clientId/github', async (req) => stripToken(ctx.repos.github.byClient(clientOf(req))));
+  app.get('/clients/:clientId/github', async (req) => {
+    const clientId = clientOf(req);
+    return stripToken(ctx.repos.github.byClient(clientId), ctx.github.hasToken(clientId));
+  });
   app.put('/clients/:clientId/github', async (req) => {
     const clientId = clientOf(req);
     const admin = requireRole(req, 'superadmin');
@@ -29,7 +32,7 @@ export async function githubRoutes(app: FastifyInstance, ctx: AppContext) {
       target: clientId,
       details: { owner: r.owner, repo: r.repo, strategy: r.commitStrategy, tokenUpdated: !!token },
     });
-    return stripToken(r);
+    return stripToken(r, ctx.github.hasToken(clientId));
   });
   app.delete('/clients/:clientId/github', async (req) => {
     const clientId = clientOf(req);

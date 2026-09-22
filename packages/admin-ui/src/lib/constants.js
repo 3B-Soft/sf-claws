@@ -41,6 +41,14 @@ export const PROVIDER_META = {
     badge: 'OA',
     badgeCls: 'bg-emerald-500/15 text-emerald-700',
   },
+  gemini: {
+    label: 'Google Gemini',
+    desc: "Gemini Pro and Flash through Google's OpenAI-compatible endpoint.",
+    color: 'teal',
+    placeholder: 'AIza…',
+    badge: 'GE',
+    badgeCls: 'bg-teal-500/15 text-teal-700',
+  },
   deepinfra: {
     label: 'DeepInfra',
     desc: 'Open models hosted behind an OpenAI-compatible endpoint. Model ids are namespaced, e.g. deepseek-ai/DeepSeek-V3.',
@@ -174,6 +182,8 @@ export function statusColor(value) {
       return 'orange';
     case 'openai':
       return 'emerald';
+    case 'gemini':
+      return 'teal';
     case 'deepseek':
       return 'sky';
     case 'deepinfra':
@@ -252,6 +262,30 @@ export const MODEL_PRESETS = [
     maxOutputTokens: 8000,
     contextWindow: 128000,
     supportsThinking: false,
+    placeholderPrices: true,
+  },
+  {
+    provider: 'gemini',
+    modelId: 'gemini-2.5-pro',
+    label: 'Gemini 2.5 Pro',
+    inputCostPerM: 1.25,
+    outputCostPerM: 10,
+    cachedInputCostPerM: 0.31,
+    maxOutputTokens: 65536,
+    contextWindow: 1048576,
+    supportsThinking: true,
+    placeholderPrices: true,
+  },
+  {
+    provider: 'gemini',
+    modelId: 'gemini-2.5-flash',
+    label: 'Gemini 2.5 Flash',
+    inputCostPerM: 0.3,
+    outputCostPerM: 2.5,
+    cachedInputCostPerM: 0.075,
+    maxOutputTokens: 65536,
+    contextWindow: 1048576,
+    supportsThinking: true,
     placeholderPrices: true,
   },
   {

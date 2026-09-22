@@ -35,7 +35,7 @@ export async function clientRoutes(app: FastifyInstance, ctx: AppContext) {
     return {
       ...c,
       orgs: ctx.repos.orgs.listByClient(c.id).map(publicOrg),
-      github: stripToken(ctx.repos.github.byClient(c.id)),
+      github: stripToken(ctx.repos.github.byClient(c.id), ctx.github.hasToken(c.id)),
       projects: ctx.repos.projects.list(c.id),
     };
   });
@@ -120,8 +120,11 @@ export async function clientRoutes(app: FastifyInstance, ctx: AppContext) {
   });
 }
 
-export function stripToken<T extends { tokenEnc?: string | null } | undefined>(r: T): Omit<NonNullable<T>, 'tokenEnc'> | null {
+export function stripToken<T extends { tokenEnc?: string | null; hasToken?: boolean } | undefined>(
+  r: T,
+  hasToken = r?.hasToken ?? false,
+): Omit<NonNullable<T>, 'tokenEnc'> | null {
   if (!r) return null;
   const { tokenEnc: _t, ...rest } = r as any;
-  return rest;
+  return { ...rest, hasToken };
 }

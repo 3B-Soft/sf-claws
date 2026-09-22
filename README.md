@@ -22,7 +22,7 @@ safe enough to point at a production org.
 │ Admin console (web)  │ ───────────── │ • models, role bindings     │                          └────────────────┘
 │ (LWC OSS + Tailwind) │               │ • skills, policies, budgets │   Messages / Chat APIs   ┌────────────────┐
 └──────────────────────┘               │ • agent runtime + swarm     │ ──────────────────────── │ Anthropic,     │
-                                       │ • knowledge sources         │                          │ OpenAI/DeepSeek│
+                                       │ • knowledge sources         │                          │ OpenAI/Gemini… │
                                        └─────────────────────────────┘                          └────────────────┘
 ```
 
@@ -94,7 +94,7 @@ guarantee, and how to run one instance per client when a client requires it.
 ```bash
 npm install
 npm run build -w @sf-claws/shared
-cp packages/server/.env.example packages/server/.env   # fill MASTER_KEY, JWT_SECRET
+cp packages/server/.env.example packages/server/.env   # fill MASTER_KEY, JWT_SECRET; provider/GitHub keys are optional
 npm run dev:server        # http://localhost:8787  (API + serves the admin UI build when present)
 npm run dev:admin         # http://localhost:5173
 npm run build -w @sf-claws/extension   # then load packages/extension/dist as an unpacked extension
@@ -109,7 +109,7 @@ approves them.
 | Package | What it is |
 |---|---|
 | `packages/shared` | The contract: zod schemas for entities, REST routes, session events, SFDX source-format helpers. |
-| `packages/server` | Control plane and agent runtime (Fastify, better-sqlite3, jsforce, Octokit, Anthropic + OpenAI + DeepSeek + DeepInfra). |
+| `packages/server` | Control plane and agent runtime (Fastify, better-sqlite3, jsforce, Octokit, Anthropic + OpenAI + Gemini + DeepSeek + DeepInfra). |
 | `packages/admin-ui` | Admin console (LWC OSS + Tailwind + Vite). |
 | `packages/extension` | Chrome MV3 side panel (LWC OSS + Tailwind + Vite). |
 | `skills/` | Default markdown skills seeded on first boot (policy, quality, playbooks). |

@@ -175,7 +175,7 @@ export type GithubRepo = z.infer<typeof GithubRepo>;
 // AI models & providers
 // ---------------------------------------------------------------------------
 
-export const AiProvider = z.enum(['anthropic', 'openai', 'deepseek', 'deepinfra']);
+export const AiProvider = z.enum(['anthropic', 'openai', 'gemini', 'deepseek', 'deepinfra']);
 export type AiProvider = z.infer<typeof AiProvider>;
 
 export const AiModel = z.object({

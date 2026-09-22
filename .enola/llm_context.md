@@ -141,4 +141,4 @@ _No specific architecture pattern detected._
 
 ---
 
-*Generated at 2026-09-18T13:54:54Z in 506.002625ms. 6104 facts, 85 insights.*
+*Generated at 2026-09-22T08:46:36Z in 186.135042ms. 6104 facts, 85 insights.*

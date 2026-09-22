@@ -42,6 +42,24 @@ describe('buildTreeEntries', () => {
 });
 
 describe('GithubService.commit', () => {
+  it('accepts the environment token when a configured repository has no stored token', async () => {
+    const ctx = makeContext();
+    const { client } = await seedClientOrgUser(ctx);
+    ctx.repos.github.upsert(client.id, {
+      owner: 'o',
+      repo: 'r',
+      defaultBranch: 'main',
+      sourceRoot: 'force-app/main/default',
+      docsRoot: 'docs',
+      commitStrategy: 'direct',
+      branchPrefix: 'sf-claws/',
+    });
+    const gh = new GithubService(ctx.repos, ctx.secrets, ctx.log, 'github_pat_from_env');
+
+    expect(gh.hasToken(client.id)).toBe(true);
+    expect(gh.repoFor(client.id).tokenEnc).toBeNull();
+  });
+
   it('deletes paths and uploads binary content byte-exact in one commit', async () => {
     const ctx = makeContext();
     const { client } = await seedClientOrgUser(ctx);
@@ -56,7 +74,7 @@ describe('GithubService.commit', () => {
       tokenEnc: ctx.secrets.encrypt('ghp_test'),
     });
     const stub = stubOctokit();
-    const gh = new GithubService(ctx.repos, ctx.secrets, ctx.log, () => stub as any);
+    const gh = new GithubService(ctx.repos, ctx.secrets, ctx.log, '', () => stub as any);
     const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0x00]);
 
     const r = await gh.commit(

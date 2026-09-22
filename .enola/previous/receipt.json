@@ -1,15 +1,15 @@
 {
-  "snapshot_id": "sha256:0beaf7c63694950ba019db1eeeb5059034140a6fe19282717aad363d87a719f2",
+  "snapshot_id": "sha256:2db00afb8b812ba062453a28b11128c6f83b21339a19286128f8eac62a98fe65",
   "format_version": 1,
   "enola_version": "0.4.12",
   "extractor_version": "v259",
-  "generated_at": "2026-09-18T13:18:45Z",
-  "duration": "251.854791ms",
+  "generated_at": "2026-09-18T13:54:54Z",
+  "duration": "506.002625ms",
   "repo_path": "/Users/jamesridge/Documents/MBA - NEW - Dev/sf-claws",
   "git": {
     "ref": "main",
-    "commit": "d829e01af1c96ae9d4ba9225547723eb5de2486e",
-    "dirty": false,
+    "commit": "b700697ae4e723e77382004b08358a579c8dfc11",
+    "dirty": true,
     "remote": "github.com/3b-soft/sf-claws"
   },
   "extractors": [
@@ -43,15 +43,15 @@
   "config_hash": "sha256:12cbb6c9d3b099d95fbadb1d4bbe736a4eeace82c3bfc868b4395916ef097edd",
   "ignore_glob_hash": "sha256:7523cc6397a498e151125a682d28fbf6df20c6f51f6dfaf18fd8f5239a20d2d8",
   "output_hashes": {
-    "facts.jsonl": "sha256:8490d78efb3115dbf960817f30e0ca662bb3521fe449f37750a7de19f0d41f7e",
-    "insights.json": "sha256:d4ca0244d7971e97f9901a8e55672ea87cdd388a3cdbfb5a767d80b67f6cd467",
-    "llm_context.md": "sha256:b286a1ba6d964ddc92b85711015cea3c1ef567821e36652f32774bd318ad6c99"
+    "facts.jsonl": "sha256:ef8ae46aa3e2dad2385193a4e171a374d8bb5e843a7e5393303d1989d587b51b",
+    "insights.json": "sha256:88721fd8fb96327ed3b255059d15dbb759c815839c230665918d46fafe0907e4",
+    "llm_context.md": "sha256:9399de0324119767664f990c4e98543aac6871ab64ceb3af6dd79ae60e872111"
   },
-  "fact_count": 6097,
+  "fact_count": 6104,
   "insight_count": 85,
   "quality": {
-    "files_seen": 390,
-    "files_parsed": 258,
+    "files_seen": 392,
+    "files_parsed": 260,
     "files_skipped": 38,
     "dirs_skipped": 9,
     "skipped_sample": [
@@ -86,8 +86,8 @@
       "extraction_unresolved": 429
     },
     "census": {
-      "files_walked": 428,
-      "parsed": 258,
+      "files_walked": 430,
+      "parsed": 260,
       "excluded_by_ignore": 38,
       "excluded_by_kind": 38,
       "excluded_kinds": {

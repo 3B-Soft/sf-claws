@@ -22,19 +22,26 @@ export class GithubService {
     private repos: Repos,
     private secrets: SecretBox,
     private log: Logger,
+    private defaultToken = '',
     /** Test seam: replaces the Octokit factory. */
     private clientFactory?: (repo: GithubRepoRow) => Octokit,
   ) {}
 
+  hasToken(clientId: string): boolean {
+    const r = this.repos.github.byClient(clientId);
+    return !!r && (!!r.tokenEnc || !!this.defaultToken.trim());
+  }
+
   repoFor(clientId: string): GithubRepoRow {
     const r = this.repos.github.byClient(clientId);
     if (!r) throw new HttpError(409, 'GITHUB_NOT_CONFIGURED', 'No GitHub repository configured for this client');
-    if (!r.tokenEnc) throw new HttpError(409, 'GITHUB_NO_TOKEN', 'GitHub token missing for this client');
+    if (!r.tokenEnc && !this.defaultToken.trim()) throw new HttpError(409, 'GITHUB_NO_TOKEN', 'GitHub token missing for this client');
     return r;
   }
   private client(r: GithubRepoRow): Octokit {
     if (this.clientFactory) return this.clientFactory(r);
-    return new Octokit({ auth: this.secrets.decrypt(r.tokenEnc!), userAgent: 'sf-claws', request: { timeout: 30_000 } });
+    const token = r.tokenEnc ? this.secrets.decrypt(r.tokenEnc) : this.defaultToken.trim();
+    return new Octokit({ auth: token, userAgent: 'sf-claws', request: { timeout: 30_000 } });
   }
 
   async testConnection(clientId: string): Promise<{ ok: boolean; message: string; defaultBranch?: string; permissions?: unknown }> {

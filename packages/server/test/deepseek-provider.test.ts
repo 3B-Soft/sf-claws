@@ -5,6 +5,8 @@ import { makeContext } from './helpers.js';
 import { DeepseekProvider } from '../src/ai/deepseek.js';
 import { OpenAiProvider } from '../src/ai/openai.js';
 import { DeepinfraProvider } from '../src/ai/deepinfra.js';
+import { GeminiProvider } from '../src/ai/gemini.js';
+import { AiRegistry } from '../src/ai/registry.js';
 import { splitSystemPrompt, SYSTEM_CACHE_BOUNDARY } from '../src/ai/types.js';
 import type { AiModel } from '@sf-claws/shared';
 import type { LlmRequest } from '../src/ai/types.js';
@@ -181,6 +183,28 @@ describe('DeepSeek provider', () => {
     expect(splitSystemPrompt(`above\n${SYSTEM_CACHE_BOUNDARY}\nbelow`)).toEqual({ stable: 'above', dynamic: 'below' });
     // No marker means everything is stable, which is the safe reading: nothing gets cached that moves.
     expect(splitSystemPrompt('just one half')).toEqual({ stable: 'just one half', dynamic: '' });
+  });
+});
+
+describe('environment provider credentials', () => {
+  it('uses an environment key as a fallback and lets a stored key take precedence', () => {
+    const ctx = makeContext();
+    const registry = new AiRegistry(ctx.repos, ctx.secrets, ctx.log, { gemini: 'gemini-from-env' });
+
+    expect(registry.hasKey('gemini')).toBe(true);
+    expect(registry.provider('gemini')).toBeInstanceOf(GeminiProvider);
+
+    ctx.repos.providers.set('gemini', ctx.secrets.encrypt('gemini-from-ui'), null, 'test');
+    registry.invalidate();
+    expect(registry.provider('gemini')).toBeInstanceOf(GeminiProvider);
+  });
+
+  it('seeds disabled Gemini models into an existing catalogue', () => {
+    const ctx = makeContext();
+    ctx.ai.seedDefaults();
+    const gemini = ctx.repos.models.list().filter((m) => m.provider === 'gemini');
+    expect(gemini.map((m) => m.modelId).sort()).toEqual(['gemini-2.5-flash', 'gemini-2.5-pro']);
+    expect(gemini.every((m) => !m.enabled)).toBe(true);
   });
 });
 

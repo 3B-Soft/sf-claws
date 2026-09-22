@@ -43,6 +43,13 @@ const Env = z.object({
     .transform((v) => ['1', 'true', 'yes', 'on'].includes(v.trim().toLowerCase())),
   BOOTSTRAP_ADMIN_EMAIL: z.string().default(''),
   BOOTSTRAP_ADMIN_PASSWORD: z.string().default(''),
+  // Optional development/deployment fallbacks. Credentials saved in the UI take precedence.
+  ANTHROPIC_API_KEY: z.string().default(''),
+  OPENAI_API_KEY: z.string().default(''),
+  GEMINI_API_KEY: z.string().default(''),
+  DEEPSEEK_API_KEY: z.string().default(''),
+  DEEPINFRA_API_KEY: z.string().default(''),
+  GITHUB_TOKEN: z.string().default(''),
   NODE_ENV: z.string().default('development'),
 });
 

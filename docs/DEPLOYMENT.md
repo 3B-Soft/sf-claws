@@ -15,11 +15,13 @@ Each org authorizes through a Connected App whose Consumer Key and Secret are en
 
 ## 2. GitHub
 
-Per client, create a fine-grained personal access token (or a GitHub App installation token) with `Contents: read/write` and `Pull requests: read/write` on the client's SFDX repository, and enter it in the client's GitHub tab. The repository must already contain the SFDX project (default `force-app/main/default`).
+Per client, create a fine-grained personal access token (or a GitHub App installation token) with `Contents: read/write` and `Pull requests: read/write` on the client's SFDX repository, and enter it in the client's GitHub tab. The repository must already contain the SFDX project (default `force-app/main/default`). For local development, `GITHUB_TOKEN` is an optional fallback for every configured repository that does not have its own token; a per-client token entered in the UI always wins.
 
 ## 3. AI providers
 
-In the admin console (super admin): AI → Providers → set a key for any of Anthropic, OpenAI, DeepSeek or DeepInfra, then enable models and bind roles. DeepSeek and DeepInfra speak the OpenAI protocol and default to their own endpoints, so a key is all they need; DeepInfra model ids are namespaced by publisher (`deepseek-ai/DeepSeek-V3`). Defaults: orchestrator/builders on `claude-opus-5`, analyst/reviewer/doc_writer on `claude-sonnet-5`, summarizer on `claude-haiku-4-5`. Verify prices in the models table.
+In the admin console (super admin): AI → Providers → set a key for any of Anthropic, OpenAI, Gemini, DeepSeek or DeepInfra, then enable models and bind roles. Gemini, DeepSeek and DeepInfra speak the OpenAI protocol and default to their own endpoints, so a key is all they need; DeepInfra model ids are namespaced by publisher (`deepseek-ai/DeepSeek-V3`). Defaults: orchestrator/builders on `claude-opus-5`, analyst/reviewer/doc_writer on `claude-sonnet-5`, summarizer on `claude-haiku-4-5`. Verify prices in the models table.
+
+For environment-driven local setup, set any of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `DEEPINFRA_API_KEY`. These are runtime fallbacks and are not copied into SQLite; a platform or per-user key entered in the UI takes precedence. An environment key makes the provider available, but you must still enable its model and bind the desired roles in the admin console.
 
 ## 4. Server
 

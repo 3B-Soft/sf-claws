@@ -74,7 +74,7 @@ export async function authRoutes(app: FastifyInstance, ctx: AppContext) {
       baseUrl: mine.get(provider)?.baseUrl ?? null,
       updatedAt: mine.get(provider)?.updatedAt ?? null,
       /** True when the platform has a key this user would otherwise fall back to. */
-      platformFallback: !!ctx.repos.providers.get(provider),
+      platformFallback: ctx.ai.hasKey(provider),
     }));
   });
 

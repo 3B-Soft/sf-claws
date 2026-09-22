@@ -514,7 +514,7 @@ export class SessionRuntime {
       memoryIndex: buildMemoryIndex(this.app.repos.docs.byOrg(ctx.org.id, MEMORY_INDEX_MAX_LINES)),
       knowledgeSection: await this.app.knowledge.promptSection(ctx.session.clientId),
       specialists: role === 'orchestrator' ? this.app.repos.customAgents.forClient(ctx.session.clientId) : [],
-      githubConfigured: !!this.app.repos.github.byClient(ctx.session.clientId)?.hasToken,
+      githubConfigured: this.app.github.hasToken(ctx.session.clientId),
       tools: toolsForRole(role).map((t) => t.name),
       specialistInstructions: specialist ? { name: specialist.name, instructions: specialist.instructions } : null,
     });
@@ -1311,7 +1311,8 @@ export class SessionRuntime {
   async requestCommit(sessionId: string, message: string, createPullRequest: boolean): Promise<{ text: string; output?: unknown; ok?: boolean }> {
     const session = this.app.repos.sessions.byId(sessionId)!;
     const repo = this.app.repos.github.byClient(session.clientId);
-    if (!repo?.hasToken) return { text: 'No GitHub repository (with token) is configured for this client; skip committing and tell the user.', ok: false };
+    if (!repo || !this.app.github.hasToken(session.clientId))
+      return { text: 'No GitHub repository (with token) is configured for this client; skip committing and tell the user.', ok: false };
     const files = this.app.repos.workspace.list(sessionId);
     const docs = this.app.repos.docs.bySession(sessionId).filter((d) => !d.committedSha);
     if (!files.length && !docs.length) return { text: 'Nothing to commit (no workspace files and no new documentation).', ok: false };

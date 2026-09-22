@@ -521,6 +521,66 @@
     ]
   },
   {
+    "title": "High fan-in symbol: packages/extension/src/modules/x/chatThread.ChatThread.session (31 dependents)",
+    "source": "god-class",
+    "description": "\"packages/extension/src/modules/x/chatThread.ChatThread.session\" is depended upon by 31 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
+    "confidence": 0.95,
+    "evidence": [
+      {
+        "file": "packages/extension/src/modules/x/chatThread/chatThread.js",
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "detail": "31 symbols depend on this",
+        "line": 27,
+        "fact_id": "7b6b2d306ea9b4d15e11dbb586b044bd"
+      },
+      {
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread",
+        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "fact_id": "0d825e80ded8d360bc86ec4b7f9b395f"
+      },
+      {
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.agents",
+        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "fact_id": "277b9135e5baf95d7d4a9166bd71f17f"
+      },
+      {
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.canComplete",
+        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "fact_id": "49dd6fd5cd146dc0edccdda85a00668e"
+      },
+      {
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.canSend",
+        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "fact_id": "3552e829a4707d12ff51ae3ee09bde96"
+      },
+      {
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.connectedCallback",
+        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "fact_id": "6be177a78bca36e0f5b1a201ea7bec46"
+      },
+      {
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.connection",
+        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "fact_id": "cca1de8e1d7e2916199062e57d2ba817"
+      },
+      {
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.connectionLost",
+        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "fact_id": "f0ef7be56c68608190f81b850f9cdd95"
+      },
+      {
+        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.contextPressure",
+        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
+        "fact_id": "0e3c111941bf5f3f71aa87d0c86ca5ed"
+      }
+    ],
+    "suggested_actions": [
+      "Split the symbol along distinct responsibilities its callers use",
+      "Introduce narrower interfaces so callers depend only on what they need",
+      "Stabilize its public contract to limit churn for dependents"
+    ]
+  },
+  {
     "title": "High fan-in symbol: packages/server/src/lib.newId (31 dependents)",
     "source": "god-class",
     "description": "\"packages/server/src/lib.newId\" is depended upon by 31 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
@@ -572,66 +632,6 @@
         "symbol": "packages/server/src/auth.AuthService.issueToken",
         "detail": "depends on packages/server/src/lib.newId",
         "fact_id": "3b0c8c6a8806d07d0ce8f3ca419ab48f"
-      }
-    ],
-    "suggested_actions": [
-      "Split the symbol along distinct responsibilities its callers use",
-      "Introduce narrower interfaces so callers depend only on what they need",
-      "Stabilize its public contract to limit churn for dependents"
-    ]
-  },
-  {
-    "title": "High fan-in symbol: packages/extension/src/modules/x/chatThread.ChatThread.session (30 dependents)",
-    "source": "god-class",
-    "description": "\"packages/extension/src/modules/x/chatThread.ChatThread.session\" is depended upon by 30 other symbols — well above the repo average. High fan-in concentrates change risk: edits here ripple across many call sites, and it often indicates a missing or overly broad abstraction.",
-    "confidence": 0.95,
-    "evidence": [
-      {
-        "file": "packages/extension/src/modules/x/chatThread/chatThread.js",
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "detail": "30 symbols depend on this",
-        "line": 26,
-        "fact_id": "7b6b2d306ea9b4d15e11dbb586b044bd"
-      },
-      {
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread",
-        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "fact_id": "0d825e80ded8d360bc86ec4b7f9b395f"
-      },
-      {
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.agents",
-        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "fact_id": "277b9135e5baf95d7d4a9166bd71f17f"
-      },
-      {
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.canComplete",
-        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "fact_id": "49dd6fd5cd146dc0edccdda85a00668e"
-      },
-      {
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.canSend",
-        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "fact_id": "3552e829a4707d12ff51ae3ee09bde96"
-      },
-      {
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.connectedCallback",
-        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "fact_id": "6be177a78bca36e0f5b1a201ea7bec46"
-      },
-      {
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.connection",
-        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "fact_id": "cca1de8e1d7e2916199062e57d2ba817"
-      },
-      {
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.connectionLost",
-        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "fact_id": "f0ef7be56c68608190f81b850f9cdd95"
-      },
-      {
-        "symbol": "packages/extension/src/modules/x/chatThread.ChatThread.contextPressure",
-        "detail": "depends on packages/extension/src/modules/x/chatThread.ChatThread.session",
-        "fact_id": "0e3c111941bf5f3f71aa87d0c86ca5ed"
       }
     ],
     "suggested_actions": [
@@ -3184,9 +3184,9 @@
     ]
   },
   {
-    "title": "Large public surface: packages/extension/src/modules/x/chatThread exports 106 of 106 symbols (100%)",
+    "title": "Large public surface: packages/extension/src/modules/x/chatThread exports 107 of 107 symbols (100%)",
     "source": "exported-surface",
-    "description": "Module \"packages/extension/src/modules/x/chatThread\" exports 106 of its 106 symbols (100%). A large, near-fully-exported module hides little of its implementation, so consumers can couple to internals and it is hard to change without breaking them. Worth a visibility review — though a deliberate library API may legitimately export most of its surface.",
+    "description": "Module \"packages/extension/src/modules/x/chatThread\" exports 107 of its 107 symbols (100%). A large, near-fully-exported module hides little of its implementation, so consumers can couple to internals and it is hard to change without breaking them. Worth a visibility review — though a deliberate library API may legitimately export most of its surface.",
     "confidence": 0.6,
     "evidence": [
       {
