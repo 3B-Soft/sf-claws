@@ -1,10 +1,6 @@
 import './styles.css';
-import { createElement, setHooks } from 'lwc';
+import { createElement } from 'lwc';
 import App from 'x/app';
-
-// `lwc:inner-html` refuses to render until a sanitizer hook is registered. Markdown is already sanitized
-// in src/lib/markdown.js (scripts, event handlers and javascript: URLs stripped), so the hook is a pass-through.
-setHooks({ sanitizeHtmlContent: (content) => content });
 
 // `/pair?code=XXXX` (path form used by the Chrome extension) -> hash route.
 if (window.location.pathname.replace(/\/+$/, '') === '/pair' && !window.location.hash) {
