@@ -111,6 +111,12 @@ LWC Open Source with light-DOM components and Tailwind v4, built with Vite throu
 `tools/vite-lwc-plugin.mjs`. The extension is Manifest V3 with a side panel, a background service
 worker (tab tracking) and a content script (page context: record, object, setup page, flow builder).
 
+The chat thread is grouped before render (`groupThread` in `lib/transcript.js`): user messages, the
+lead agent's replies and anything that needs the user (cards, deploy results, commits) stay inline,
+and every run of tool calls, thinking, sub-agent messages and lifecycle events between them folds
+into one `x-activity-card` with the latest thought visible and "Reasoning" / "Log" collapsed. Raw
+`unknown` events only appear in the log in Pro mode.
+
 ## The agent loop
 
 Per iteration, in order:
@@ -345,6 +351,12 @@ confirmations answered after a restart execute directly (with the same permissio
 checks). An orphaned plan approval is recorded on the session, and a plan or `ask_user` answer is
 delivered on the next turn as the result of the call that asked, so the model continues from the
 answer instead of asking again.
+
+An `ask_user` question can be answered two ways from the panel: click one option (the option id is
+sent on its own), or type an answer and press "Send answer", which posts `optionId: "custom"` with
+`answerText`. The server accepts `custom` only for a question card that allows free text and only
+with non-blank text; the `confirmation.resolved` event echoes `answerText` so the thread shows the
+typed answer after a reload.
 
 Whether the workspace is dirty — changed after its last validation — is derived from persisted
 state (the latest `workspace.file` event against the validation's start time), not from memory,

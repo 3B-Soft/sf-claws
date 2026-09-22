@@ -13,13 +13,17 @@ export default class ConfirmationCard extends LightningElement {
   @api item;
   @api pro = false;
   busy = false;
+  answer = '';
 
   get title() {
     return this.item?.title;
   }
   get titleCls() {
-    const wrapping = this.isQuestion ? 'whitespace-normal break-words leading-relaxed' : 'truncate';
-    return `min-w-0 flex-1 text-[13px] font-semibold text-content-strong ${wrapping}`;
+    if (this.isQuestion) return 'mt-1.5 whitespace-normal break-words text-[14px] font-semibold leading-snug text-content-strong';
+    return 'mt-1 truncate text-[13px] font-semibold text-content-strong';
+  }
+  get headCls() {
+    return 'flex items-center gap-2';
   }
   get description() {
     return this.item?.description;
@@ -36,6 +40,24 @@ export default class ConfirmationCard extends LightningElement {
   }
   get resolvedLabel() {
     return this.item?.resolvedLabel || this.item?.resolvedOptionId;
+  }
+  get resolvedVerb() {
+    return this.isQuestion && this.item?.resolvedOptionId === 'custom' ? 'You answered' : 'You chose';
+  }
+  get answerDisabled() {
+    return this.busy || !this.answer.trim();
+  }
+  /** Full-width choice rows: one click answers. First option is the agent's recommendation. */
+  get questionChoices() {
+    return (this.item?.details?.options || this.item?.options || []).map((o, i) => ({
+      id: o.id,
+      label: o.label,
+      detail: o.detail || '',
+      cls: `flex w-full items-start gap-2.5 rounded-xl border px-3 py-2 text-left transition disabled:opacity-50 ${
+        i === 0 ? 'border-cyan-600/50 bg-surface hover:bg-cyan-500/10' : 'border-line bg-surface hover:border-cyan-600/40 hover:bg-cyan-500/5'
+      }`,
+      dotCls: `mt-1.5 h-2 w-2 shrink-0 rounded-full ${i === 0 ? 'bg-cyan-600' : 'border border-line-strong'}`,
+    }));
   }
   get kind() {
     return this.item?.confirmationKind || this.item?.kind;
@@ -90,16 +112,17 @@ export default class ConfirmationCard extends LightningElement {
   get kindText() {
     if (this.isCommand) return 'approval';
     if (this.isPlan) return 'plan';
-    if (this.isQuestion) return 'question';
+    if (this.isQuestion) return this.item?.details?.header || 'question';
     return String(this.kind || 'confirm').replace(/_/g, ' ');
   }
   get cardCls() {
-    const base = 'rounded-xl border p-3';
-    if (this.resolved) return `${base} border-line bg-surface`;
-    if (this.isCommand) return `${base} border-brand-500/50 bg-brand-500/10 shadow-lg shadow-content-strong/10`;
-    if (this.isPlan) return `${base} border-violet-500/50 bg-violet-500/10 shadow-lg shadow-content-strong/10`;
-    if (this.isQuestion) return `${base} border-cyan-500/50 bg-cyan-500/10 shadow-lg shadow-content-strong/10`;
-    return `${base} border-amber-500/50 bg-amber-500/10 shadow-lg shadow-content-strong/10`;
+    const base = 'rounded-2xl border p-3.5';
+    if (this.resolved) return `${base} border-line bg-surface opacity-80`;
+    const live = 'shadow-lg shadow-content-strong/10 border-l-4';
+    if (this.isCommand) return `${base} ${live} border-brand-500/40 border-l-brand-500 bg-surface`;
+    if (this.isPlan) return `${base} ${live} border-violet-500/40 border-l-violet-500 bg-surface`;
+    if (this.isQuestion) return `${base} ${live} border-cyan-600/40 border-l-cyan-600 bg-surface`;
+    return `${base} ${live} border-amber-500/40 border-l-amber-500 bg-surface`;
   }
   get options() {
     let opts = this.item?.options || [];
@@ -217,12 +240,24 @@ export default class ConfirmationCard extends LightningElement {
     return jsonPretty(this.item?.details);
   }
 
+  onAnswerInput(e) {
+    this.answer = e.target.value;
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  }
+  onAnswerKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (!this.answerDisabled) this.onPick({ currentTarget: { dataset: { id: 'custom' } } });
+    }
+  }
   async onPick(e) {
     if (this.resolved || this.busy) return;
     const optionId = e.currentTarget.dataset.id;
+    // A picked option answers on its own; typed text only travels with the "Send answer" button.
+    const answerText = optionId === 'custom' ? this.answer.trim() : undefined;
+    if (optionId === 'custom' && !answerText) return;
     this.busy = true;
-    const input = this.querySelector('[data-answer]');
-    const answerText = input?.value.trim() ? input.value.trim() : undefined;
     this.dispatchEvent(new CustomEvent('confirm', { detail: { confirmationId: this.item.confirmationId, optionId, answerText } }));
     setTimeout(() => {
       this.busy = false;

@@ -176,6 +176,8 @@ export const ConfirmationResolvedEvent = z.object({
   confirmationId: z.string(),
   optionId: z.string(),
   byUserId: z.string(),
+  /** The typed answer on a question card, so the thread shows it after a reload. */
+  answerText: z.string().optional(),
 });
 
 export const DeployResultEvent = z.object({

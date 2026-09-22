@@ -473,7 +473,7 @@ export async function confirm(confirmationId, optionId, answerText) {
   const id = currentId;
   if (!id) return;
   await api.confirm(id, confirmationId, optionId, answerText);
-  transcript.resolveConfirmation(confirmationId, optionId, true);
+  transcript.resolveConfirmation(confirmationId, optionId, true, answerText);
   if (optionId === 'approve_session') loadPermissions();
   publish();
   schedulePersist();

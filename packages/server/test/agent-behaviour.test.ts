@@ -151,6 +151,28 @@ describe('ask_user', () => {
     await waitForIdle(ctx, session.id);
   });
 
+  it('accepts a typed answer on its own, with no option chosen', async () => {
+    const provider = new FakeProvider([]);
+    const ctx = makeContext({ provider, sf: {} as never });
+    disablePlanMode(ctx);
+    const { user, org } = await seedClientOrgUser(ctx);
+    const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+    provider.script = [
+      () => toolCall('ask_user', { question: 'Which object?', options: [{ id: 'acct', label: 'Account' }] }),
+      (req) => {
+        const last = req.messages.at(-1)!.content[0] as { content: string };
+        expect(last.content).toContain('The user answered: "Custom_Thing__c"');
+        expect(last.content).not.toContain('after choosing');
+        return text('Using the custom object.');
+      },
+    ];
+    ctx.runtime.startTurn(session.id, user.id, 'add a field');
+    const q = await nextEvent(ctx, session.id, 'confirmation.requested');
+    await expect(ctx.runtime.confirm(session.id, q.confirmationId, 'custom', user.id, '   ')).rejects.toThrow('Unknown option');
+    await ctx.runtime.confirm(session.id, q.confirmationId, 'custom', user.id, 'Custom_Thing__c');
+    await waitForIdle(ctx, session.id);
+  });
+
   it('rejects a question with no options rather than stalling the user', async () => {
     const provider = new FakeProvider([]);
     const ctx = makeContext({ provider, sf: {} as never });

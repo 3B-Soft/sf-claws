@@ -255,7 +255,7 @@ export default class TranscriptItem extends LightningElement {
 
   // status / error
   get statusCls() {
-    return statusClass(this.item?.status);
+    return statusClass(this.item?.status).replace('text-[11px]', 'text-[10px]');
   }
   get statusText() {
     return statusLabel(this.item?.status);

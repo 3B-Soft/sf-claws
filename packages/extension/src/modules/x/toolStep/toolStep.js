@@ -59,7 +59,7 @@ export default class ToolStep extends LightningElement {
     return `flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold ${tones[this.meta.tone] || tones.slate}`;
   }
   get cardCls() {
-    return `rounded-xl border ${this.failed ? 'border-rose-500/40 bg-rose-500/5' : 'border-line bg-surface'}`;
+    return `rounded-lg border ${this.failed ? 'border-rose-500/40 bg-rose-500/5' : this.open ? 'border-line bg-surface' : 'border-transparent bg-surface-sunken hover:border-line'}`;
   }
   get toggle() {
     return this.open ? '▾' : '▸';
