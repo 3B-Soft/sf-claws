@@ -1,8 +1,22 @@
 # Deployment
 
-## 1. Salesforce Connected App (per org)
+## 1. Salesforce authentication
 
-Each org authorizes through a Connected App whose Consumer Key and Secret are entered when the org is added in the admin console (client → Orgs → Add org). Create the app in the client's org, or reuse one app for several orgs you control:
+Choose an authentication mode when creating a client. **External Client App** is recommended: it
+supports refresh tokens, server restarts, and long-running work. **Browser session** is intended for
+short, attended work: the Chrome extension reads the active org's `sid` cookie and sends it over TLS
+to SF Claws, where it is kept in process memory only. It expires with the Salesforce session, is
+lost on server restart, and gives the server the same Salesforce access as the signed-in user.
+Only one Salesforce browser identity can supply an org at a time; disconnect the org before
+switching identities so an existing agent run can never silently continue as another user.
+
+Browser-session orgs must be registered with their exact My Domain URL. Users must grant the
+extension cookie access and be signed into that org in Chrome. An allowed URL constrains where a
+credential can be used; SF Claws also verifies the returned Salesforce org id before accepting it.
+
+### External Client App (per org)
+
+Each org authorizes through a Salesforce External Client App (or a legacy Connected App) whose Consumer Key and optional Secret are entered when the org is added in the admin console (client → Orgs → Add org). Create the app in the client's org, or reuse one app for several orgs you control:
 
 1. Setup → App Manager → New Connected App. Enable OAuth settings.
 2. Callback URL: `https://<your-server>/api/v1/oauth/salesforce/callback`

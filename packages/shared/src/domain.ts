@@ -47,6 +47,8 @@ export const Client = z.object({
   description: z.string().nullable().optional(),
   /** Client-wide agent instructions, injected into every session's system prompt. */
   instructions: z.string().nullable().optional(),
+  /** How this client's Salesforce orgs authenticate to the control plane. */
+  salesforceAuthMode: z.enum(['external_app', 'browser_session']).default('external_app'),
   createdAt: z.string(),
 });
 export type Client = z.infer<typeof Client>;

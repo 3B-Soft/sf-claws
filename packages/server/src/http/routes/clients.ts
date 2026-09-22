@@ -41,17 +41,25 @@ export async function clientRoutes(app: FastifyInstance, ctx: AppContext) {
   });
   app.patch('/clients/:id', async (req) => {
     clientFor(req);
+    const before = ctx.repos.clients.byId((req.params as any).id)!;
     const admin = requireRole(req, 'admin');
     const body = parse(
       z.object({
         name: z.string().min(1).optional(),
         description: z.string().nullable().optional(),
         instructions: AgentInstructions.nullable().optional(),
+        salesforceAuthMode: z.enum(['external_app', 'browser_session']).optional(),
       }),
       req.body,
     );
     const c = ctx.repos.clients.update((req.params as any).id, body);
     if (!c) throw notFound('Client');
+    if (body.salesforceAuthMode && body.salesforceAuthMode !== before.salesforceAuthMode) {
+      for (const org of ctx.repos.orgs.listByClient(c.id)) {
+        ctx.sf.connections.clearBrowserSession(org.id);
+        ctx.repos.orgs.update(org.id, { status: 'disconnected', lastError: null });
+      }
+    }
     // The audit trail records that instructions changed and their size, not the prose itself.
     ctx.repos.audit.log({
       userId: admin.id,
@@ -80,6 +88,14 @@ export async function clientRoutes(app: FastifyInstance, ctx: AppContext) {
     const admin = requireRole(req, 'admin');
     const { clientId } = req.params as any;
     const { consumerSecret, ...body } = parse(CreateOrgRequest, req.body);
+    const client = ctx.repos.clients.byId(clientId)!;
+    if (client.salesforceAuthMode === 'external_app' && !body.consumerKey && !ctx.config.SF_CLIENT_ID)
+      throw badRequest('Consumer Key is required for clients using an external app');
+    if (client.salesforceAuthMode === 'browser_session') {
+      const host = new URL(body.loginUrl).hostname.toLowerCase();
+      if (/^(login|test)\.salesforce\.com$/.test(host))
+        throw badRequest('Browser-session clients require the org\'s My Domain URL, not login.salesforce.com or test.salesforce.com');
+    }
     const org = ctx.repos.orgs.create({
       clientId,
       ...body,

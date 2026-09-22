@@ -27,7 +27,7 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["sidePanel", "storage", "tabs", "activeTab", "scripting", "notifications"],
+  "permissions": ["sidePanel", "storage", "tabs", "activeTab", "scripting", "notifications", "cookies"],
   "host_permissions": [
     "https://*.lightning.force.com/*",
     "https://*.my.salesforce.com/*",

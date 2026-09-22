@@ -268,6 +268,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       })();
       return true;
     }
+    case 'getSalesforceSession': {
+      const requestedHost = String(msg.host || '').toLowerCase();
+      chrome.cookies.getAll({ name: 'sid' }, (cookies) => {
+        if (chrome.runtime.lastError) return sendResponse({ error: chrome.runtime.lastError.message });
+        const orgPrefix = String(msg.sfOrgId || '').slice(0, 15);
+        const domainKey = (host) =>
+          String(host || '')
+            .replace(/^\./, '')
+            .toLowerCase()
+            .replace(/\.(?:sandbox\.|develop\.|scratch\.)?(?:lightning\.force|my\.salesforce|my\.salesforce-setup|vf\.force|visualforce)\.com$/, '');
+        const wanted = domainKey(requestedHost);
+        const ranked = (cookies || [])
+          .filter((c) => c?.value && (!orgPrefix || c.value.startsWith(`${orgPrefix}!`) || c.value.startsWith(`${msg.sfOrgId}!`)))
+          .map((c) => ({ cookie: c, score: domainKey(c.domain) === wanted ? 10 : String(c.domain).includes(wanted) ? 5 : 0 }))
+          .sort((a, b) => b.score - a.score);
+        const found = ranked[0]?.score > 0 ? ranked[0].cookie : null;
+        if (!found) return sendResponse({ error: 'No matching Salesforce sid cookie was found. Sign in to this org and reload the page.' });
+        const domain = found.domain.replace(/^\./, '');
+        sendResponse({ accessToken: found.value, instanceUrl: `https://${domain}` });
+      });
+      return true;
+    }
     case 'armRecorder': {
       // The panel opened a session on this tab: start recording there, and only there.
       (async () => {

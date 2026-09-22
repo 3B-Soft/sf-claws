@@ -22,6 +22,7 @@ export function latestApiVersion(listing: { version: string }[]): string | null 
  */
 export class ConnectionManager {
   private cache = new Map<string, Connection>();
+  private browserSessions = new Map<string, { accessToken: string; instanceUrl: string; salesforceUserId: string }>();
   private maxVersions = new Map<string, { version: string; at: number }>();
   constructor(
     private repos: Repos,
@@ -57,11 +58,41 @@ export class ConnectionManager {
     this.cache.delete(orgId);
   }
 
+  /** Browser session IDs deliberately live in process memory only. */
+  setBrowserSession(orgId: string, accessToken: string, instanceUrl: string, salesforceUserId: string): void {
+    this.cache.delete(orgId);
+    this.browserSessions.set(orgId, { accessToken, instanceUrl: instanceUrl.replace(/\/$/, ''), salesforceUserId });
+  }
+
+  browserSessionUser(orgId: string): string | null {
+    return this.browserSessions.get(orgId)?.salesforceUserId ?? null;
+  }
+
+  clearBrowserSession(orgId: string): void {
+    this.cache.delete(orgId);
+    this.browserSessions.delete(orgId);
+  }
+
   async forOrg(orgId: string): Promise<{ conn: Connection; org: OrgRow }> {
     const org = this.repos.orgs.byId(orgId);
     if (!org) throw new HttpError(404, 'NOT_FOUND', 'Org not found');
     const cached = this.cache.get(orgId);
     if (cached) return { conn: cached, org };
+    const client = this.repos.clients.byId(org.clientId);
+    if (client?.salesforceAuthMode === 'browser_session') {
+      const session = this.browserSessions.get(orgId);
+      if (!session)
+        throw new HttpError(409, 'BROWSER_SESSION_REQUIRED', `Open "${org.label}" in Salesforce and reopen SF Claws so it can use the active browser session.`);
+      const conn = new jsforce.Connection({
+        instanceUrl: session.instanceUrl,
+        accessToken: session.accessToken,
+        version: await this.resolveApiVersion(orgId, org.apiVersion, session.instanceUrl),
+        maxRequest: 50,
+      });
+      conn.on('error', (err: Error) => this.log.warn({ orgId, err: err.message }, 'Salesforce browser-session connection error'));
+      this.cache.set(orgId, conn);
+      return { conn, org };
+    }
     const secrets = this.repos.orgs.secrets(orgId);
     if (!secrets.refreshTokenEnc || !org.instanceUrl)
       throw new HttpError(409, 'ORG_DISCONNECTED', `Org "${org.label}" is not connected. Ask an admin to connect it.`);
@@ -111,6 +142,7 @@ export class ConnectionManager {
     if (/invalid_grant|expired access\/refresh token|INVALID_SESSION_ID|inactive user/i.test(msg)) {
       this.repos.orgs.update(orgId, { status: 'expired', lastError: msg });
       this.cache.delete(orgId);
+      this.browserSessions.delete(orgId);
     }
   }
 }

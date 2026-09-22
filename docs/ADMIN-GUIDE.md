@@ -6,7 +6,7 @@
 - The **Clients** column shows which clients each user can see. A super admin sees all of them; everyone else needs a membership per client (below). A user with no memberships can sign in but sees no orgs, so the extension tells them the tab is not a registered org.
 
 ## Clients and orgs
-Create a client, add its orgs with each org's Connected App Consumer Key and Secret (production is auto-protected), connect each org with "Connect to Salesforce". The extension resolves the org from the browser tab's MyDomain host, so orgs must be connected before admins can use them.
+Create a client and choose its Salesforce authentication mode. External Client App mode is recommended; add each org's Consumer Key and optional Secret, then use "Connect to Salesforce". Browser-session mode requires each org's exact My Domain URL and an actively signed-in Salesforce tab; it cannot refresh an expired session or survive a server restart. Production is auto-protected. The extension resolves the org from the browser tab's My Domain host, so orgs must be registered before admins can use them.
 
 ### Members
 Who may see a client is set on the client's **Members** tab (super admin only). Add each consultant who works on the client; the roles are `member` (sees the client, its orgs, GitHub, skills and policy, and their own sessions) and `admin` (client admin: also sees every session of that client). Removing a member closes their access immediately, including to their past sessions on that client; nothing is deleted, and adding them back restores it. Super admins belong to every client and cannot be added. An admin who creates a client becomes its client admin automatically.

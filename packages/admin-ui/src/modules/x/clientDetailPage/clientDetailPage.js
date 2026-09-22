@@ -77,12 +77,19 @@ export default class ClientDetailPage extends LightningElement {
   get sessionsHref() {
     return `#/sessions?clientId=${this.clientId}`;
   }
+  get browserSessionMode() {
+    return !!this.form.useBrowserSession;
+  }
   selectTab(e) {
     setQuery({ tab: e.detail.id });
   }
 
   openEdit() {
-    this.form = { name: this.client.name, description: this.client.description || '' };
+    this.form = {
+      name: this.client.name,
+      description: this.client.description || '',
+      useBrowserSession: this.client.salesforceAuthMode === 'browser_session',
+    };
     this.editOpen = true;
   }
   closeEdit() {
@@ -94,7 +101,14 @@ export default class ClientDetailPage extends LightningElement {
   async saveEdit() {
     this.busy = true;
     try {
-      this.client = { ...this.client, ...(await Api.updateClient(this.clientId, { name: this.form.name, description: this.form.description })) };
+      this.client = {
+        ...this.client,
+        ...(await Api.updateClient(this.clientId, {
+          name: this.form.name,
+          description: this.form.description,
+          salesforceAuthMode: this.form.useBrowserSession ? 'browser_session' : 'external_app',
+        })),
+      };
       toast.success('Client updated');
       this.editOpen = false;
     } catch (err) {

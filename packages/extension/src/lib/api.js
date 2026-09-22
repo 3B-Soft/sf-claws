@@ -126,6 +126,7 @@ export function createApi({ getBaseUrl, getToken }) {
 
     // ---- orgs
     resolveOrg: (host) => api.get('/orgs/resolve', { query: { host } }),
+    attachBrowserSession: (orgId, accessToken, instanceUrl) => api.post(`/orgs/${orgId}/browser-session`, { body: { accessToken, instanceUrl } }),
     orgStatus: (orgId) => api.get(`/orgs/${orgId}/status`),
     query: (orgId, soql, { tooling = false, limit = 200 } = {}) => api.post(`/orgs/${orgId}/query`, { body: { soql, tooling, limit }, timeoutMs: 60000 }),
     describeGlobal: (orgId) => api.get(`/orgs/${orgId}/describe/global`, { timeoutMs: 60000 }),

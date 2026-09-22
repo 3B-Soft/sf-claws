@@ -10,6 +10,7 @@ import { authStore } from '../../../lib/store.js';
 export default class OrgsTab extends LightningElement {
   static renderMode = 'light';
   @api clientId;
+  @api authMode = 'external_app';
   orgs = [];
   loading = true;
   error = null;
@@ -53,6 +54,7 @@ export default class OrgsTab extends LightningElement {
       showLimits: this.limitsOpen.has(o.id),
       limitsCls: `btn-ghost btn-xs ${this.limitsOpen.has(o.id) ? 'text-sky-700' : 'text-content-muted'}`,
       limitsLabel: this.limitsOpen.has(o.id) ? 'Hide limits' : 'API limits',
+      browserAuth: this.browserAuth,
     }));
   }
   get superadmin() {
@@ -68,7 +70,21 @@ export default class OrgsTab extends LightningElement {
     return ORG_KINDS.map((k) => ({ value: k, label: k[0].toUpperCase() + k.slice(1) }));
   }
   get cannotCreate() {
-    return this.busy || !this.form.label?.trim() || !this.form.consumerKey?.trim();
+    return this.busy || !this.form.label?.trim() || (this.browserAuth ? !this.validMyDomain : !this.form.consumerKey?.trim());
+  }
+  get browserAuth() {
+    return this.authMode === 'browser_session';
+  }
+  get validMyDomain() {
+    try {
+      const host = new URL(this.form.loginUrl).hostname;
+      return /(?:\.salesforce\.com|\.force\.com)$/.test(host) && !/^(login|test)\.salesforce\.com$/.test(host);
+    } catch {
+      return false;
+    }
+  }
+  get callbackUrl() {
+    return `${window.location.origin}/api/v1/oauth/salesforce/callback`;
   }
 
   openCreate() {
@@ -102,15 +118,15 @@ export default class OrgsTab extends LightningElement {
         label: this.form.label.trim(),
         kind: this.form.kind,
         loginUrl: this.form.loginUrl,
-        consumerKey: this.form.consumerKey.trim(),
-        consumerSecret: this.form.consumerSecret || undefined,
+        consumerKey: this.browserAuth ? undefined : this.form.consumerKey.trim(),
+        consumerSecret: this.browserAuth ? undefined : this.form.consumerSecret || undefined,
         apiVersion: this.form.apiVersion || '62.0',
         protected: !!this.form.protected,
       });
-      toast.success('Org added', 'Now connect it to Salesforce.');
+      toast.success('Org added', this.browserAuth ? 'Open this org in Chrome; SF Claws will use that signed-in session.' : 'Now connect it to Salesforce.');
       this.modalOpen = false;
       await this.load();
-      if (org?.id) this.connectOrg(org.id);
+      if (org?.id && !this.browserAuth) this.connectOrg(org.id);
     } catch (err) {
       toast.error('Could not add org', err.message);
     } finally {

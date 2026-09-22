@@ -11,7 +11,7 @@ export default class ClientsPage extends LightningElement {
   error = null;
   search = '';
   modalOpen = false;
-  form = { name: '', slug: '', description: '' };
+  form = { name: '', slug: '', description: '', useBrowserSession: false };
   slugTouched = false;
   busy = false;
 
@@ -47,13 +47,16 @@ export default class ClientsPage extends LightningElement {
   get cannotCreate() {
     return this.busy || !this.form.name.trim() || !this.form.slug || !!this.slugError;
   }
+  get browserSessionMode() {
+    return !!this.form.useBrowserSession;
+  }
 
   handleSearch(e) {
     this.search = e.detail.value;
   }
   openCreate() {
     this.modalOpen = true;
-    this.form = { name: '', slug: '', description: '' };
+    this.form = { name: '', slug: '', description: '', useBrowserSession: false };
     this.slugTouched = false;
   }
   closeCreate() {
@@ -69,7 +72,11 @@ export default class ClientsPage extends LightningElement {
   async create() {
     this.busy = true;
     try {
-      const body = { name: this.form.name.trim(), slug: this.form.slug };
+      const body = {
+        name: this.form.name.trim(),
+        slug: this.form.slug,
+        salesforceAuthMode: this.form.useBrowserSession ? 'browser_session' : 'external_app',
+      };
       if (this.form.description.trim()) body.description = this.form.description.trim();
       const created = await Api.createClient(body);
       toast.success('Client created');

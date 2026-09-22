@@ -87,7 +87,12 @@ export const SetRoleBindingsRequest = z.array(RoleModelBinding);
 
 // ----------------------------- clients, orgs, github -----------------------
 // GET/POST /clients ; GET/PATCH/DELETE /clients/:id
-export const CreateClientRequest = z.object({ name: z.string().min(1), slug: z.string().regex(/^[a-z0-9-]+$/), description: z.string().optional() });
+export const CreateClientRequest = z.object({
+  name: z.string().min(1),
+  slug: z.string().regex(/^[a-z0-9-]+$/),
+  description: z.string().optional(),
+  salesforceAuthMode: z.enum(['external_app', 'browser_session']).default('external_app'),
+});
 /** Membership routes (super admin only): GET /clients/:clientId/members, PUT /clients/:clientId/members/:userId, DELETE /clients/:clientId/members/:userId, GET /admin/memberships. */
 export const SetClientMemberRequest = z.object({ role: ClientMemberRole.default('member') });
 // GET  /clients/:clientId/orgs ; POST /clients/:clientId/orgs
