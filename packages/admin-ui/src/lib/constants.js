@@ -312,6 +312,28 @@ export const MODEL_PRESETS = [
     supportsThinking: true,
     placeholderPrices: true,
   },
+  {
+    provider: 'deepseek',
+    modelId: 'deepseek-v4-pro',
+    label: 'deepseek-v4-pro',
+    inputCostPerM: 1.32,
+    outputCostPerM: 3.96,
+    cachedInputCostPerM: 0.044,
+    maxOutputTokens: 64000,
+    contextWindow: 1000000,
+    supportsThinking: true,
+  },
+  {
+    provider: 'deepseek',
+    modelId: 'DeepSeek-V4.1-Flash',
+    label: 'DeepSeek-V4.1-Flash',
+    inputCostPerM: 0.3,
+    outputCostPerM: 1.2,
+    cachedInputCostPerM: 0.006,
+    maxOutputTokens: 64000,
+    contextWindow: 1000000,
+    supportsThinking: false,
+  },
 ];
 
 export const DEFAULT_POLICY = {

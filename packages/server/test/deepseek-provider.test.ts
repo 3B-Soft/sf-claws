@@ -142,9 +142,13 @@ describe('DeepSeek provider', () => {
     const ctx = makeContext();
     ctx.ai.seedDefaults();
     const seeded = ctx.repos.models.list().filter((m) => m.provider === 'deepseek');
-    expect(seeded.map((m) => m.modelId).sort()).toEqual(['deepseek-chat', 'deepseek-reasoner']);
-    // A new provider must not start enabled: no key is configured yet, and role bindings stay on Claude.
-    expect(seeded.every((m) => !m.enabled)).toBe(true);
+    expect(seeded.map((m) => m.modelId).sort()).toEqual(['DeepSeek-V4.1-Flash', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-pro']);
+    expect(
+      seeded
+        .filter((m) => m.enabled)
+        .map((m) => m.modelId)
+        .sort(),
+    ).toEqual(['DeepSeek-V4.1-Flash', 'deepseek-v4-pro']);
 
     expect(() => ctx.ai.provider('deepseek')).toThrow(/No API key configured/);
     ctx.repos.providers.set('deepseek', ctx.secrets.encrypt('sk-test'), null, 'test');

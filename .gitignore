@@ -12,3 +12,8 @@ coverage/
 packages/extension/release/
 workspaces/
 packages/server/eval/output/
+
+# Deployment-local seed configuration (contains private repository guidance).
+packages/server/scripts/seed-3b.ts
+packages/server/src/seed/three-b.ts
+packages/server/test/three-b-seed.test.ts

@@ -97,6 +97,30 @@ export const DEFAULT_MODELS: Omit<AiModel, 'id' | 'createdAt'>[] = [
     supportsThinking: true,
   },
   {
+    provider: 'deepseek',
+    modelId: 'deepseek-v4-pro',
+    label: 'deepseek-v4-pro',
+    enabled: true,
+    inputCostPerM: 1.32,
+    outputCostPerM: 3.96,
+    cachedInputCostPerM: 0.044,
+    maxOutputTokens: 64_000,
+    contextWindow: 1_000_000,
+    supportsThinking: true,
+  },
+  {
+    provider: 'deepseek',
+    modelId: 'DeepSeek-V4.1-Flash',
+    label: 'DeepSeek-V4.1-Flash',
+    enabled: true,
+    inputCostPerM: 0.3,
+    outputCostPerM: 1.2,
+    cachedInputCostPerM: 0.006,
+    maxOutputTokens: 64_000,
+    contextWindow: 1_000_000,
+    supportsThinking: false,
+  },
+  {
     provider: 'gemini',
     modelId: 'gemini-2.5-pro',
     label: 'Gemini 2.5 Pro',
@@ -124,15 +148,15 @@ export const DEFAULT_MODELS: Omit<AiModel, 'id' | 'createdAt'>[] = [
 
 /** Default role bindings by provider model id (resolved to db ids on seed). */
 export const DEFAULT_BINDINGS: { role: AgentRole; modelId: string; effort: RoleModelBinding['effort']; maxIterations: number }[] = [
-  { role: 'orchestrator', modelId: 'claude-opus-5', effort: 'xhigh', maxIterations: 60 },
-  { role: 'analyst', modelId: 'claude-sonnet-5', effort: 'medium', maxIterations: 40 },
-  { role: 'metadata_builder', modelId: 'claude-opus-5', effort: 'high', maxIterations: 40 },
-  { role: 'flow_builder', modelId: 'claude-opus-5', effort: 'high', maxIterations: 40 },
-  { role: 'apex_builder', modelId: 'claude-opus-5', effort: 'xhigh', maxIterations: 40 },
-  { role: 'reviewer', modelId: 'claude-sonnet-5', effort: 'medium', maxIterations: 20 },
-  { role: 'doc_writer', modelId: 'claude-sonnet-5', effort: 'low', maxIterations: 10 },
-  { role: 'researcher', modelId: 'claude-sonnet-5', effort: 'medium', maxIterations: 30 },
-  { role: 'summarizer', modelId: 'claude-haiku-4-5', effort: 'low', maxIterations: 5 },
+  { role: 'orchestrator', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 60 },
+  { role: 'analyst', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 40 },
+  { role: 'metadata_builder', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 40 },
+  { role: 'flow_builder', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 40 },
+  { role: 'apex_builder', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 40 },
+  { role: 'reviewer', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 20 },
+  { role: 'doc_writer', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 10 },
+  { role: 'researcher', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 30 },
+  { role: 'summarizer', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 5 },
 ];
 
 /** One place that knows which client class serves a provider id. */
@@ -185,7 +209,7 @@ export class AiRegistry {
     if (this.repos.bindings.list().length === 0) {
       const bindings: RoleModelBinding[] = [];
       for (const b of DEFAULT_BINDINGS) {
-        const m = this.repos.models.byProviderModel('anthropic', b.modelId) ?? this.repos.models.list()[0];
+        const m = this.repos.models.list().find((candidate) => candidate.modelId === b.modelId) ?? this.repos.models.list()[0];
         if (m) bindings.push({ role: b.role, modelId: m.id, effort: b.effort, maxIterations: b.maxIterations });
       }
       if (bindings.length) this.repos.bindings.setAll(bindings);
