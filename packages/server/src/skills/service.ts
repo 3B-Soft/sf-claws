@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { AgentRole, Skill, SkillKind, SkillScope } from '@sf-claws/shared';
 import type { Repos } from '../db/repos/index.js';
 import type { Logger } from '../logger.js';
+import { canonicalRole } from '../agents/built-in/index.js';
 
 /**
  * Skills are markdown documents with optional front matter:
@@ -60,7 +61,9 @@ export class SkillsService {
   }
 
   applicable(role: AgentRole, clientId: string, orgId: string): Skill[] {
-    return this.repos.skills.list({ clientId, orgId, enabledOnly: true }).filter((s) => !s.roles.length || s.roles.includes(role));
+    return this.repos.skills
+      .list({ clientId, orgId, enabledOnly: true })
+      .filter((s) => !s.roles.length || s.roles.some((r) => canonicalRole(r) === canonicalRole(role)));
   }
 
   /** Find one applicable skill by name, for the load_skill tool. */

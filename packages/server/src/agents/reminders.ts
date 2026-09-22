@@ -64,7 +64,7 @@ export function buildReminders(i: ReminderInput): string[] {
   // Reviewers drift from "review" to "fix": being helpful is the default behaviour we must suppress.
   // Full text on the first call, then a single line every few calls — a per-turn cadence is more
   // reliable than tying it to one tool name.
-  if (i.role === 'reviewer') {
+  if (i.role === 'reviewer' || i.role === 'verify') {
     if (i.callsThisRun === 1) {
       out.push(
         'You are reviewing, not building. You hold no write tools on purpose: an independent check that edits is no longer independent. Report findings with evidence and a concrete fix for the builder; do not attempt to change any file, and end with a VERDICT line.',

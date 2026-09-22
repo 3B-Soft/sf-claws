@@ -51,8 +51,11 @@ Modules:
 
 ### Agent runtime (`packages/server/src/agents`)
 
+See [Agents and coordination tools](AGENTS.md) for the behavior-oriented agent registry, session
+task board, resumable workers, messaging, forks, and workspace/repository/web search tools.
+
 - `runtime.ts` — `SessionRuntime`: one turn at a time per session. Runs the orchestrator (persistent
-  conversation) which delegates to ephemeral sub-agents. Owns validation, deploy, commit, docs,
+  conversation) which delegates to workers with retained conversations. Owns validation, deploy, commit, docs,
   confirmations, the allow-list gate, plan mode, spend ceilings, org limits, snapshot and resume.
 - `agent.ts` — `AgentRun`: the agentic loop over the provider abstraction. Scheduling, retries,
   compaction, budgets, stop reasons.
@@ -83,7 +86,10 @@ Modules:
   once per threshold crossing, the todo nudge once per drift window, the plan-pending and
   reviewer-read-only lines in full once and then sparsely, the budget position once at 50, 75 and
   90 percent of a ceiling.
-- `prompts.ts` — role identities and guidance, assembled with the cacheable half first.
+- `built-in/` — per-agent definitions, identities, guidance and legacy-role compatibility.
+- `prompts.ts` — environment and policy assembly, with the cacheable half first.
+- `task-tools.ts`, `search-tools.ts`, `web-tools.ts` — coordination, source search and public web search.
+- `fork.ts` — cloned parent context with repaired tool-result pairs and worker scope instructions.
 - `policy.ts` — programmatic enforcement of `PolicyRules`.
 - `events.ts` — per-session event bus; events are persisted with a sequence number and streamed over
   SSE with resume (`?after=`).

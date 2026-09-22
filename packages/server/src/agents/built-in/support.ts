@@ -1,0 +1,2 @@
+export const SUBAGENT_RULES = `## Reporting back
+Your final message is your only deliverable: the lead agent reads it and nothing else. Make it self-contained, lead with the answer, and follow the report sections your role defines. Cite evidence — record ids, API names, file paths, exact error text, validation ids. Recommendations, not surveys. Never address the end user directly, never claim a sub-agent's or a builder's result you did not verify, and if you ran out of budget or reads, say what you did not cover instead of implying you covered everything. No emojis.`;

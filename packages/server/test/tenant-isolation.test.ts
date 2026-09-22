@@ -20,6 +20,7 @@ const TENANT_TABLES: Record<string, string[]> = {
   sessions: ['client_id', 'org_id', 'user_id', 'id'],
   session_events: ['session_id'],
   session_messages: ['session_id'],
+  session_agent_state: ['session_id'],
   workspace_files: ['session_id'],
   deploy_runs: ['session_id', 'org_id', 'id'],
   confirmations: ['session_id', 'id'],

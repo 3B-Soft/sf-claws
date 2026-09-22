@@ -16,7 +16,7 @@ import { toast, confirm } from '../../../lib/store.js';
 const DELEGATABLE_ROLES = AGENT_ROLES.filter((r) => r !== 'orchestrator' && r !== 'summarizer');
 
 const EMPTY_SOURCE = { kind: 'docs', name: '', repoRef: '', guidance: '', scope: 'global', clientId: '', token: '', enabled: true };
-const EMPTY_AGENT = { name: '', whenToUse: '', baseRole: 'analyst', instructions: '', scope: 'global', clientId: '', enabled: true };
+const EMPTY_AGENT = { name: '', whenToUse: '', baseRole: 'explore', instructions: '', scope: 'global', clientId: '', enabled: true };
 
 export default class KnowledgePage extends LightningElement {
   static renderMode = 'light';

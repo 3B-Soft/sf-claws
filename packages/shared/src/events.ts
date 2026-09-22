@@ -75,6 +75,8 @@ export const AssistantMessageEvent = z.object({
   role: AgentRole,
   messageId: z.string(),
   text: z.string(),
+  status: z.enum(['normal', 'proactive']).optional(),
+  attachments: z.array(z.string()).optional(),
 });
 
 /** Thinking summary (when the provider exposes it). */

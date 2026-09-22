@@ -62,6 +62,7 @@ export interface GrepOptions {
   headLimit?: number;
   offset?: number;
   multiline?: boolean;
+  ignoreCase?: boolean;
 }
 
 export class RepoStore {
@@ -147,7 +148,7 @@ export class RepoStore {
    */
   grep(snap: Snapshot, opts: GrepOptions): { lines: string[]; filesMatched: number; truncated: boolean; totalMatches: number; nextOffset: number | null } {
     // Rejects the patterns that can hang the shared event loop; see knowledge/pattern-guard.ts.
-    const re = compileSafePattern(opts.pattern, opts.multiline ? 'gms' : 'gm');
+    const re = compileSafePattern(opts.pattern, (opts.multiline ? 'gms' : 'gm') + (opts.ignoreCase ? 'i' : ''));
     const pathFilter = opts.glob ? globToRegExp(opts.glob) : null;
     const mode = opts.mode ?? 'content';
     const headLimit = clamp(opts.headLimit ?? 150, 1, 2000);
@@ -284,7 +285,7 @@ export function globToRegExp(pattern: string): RegExp {
     const c = pattern[i];
     if (c === '*') {
       if (pattern[i + 1] === '*') {
-        out += '.*';
+        out += pattern[i + 2] === '/' ? '(?:.*/)?' : '.*';
         i++;
         if (pattern[i + 1] === '/') i++;
       } else out += '[^/]*';

@@ -83,6 +83,10 @@ export const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 export const COMMIT_STRATEGIES = ['direct', 'branch-per-session', 'branch-per-task', 'pull-request'];
 
 export const ROLE_META = {
+  general: { label: 'General purpose', color: 'violet', desc: 'Implementation, investigation, and multi-step work' },
+  explore: { label: 'Explore', color: 'sky', desc: 'Read-only discovery and behavior tracing' },
+  plan: { label: 'Plan', color: 'brand', desc: 'Architecture, dependencies, and implementation plans' },
+  verify: { label: 'Verify', color: 'amber', desc: 'Independent checks and evidence-backed verdicts' },
   orchestrator: { label: 'Orchestrator', color: 'brand', desc: 'Plans, delegates, talks to the user' },
   analyst: { label: 'Analyst', color: 'sky', desc: 'Reads the org: SOQL, describe, debug logs, flows' },
   metadata_builder: { label: 'Metadata builder', color: 'violet', desc: 'Objects, fields, layouts, flexipages' },

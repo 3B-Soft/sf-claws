@@ -148,6 +148,10 @@ export const DEFAULT_MODELS: Omit<AiModel, 'id' | 'createdAt'>[] = [
 
 /** Default role bindings by provider model id (resolved to db ids on seed). */
 export const DEFAULT_BINDINGS: { role: AgentRole; modelId: string; effort: RoleModelBinding['effort']; maxIterations: number }[] = [
+  { role: 'general', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 40 },
+  { role: 'explore', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 30 },
+  { role: 'plan', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 30 },
+  { role: 'verify', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 20 },
   { role: 'orchestrator', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 60 },
   { role: 'analyst', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 40 },
   { role: 'metadata_builder', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 40 },
@@ -214,6 +218,18 @@ export class AiRegistry {
       }
       if (bindings.length) this.repos.bindings.setAll(bindings);
     }
+    const bindings = this.repos.bindings.list();
+    const inherit: Partial<Record<AgentRole, AgentRole>> = { general: 'apex_builder', explore: 'analyst', plan: 'analyst', verify: 'reviewer' };
+    let changed = false;
+    for (const [role, old] of Object.entries(inherit)) {
+      if (bindings.some((b) => b.role === role)) continue;
+      const binding = bindings.find((b) => b.role === old) ?? bindings.find((b) => b.role === 'orchestrator');
+      if (binding) {
+        bindings.push({ ...binding, role: role as AgentRole });
+        changed = true;
+      }
+    }
+    if (changed) this.repos.bindings.setAll(bindings);
   }
 
   /**

@@ -11,6 +11,11 @@ import { compileSafePattern } from '../knowledge/pattern-guard.js';
 import { componentSubject, permissionRefusalText } from './policy.js';
 import { classifyAnonymousApex } from './apex-classify.js';
 import { sha256 } from '../lib/crypto.js';
+import { canonicalRole, DELEGATABLE_ROLES, READ_ONLY_ROLES } from './built-in/index.js';
+import { AGENT_PROMPT } from './tool-prompts.js';
+import { TASK_TOOLS } from './task-tools.js';
+import { SEARCH_TOOLS } from './search-tools.js';
+import { WEB_TOOLS } from './web-tools.js';
 
 /**
  * The object a SOQL statement reads, for permission scoping. Anything the regex cannot name still
@@ -42,6 +47,7 @@ export interface ToolContext {
   originals: Map<string, string>;
   /** Set for researcher sub-agents: which knowledge repository they are scanning, and their budget. */
   research?: { sourceId: string; readBudget: { used: number; max: number } };
+  conversation?: () => import('../ai/types.js').LlmMessage[];
 }
 
 /** The repository a researcher sub-agent was pointed at, with its warm snapshot. */
@@ -108,7 +114,7 @@ export function isConcurrencySafe(def: ToolDef | undefined, input: unknown, ctx?
 }
 
 /** Sub-agent roles that only read: delegating to one is safe beside other calls and needs no plan. */
-export const READ_ONLY_SUBAGENT_ROLES = new Set<AgentRole>(['analyst', 'reviewer', 'researcher']);
+export const READ_ONLY_SUBAGENT_ROLES = READ_ONLY_ROLES;
 
 /** Per-call result ceiling for a tool. */
 export function resultLimitFor(def: ToolDef | undefined): number {
@@ -116,6 +122,10 @@ export function resultLimitFor(def: ToolDef | undefined): number {
 }
 
 const ALL_ROLES: AgentRole[] = [
+  'general',
+  'explore',
+  'plan',
+  'verify',
   'orchestrator',
   'analyst',
   'metadata_builder',
@@ -197,6 +207,9 @@ export async function stageWorkspaceFile(
 }
 
 export const TOOLS: ToolDef[] = [
+  ...TASK_TOOLS,
+  ...SEARCH_TOOLS,
+  ...WEB_TOOLS,
   {
     name: 'hydrate_context',
     readOnly: true,
@@ -1302,6 +1315,8 @@ export const TOOLS: ToolDef[] = [
     ),
     roles: ['orchestrator'],
     run: async (input, ctx) => {
+      if (ctx.app.repos.agentState.get(ctx.session.id).tasks.length)
+        return { text: 'This session uses task_create/task_update. Update that task board instead of replacing the checklist with todo_write.', ok: false };
       const items: TodoItem[] = (input.items as any[]).map((t) => ({
         id: String(t.id),
         content: String(t.content),
@@ -1538,20 +1553,22 @@ export const TOOLS: ToolDef[] = [
     name: 'run_subagent',
     readOnly: false,
     requiresApprovedPlan: true,
-    concurrencySafe: (input) => input?.role === 'analyst' || input?.role === 'reviewer',
-    description:
-      'Delegate a focused objective to a specialised sub-agent and wait for its report. Roles: analyst (investigate, read-only), metadata_builder (objects/fields/layouts/record pages/permissions), flow_builder (flows), apex_builder (Apex/LWC + tests), reviewer (quality gate), doc_writer (documentation). Give a complete objective with acceptance criteria; sub-agents do not see the chat.',
+    concurrencySafe: (input) => READ_ONLY_ROLES.has(input?.role),
+    description: AGENT_PROMPT,
     inputSchema: obj(
       {
-        role: { type: 'string', enum: ['analyst', 'metadata_builder', 'flow_builder', 'apex_builder', 'reviewer', 'doc_writer'] },
+        role: { type: 'string', enum: [...DELEGATABLE_ROLES, 'analyst', 'metadata_builder', 'flow_builder', 'apex_builder', 'reviewer'] },
         objective: { type: 'string' },
+        description: { type: 'string', description: 'Short description of the assignment' },
+        runInBackground: { type: 'boolean' },
+        forkContext: { type: 'boolean' },
         context: { type: 'string', description: 'Relevant facts gathered so far (ids, API names, user preferences)' },
       },
       ['role', 'objective'],
     ),
     roles: ['orchestrator'],
     run: async (input, ctx) => {
-      const r = await ctx.runtime.runSubagent(ctx.session.id, ctx.agent.id, input.role, input.objective, input.context);
+      const r = await ctx.runtime.startWorker(ctx, input.role, input.objective, input.context, !!input.runInBackground, !!input.forkContext);
       return { text: r.report, output: { agentId: r.agentId, role: input.role, ok: r.ok }, ok: r.ok };
     },
   },
@@ -1575,7 +1592,17 @@ export const TOOLS: ToolDef[] = [
 ];
 
 export function toolsForRole(role: AgentRole): ToolDef[] {
-  return TOOLS.filter((t) => t.roles === 'all' || t.roles.includes(role));
+  const canonical = canonicalRole(role);
+  const base: AgentRole =
+    canonical === 'general' ? 'apex_builder' : canonical === 'verify' ? 'reviewer' : canonical === 'explore' || canonical === 'plan' ? 'analyst' : role;
+  const coordination = new Set(['task_create', 'task_update', 'send_message']);
+  const verification = new Set(['validate_deployment', 'run_apex_tests']);
+  return TOOLS.filter((t) => {
+    if (role !== 'orchestrator' && ['run_subagent', 'consult_specialist', 'investigate_product_repo'].includes(t.name)) return false;
+    if (t.roles !== 'all' && !t.roles.includes(base) && !t.roles.includes(role)) return false;
+    if (READ_ONLY_ROLES.has(role) && !t.readOnly && !coordination.has(t.name) && !(canonical === 'verify' && verification.has(t.name))) return false;
+    return true;
+  });
 }
 export function toLlmTools(defs: ToolDef[]): LlmTool[] {
   return defs.map((d) => ({ name: d.name, description: d.description, inputSchema: d.inputSchema }));
@@ -1599,7 +1626,7 @@ export function globToRegExp(pattern: string): RegExp {
     const c = pattern[i];
     if (c === '*') {
       if (pattern[i + 1] === '*') {
-        out += '.*';
+        out += pattern[i + 2] === '/' ? '(?:.*/)?' : '.*';
         i++;
         if (pattern[i + 1] === '/') i++;
       } else out += '[^/]*';

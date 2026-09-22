@@ -555,4 +555,11 @@ ALTER TABLE clients ADD COLUMN salesforce_auth_mode TEXT NOT NULL DEFAULT 'exter
   CHECK (salesforce_auth_mode IN ('external_app','browser_session'));
 `,
   },
+  {
+    name: 'session_agent_state',
+    sql: `CREATE TABLE session_agent_state (
+      session_id TEXT PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
+      state TEXT NOT NULL
+    );`,
+  },
 ];
