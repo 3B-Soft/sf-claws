@@ -4,8 +4,7 @@ SF Claws holds Salesforce OAuth refresh tokens, GitHub tokens and AI provider ke
 metadata to production Salesforce orgs. It is designed to be self-hosted, often by an agency running
 it for several clients at once. Security reports matter here more than they would for a library.
 
-Clients configured for browser-session authentication additionally send the active Salesforce
-`sid` bearer credential from the Chrome extension to the control plane. It is validated against the
+Clients configured for browser-session authentication additionally send the active Salesforce `sid` bearer credential from the Chrome extension to the control plane. It is validated against the
 configured My Domain and Salesforce org id and held in process memory only. It is intentionally not
 written to SQLite, logs, audit details, or model context.
 
@@ -39,7 +38,7 @@ Anything that breaks one of the guarantees below. In particular:
 - **Prompt injection with real consequences.** Content in an org, a repository or a document that
   causes an agent to take an action outside the session's scope. Note that a tool call cannot select
   which org it targets — the org is bound to the session at creation — so an injection that merely
-  changes what the model *says* is a bug, while one that reaches another tenant is a vulnerability.
+  changes what the model _says_ is a bug, while one that reaches another tenant is a vulnerability.
 
 ## What the current design does and does not guarantee
 
