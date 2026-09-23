@@ -179,7 +179,56 @@ export class SalesforceService {
     }
     this.repos.orgs.update(orgId, { status: 'disconnected', accessTokenEnc: null, refreshTokenEnc: null });
     this.connections.invalidate(orgId);
+    this.connections.clearBrowserSession(orgId);
     this.repos.harness.invalidate(orgId);
+  }
+
+  /**
+   * Validate and attach a Salesforce browser session. The bearer credential is never persisted;
+   * only the verified org identity and display metadata are stored.
+   */
+  async attachBrowserSession(orgId: string, accessToken: string, instanceUrl: string): Promise<{ username: string; orgId: string }> {
+    const org = this.repos.orgs.byId(orgId);
+    if (!org) throw new HttpError(404, 'NOT_FOUND', 'Org not found');
+    const client = this.repos.clients.byId(org.clientId);
+    if (client?.salesforceAuthMode !== 'browser_session') throw badRequest('This client is configured to use an external app');
+    const url = new URL(instanceUrl);
+    if (url.protocol !== 'https:' || !isSalesforceHost(url.hostname)) throw badRequest('Session instance must be an HTTPS Salesforce host');
+    if (!sameSalesforceDomain(new URL(org.loginUrl).hostname, url.hostname))
+      throw badRequest("The browser session does not belong to this org's configured My Domain");
+
+    const jsforce = (await import('jsforce')).default;
+    const conn = new jsforce.Connection({ instanceUrl: url.origin, accessToken, version: org.apiVersion });
+    try {
+      const identity = await conn.identity();
+      if (org.sfOrgId && org.sfOrgId.slice(0, 15) !== identity.organization_id.slice(0, 15))
+        throw new HttpError(409, 'ORG_ID_MISMATCH', 'The active Salesforce session belongs to a different org');
+      const info = await organizationInfo(conn);
+      const detectedKind = detectOrgKind(info);
+      if (orgKindConflict(org.kind, detectedKind))
+        throw new HttpError(409, 'ORG_KIND_MISMATCH', `The active session is for ${describeOrg(info)}, but this org is registered as ${org.kind}.`);
+      const activeUser = this.connections.browserSessionUser(org.id);
+      if (activeUser && activeUser !== identity.user_id)
+        throw new HttpError(
+          409,
+          'BROWSER_SESSION_USER_CONFLICT',
+          "A different Salesforce user already supplies this org's browser session. Disconnect the org before switching users.",
+        );
+      this.connections.setBrowserSession(org.id, accessToken, url.origin, identity.user_id);
+      this.repos.orgs.update(org.id, {
+        status: 'connected',
+        sfOrgId: identity.organization_id,
+        instanceUrl: url.origin,
+        myDomainHost: url.hostname,
+        username: identity.username,
+        lastConnectedAt: new Date().toISOString(),
+        lastError: null,
+      });
+      return { username: identity.username, orgId: identity.organization_id };
+    } catch (e) {
+      if (e instanceof HttpError) throw e;
+      throw new HttpError(401, 'INVALID_SALESFORCE_SESSION', `The active Salesforce session could not be used: ${(e as Error).message}`);
+    }
   }
 
   async status(orgId: string): Promise<{ status: string; identity: unknown | null; error: string | null }> {
@@ -197,6 +246,7 @@ export class SalesforceService {
       };
     } catch (e) {
       this.connections.handleAuthError(orgId, e);
+      if ((e as any)?.code === 'BROWSER_SESSION_REQUIRED') this.repos.orgs.update(orgId, { status: 'disconnected' });
       return { status: this.repos.orgs.byId(orgId)?.status ?? 'error', identity: null, error: (e as Error).message };
     }
   }
@@ -978,6 +1028,18 @@ export function normalizeDeployResult(r: any): DeployOutcome {
 
 const arr = (x: any): any[] => (x == null ? [] : Array.isArray(x) ? x : [x]);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isSalesforceHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return h === 'salesforce.com' || h.endsWith('.salesforce.com') || h.endsWith('.force.com') || h.endsWith('.visualforce.com');
+}
+
+/** Treat the Lightning, API and Setup faces of one My Domain as the same configured org. */
+function sameSalesforceDomain(configuredHost: string, sessionHost: string): boolean {
+  const key = (host: string) =>
+    host.toLowerCase().replace(/\.(?:sandbox\.|develop\.|scratch\.)?(?:lightning\.force|my\.salesforce|my\.salesforce-setup|vf\.force|visualforce)\.com$/, '');
+  return key(configuredHost) === key(sessionHost);
+}
 
 /** Flatten nested relationship records (Account.Owner.Name -> "Owner.Name") and drop attributes. */
 export function flattenRecord(rec: any, prefix = ''): Record<string, unknown> {

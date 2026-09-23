@@ -13,7 +13,7 @@ running when the panel closes, and the panel reconnects to the event stream and 
 
 ### Control plane (`packages/server`)
 
-One Node.js process (Fastify 5, TypeScript, ESM). State in SQLite (WAL) via better-sqlite3 — a
+One Bun process (Fastify 5, TypeScript, ESM). State in SQLite (WAL) via bun:sqlite — a
 single file under `DATA_DIR`, migrations in `src/db/migrations.ts`, append-only. Secrets are
 AES-256-GCM encrypted: client-owned secrets under that client's own data key, wrapped by
 `MASTER_KEY` (`lib/crypto.ts`). Passwords use scrypt. JWTs (HS256, `jose`) carry a `jti` stored in
@@ -51,8 +51,11 @@ Modules:
 
 ### Agent runtime (`packages/server/src/agents`)
 
+See [Agents and coordination tools](AGENTS.md) for the behavior-oriented agent registry, session
+task board, resumable workers, messaging, forks, and workspace/repository/web search tools.
+
 - `runtime.ts` — `SessionRuntime`: one turn at a time per session. Runs the orchestrator (persistent
-  conversation) which delegates to ephemeral sub-agents. Owns validation, deploy, commit, docs,
+  conversation) which delegates to workers with retained conversations. Owns validation, deploy, commit, docs,
   confirmations, the allow-list gate, plan mode, spend ceilings, org limits, snapshot and resume.
 - `agent.ts` — `AgentRun`: the agentic loop over the provider abstraction. Scheduling, retries,
   compaction, budgets, stop reasons.
@@ -83,7 +86,10 @@ Modules:
   once per threshold crossing, the todo nudge once per drift window, the plan-pending and
   reviewer-read-only lines in full once and then sparsely, the budget position once at 50, 75 and
   90 percent of a ceiling.
-- `prompts.ts` — role identities and guidance, assembled with the cacheable half first.
+- `built-in/` — per-agent definitions, identities, guidance and legacy-role compatibility.
+- `prompts.ts` — environment and policy assembly, with the cacheable half first.
+- `task-tools.ts`, `search-tools.ts`, `web-tools.ts` — coordination, source search and public web search.
+- `fork.ts` — cloned parent context with repaired tool-result pairs and worker scope instructions.
 - `policy.ts` — programmatic enforcement of `PolicyRules`.
 - `events.ts` — per-session event bus; events are persisted with a sequence number and streamed over
   SSE with resume (`?after=`).
@@ -98,12 +104,18 @@ so changing it first is not a style preference — it is what keeps them from dr
 
 Both UIs share one palette: semantic tokens (`surface`, `content`, `line`, `brand`) defined per
 package in `styles.css` from the Salesforce Lightning colours, so the side panel does not read as a
-foreign object docked beside the org. `tools/contrast-audit.mjs` (`npm run contrast`) checks every
+foreign object docked beside the org. `tools/contrast-audit.mjs` (`bun run contrast`) checks every
 text node on every screen against its real composited background and fails anything below WCAG AA.
 
 LWC Open Source with light-DOM components and Tailwind v4, built with Vite through
 `tools/vite-lwc-plugin.mjs`. The extension is Manifest V3 with a side panel, a background service
 worker (tab tracking) and a content script (page context: record, object, setup page, flow builder).
+
+The chat thread is grouped before render (`groupThread` in `lib/transcript.js`): user messages, the
+lead agent's replies and anything that needs the user (cards, deploy results, commits) stay inline,
+and every run of tool calls, thinking, sub-agent messages and lifecycle events between them folds
+into one `x-activity-card` with the latest thought visible and "Reasoning" / "Log" collapsed. Raw
+`unknown` events only appear in the log in Pro mode.
 
 ## The agent loop
 
@@ -339,6 +351,12 @@ confirmations answered after a restart execute directly (with the same permissio
 checks). An orphaned plan approval is recorded on the session, and a plan or `ask_user` answer is
 delivered on the next turn as the result of the call that asked, so the model continues from the
 answer instead of asking again.
+
+An `ask_user` question can be answered two ways from the panel: click one option (the option id is
+sent on its own), or type an answer and press "Send answer", which posts `optionId: "custom"` with
+`answerText`. The server accepts `custom` only for a question card that allows free text and only
+with non-blank text; the `confirmation.resolved` event echoes `answerText` so the thread shows the
+typed answer after a reload.
 
 Whether the workspace is dirty — changed after its last validation — is derived from persisted
 state (the latest `workspace.file` event against the validation's start time), not from memory,

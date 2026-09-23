@@ -546,4 +546,20 @@ CREATE TABLE session_hydration (
 );
 `,
   },
+  {
+    name: 'client_salesforce_auth_mode',
+    sql: `
+-- Browser-session mode is an explicit client-wide alternative to durable OAuth. Session IDs are
+-- held in process memory only; this column stores the choice, never the credential.
+ALTER TABLE clients ADD COLUMN salesforce_auth_mode TEXT NOT NULL DEFAULT 'external_app'
+  CHECK (salesforce_auth_mode IN ('external_app','browser_session'));
+`,
+  },
+  {
+    name: 'session_agent_state',
+    sql: `CREATE TABLE session_agent_state (
+      session_id TEXT PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
+      state TEXT NOT NULL
+    );`,
+  },
 ];

@@ -4,13 +4,13 @@ Generated, not hand-made. Regenerate rather than editing, so they cannot drift f
 show:
 
 ```
-npm run build -w @sf-claws/shared
-node tools/render-icons.mjs          # only when src/icons/logo.svg changed
-npm run build:store -w @sf-claws/extension
-npm run build -w @sf-claws/admin-ui
-node tools/demo-server.mjs --port 8799 > /tmp/demo.json &
-node tools/screenshots.mjs --demo /tmp/demo.json --out docs/screenshots
-node tools/store-assets.mjs --shots docs/screenshots --out docs/store
+bun run --filter @sf-claws/shared build
+bun tools/render-icons.mjs          # only when src/icons/logo.svg changed
+bun run --filter @sf-claws/extension build:store
+bun run --filter @sf-claws/admin-ui build
+bun tools/demo-server.mjs --port 8799 > /tmp/demo.json &
+bun tools/screenshots.mjs --demo /tmp/demo.json --out docs/screenshots
+bun tools/store-assets.mjs --shots docs/screenshots --out docs/store
 ```
 
 `tools/store-assets.mjs` only frames the real screenshots from `tools/screenshots.mjs` and adds the

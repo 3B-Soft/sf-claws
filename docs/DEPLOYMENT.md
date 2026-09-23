@@ -1,8 +1,22 @@
 # Deployment
 
-## 1. Salesforce Connected App (per org)
+## 1. Salesforce authentication
 
-Each org authorizes through a Connected App whose Consumer Key and Secret are entered when the org is added in the admin console (client → Orgs → Add org). Create the app in the client's org, or reuse one app for several orgs you control:
+Choose an authentication mode when creating a client. **External Client App** is recommended: it
+supports refresh tokens, server restarts, and long-running work. **Browser session** is intended for
+short, attended work: the Chrome extension reads the active org's `sid` cookie and sends it over TLS
+to SF Claws, where it is kept in process memory only. It expires with the Salesforce session, is
+lost on server restart, and gives the server the same Salesforce access as the signed-in user.
+Only one Salesforce browser identity can supply an org at a time; disconnect the org before
+switching identities so an existing agent run can never silently continue as another user.
+
+Browser-session orgs must be registered with their exact My Domain URL. Users must grant the
+extension cookie access and be signed into that org in Chrome. An allowed URL constrains where a
+credential can be used; SF Claws also verifies the returned Salesforce org id before accepting it.
+
+### External Client App (per org)
+
+Each org authorizes through a Salesforce External Client App (or a legacy Connected App) whose Consumer Key and optional Secret are entered when the org is added in the admin console (client → Orgs → Add org). Create the app in the client's org, or reuse one app for several orgs you control:
 
 1. Setup → App Manager → New Connected App. Enable OAuth settings.
 2. Callback URL: `https://<your-server>/api/v1/oauth/salesforce/callback`
@@ -25,12 +39,15 @@ For environment-driven local setup, set any of `ANTHROPIC_API_KEY`, `OPENAI_API_
 
 ## 4. Server
 
+Requires Bun 1.3.12 or newer. CI and Docker pin 1.3.12. The server uses Bun's built-in SQLite driver;
+the database path and migration history are unchanged.
+
 ```bash
-npm ci
-npm run build
+bun install --frozen-lockfile
+bun run build
 cd packages/server
 cp .env.example .env    # set PUBLIC_URL, MASTER_KEY, JWT_SECRET, CORS_ORIGINS
-NODE_ENV=production node dist/index.js
+NODE_ENV=production bun dist/index.js
 ```
 
 `ADMIN_UI_DIST=../admin-ui/dist` (default) serves the admin console from the same origin, including `/pair?code=` for extension pairing and the OAuth result page. Put the server behind TLS (nginx/Caddy/Cloud Run/etc.); SSE requires proxies to disable response buffering (`X-Accel-Buffering: no` is set).
@@ -89,7 +106,7 @@ To upgrade, run `git pull && docker build -t sf-claws:latest .` in the checkout,
 
 ## 5. Chrome extension
 
-Build: `npm run build -w @sf-claws/extension`. Distribute `packages/extension/release/sf-claws.zip` via the Chrome Web Store (private/unlisted) or enterprise policy (`ExtensionInstallForcelist`), or load `packages/extension/dist` unpacked for development. On first run each admin enters the server URL, requests permission for that origin, and pairs the device: the panel shows a code, the admin console approves it (the user must already be approved by the super admin).
+Build: `bun run --filter @sf-claws/extension build`. Distribute `packages/extension/release/sf-claws.zip` via the Chrome Web Store (private/unlisted) or enterprise policy (`ExtensionInstallForcelist`), or load `packages/extension/dist` unpacked for development. On first run each admin enters the server URL, requests permission for that origin, and pairs the device: the panel shows a code, the admin console approves it (the user must already be approved by the super admin).
 
 ## 6. Environment reference
 
@@ -126,8 +143,8 @@ docker build -t sf-claws:latest .
 1. Run commands to re-generate the extension package
 
 ```
-npm run build -w @sf-claws/shared
-npm run build -w @sf-claws/extension
+bun run --filter @sf-claws/shared build
+bun run --filter @sf-claws/extension build
 ```
 
 - Loaded unpacked: open chrome://extensions, click reload on SF Claws, then close and reopen the side panel.

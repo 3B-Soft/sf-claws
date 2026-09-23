@@ -14,7 +14,7 @@ labels: bug
 
 **Environment**
 - SF Claws version / commit:
-- Node version:
+- Bun version:
 - Deployment: local dev / Docker / other
 - Salesforce org type (if relevant): production / sandbox / scratch / developer
 

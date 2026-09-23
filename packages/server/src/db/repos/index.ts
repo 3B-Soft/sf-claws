@@ -6,6 +6,7 @@ import { ProjectsRepo, TasksRepo } from './projects.js';
 import { KnowledgeSourcesRepo, CustomAgentsRepo } from './knowledge.js';
 import { CompileControlRepo } from './compile-control.js';
 import { HarnessRepo } from './harness.js';
+import { AgentStateRepo } from './agent-state.js';
 import {
   SessionsRepo,
   EventsRepo,
@@ -23,6 +24,7 @@ import {
 } from './sessions.js';
 
 export interface Repos {
+  agentState: AgentStateRepo;
   harness: HarnessRepo;
   compileControl: CompileControlRepo;
   users: UsersRepo;
@@ -61,6 +63,7 @@ export interface Repos {
 
 export function createRepos(db: Db): Repos {
   return {
+    agentState: new AgentStateRepo(db),
     harness: new HarnessRepo(db),
     compileControl: new CompileControlRepo(db),
     users: new UsersRepo(db),

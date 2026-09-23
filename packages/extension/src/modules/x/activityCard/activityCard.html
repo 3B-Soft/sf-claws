@@ -1,0 +1,43 @@
+<template lwc:render-mode="light">
+  <div class={cardCls}>
+    <div class="flex items-center gap-2 px-3.5 pt-3">
+      <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-content-strong">{heading}</span>
+      <span class={chipCls}><template lwc:if={running}><span class="h-1.5 w-1.5 rounded-full bg-current pulse-dot"></span></template>{chipText}</span>
+    </div>
+
+    <template lwc:if={latestThought}>
+      <div class="px-3.5 pt-2.5">
+        <div class="text-[10px] font-semibold uppercase tracking-wide text-content-subtle">Latest thought</div>
+        <div class="mt-1 line-clamp-3 text-[12.5px] leading-relaxed text-content">{latestThought}</div>
+      </div>
+    </template>
+
+    <div class="space-y-1.5 px-3.5 pb-3 pt-3">
+      <template lwc:if={hasReasoning}>
+        <button class="flex w-full items-center gap-2 rounded-lg bg-surface-sunken px-3 py-2 text-left text-[12px] font-medium text-content hover:bg-surface-hover" onclick={onToggleReasoning}>
+          <span class="w-3 text-[10px] text-content-subtle">{reasoningGlyph}</span>Reasoning<span class="text-content-subtle">({reasoningCount})</span>
+        </button>
+        <template lwc:if={reasoningOpen}>
+          <ol class="space-y-2 border-l-2 border-line py-1 pl-3">
+            <template for:each={reasoning} for:item="r">
+              <li key={r.key} class="whitespace-pre-wrap text-[11.5px] leading-relaxed text-content-muted">{r.text}</li>
+            </template>
+          </ol>
+        </template>
+      </template>
+      <template lwc:if={hasLog}>
+        <button class="flex w-full items-center gap-2 rounded-lg bg-surface-sunken px-3 py-2 text-left text-[12px] font-medium text-content hover:bg-surface-hover" onclick={onToggleLog}>
+          <span class="w-3 text-[10px] text-content-subtle">{logGlyph}</span>Log<span class="text-content-subtle">({logCount})</span>
+          <template lwc:if={logSummary}><span class="ml-auto min-w-0 truncate text-[11px] font-normal text-content-subtle">{logSummary}</span></template>
+        </button>
+        <template lwc:if={logOpen}>
+          <div class="space-y-1.5 py-1">
+            <template for:each={log} for:item="it">
+              <x-transcript-item key={it.key} item={it} pro={pro} onopenchanges={onOpenChanges}></x-transcript-item>
+            </template>
+          </div>
+        </template>
+      </template>
+    </div>
+  </div>
+</template>

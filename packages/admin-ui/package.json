@@ -5,10 +5,10 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "bun --bun vite build",
     "dev": "vite",
     "typecheck": "echo 'admin-ui: JS-only LWC modules'",
-    "test": "vitest run --passWithNoTests"
+    "test": "bun --bun vitest run --pool forks --passWithNoTests"
   },
   "dependencies": {
     "@sf-claws/shared": "*",

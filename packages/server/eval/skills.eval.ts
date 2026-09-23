@@ -1,9 +1,9 @@
 /**
  * Skill-use evaluation. Builds the real orchestrator prompt with the real seeded skills, offers the
  * model only load_skill, and grades the reply against `cases.ts`. Costs real money: it runs only
- * through `npm run eval` (its own vitest config) and never from `npm test`.
+ * through `bun run eval` (its own vitest config) and never from `bun run test`.
  *
- *   ANTHROPIC_API_KEY=sk-... npm run eval            # EVAL_MODEL=claude-sonnet-5 for a cheaper pass
+ *   ANTHROPIC_API_KEY=sk-... bun run eval            # EVAL_MODEL=claude-sonnet-5 for a cheaper pass
  *
  * Replies land in eval/output/<case>.md (gitignored) so a failure can be read, not just counted.
  */
@@ -25,7 +25,7 @@ try {
   process.loadEnvFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.env'));
 } catch {}
 const apiKey = process.env.ANTHROPIC_API_KEY;
-if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set. Export it, or add ANTHROPIC_API_KEY=sk-... to packages/server/.env, then rerun npm run eval.');
+if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set. Export it, or add ANTHROPIC_API_KEY=sk-... to packages/server/.env, then rerun bun run eval.');
 const OUT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'output');
 const MAX_ROUNDS = 6;
 

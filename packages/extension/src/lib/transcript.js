@@ -239,7 +239,7 @@ export function createTranscript() {
         push({ kind: 'blocked', seq: ev.seq, at, agentId: ev.agentId, tool: ev.tool, rule: ev.rule, message: ev.message });
         break;
       case 'confirmation.resolved':
-        resolveConfirmation(ev.confirmationId, ev.optionId);
+        resolveConfirmation(ev.confirmationId, ev.optionId, false, ev.answerText);
         break;
       case 'deploy.result':
         push({ kind: 'deploy', seq: ev.seq, at, ...pick(ev, ['deployId', 'ok', 'sfDeployId', 'componentsDeployed', 'message']) });
@@ -281,13 +281,13 @@ export function createTranscript() {
     return true;
   }
 
-  function resolveConfirmation(confirmationId, optionId, local = false) {
+  function resolveConfirmation(confirmationId, optionId, local = false, answerText) {
     const item = state.byKey.get(`confirm-${confirmationId}`);
     if (!item) return null;
     return touch(item, {
       resolved: true,
       resolvedOptionId: optionId,
-      resolvedLabel: item.options?.find((o) => o.id === optionId)?.label || optionId,
+      resolvedLabel: item.options?.find((o) => o.id === optionId)?.label || (optionId === 'custom' && answerText) || optionId,
       localResolved: local,
     });
   }
@@ -435,4 +435,35 @@ export function turnAnswered(items = []) {
     else if (it.kind === 'assistant' && !it.streaming) lastReply = i;
   });
   return lastReply > lastUser;
+}
+
+// Kinds that are "how the agent got there" rather than "what it said or did to the org".
+const ACTIVITY_KINDS = new Set(['tool', 'thinking', 'agent', 'status', 'unknown', 'assistant']);
+const isActivity = (i) => ACTIVITY_KINDS.has(i.kind) && !(i.kind === 'assistant' && (!i.role || i.role === 'orchestrator'));
+
+/**
+ * The thread as the user reads it: their messages, the lead agent's replies and anything that
+ * needs them (cards, deploy results…) stay inline; every run of behind-the-scenes activity in
+ * between folds into one `{ activity: true, items }` group. The trailing group is marked
+ * `running` while the turn is still going.
+ */
+export function groupThread(items = [], running = false) {
+  const out = [];
+  let bucket = null;
+  for (const item of items) {
+    if (isActivity(item)) {
+      if (!bucket) {
+        bucket = { key: `activity-${item.key}`, activity: true, items: [] };
+        out.push(bucket);
+      }
+      bucket.items.push(item);
+    } else {
+      bucket = null;
+      out.push({ key: item.key, item });
+    }
+  }
+  const last = out[out.length - 1];
+  if (last?.activity && running) last.running = true;
+  // A group of nothing but lifecycle noise (status flips, model.started…) has no card to show.
+  return out.filter((g) => !g.activity || g.running || g.items.some((i) => i.kind !== 'status' && i.kind !== 'unknown'));
 }

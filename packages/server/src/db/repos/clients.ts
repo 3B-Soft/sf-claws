@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from 'bun:sqlite';
 import type { Client, ClientMember, ClientMemberRole, SalesforceOrg, GithubRepo, OrgKind, OrgConnectionStatus } from '@sf-claws/shared';
 import { type Db, nowIso, rowToObj } from '../db.js';
 import { newId } from '../../lib/crypto.js';
@@ -16,17 +17,21 @@ export class ClientsRepo {
   bySlug(slug: string): Client | undefined {
     return rowToObj<Client>(this.db.prepare('SELECT * FROM clients WHERE slug=?').get(slug));
   }
-  create(input: { name: string; slug: string; description?: string }): Client {
+  create(input: { name: string; slug: string; description?: string; salesforceAuthMode?: 'external_app' | 'browser_session' }): Client {
     const id = newId('cli');
     this.db
-      .prepare('INSERT INTO clients (id, name, slug, description, created_at) VALUES (?, ?, ?, ?, ?)')
-      .run(id, input.name, input.slug, input.description ?? null, nowIso());
+      .prepare('INSERT INTO clients (id, name, slug, description, salesforce_auth_mode, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(id, input.name, input.slug, input.description ?? null, input.salesforceAuthMode ?? 'external_app', nowIso());
     return this.byId(id)!;
   }
-  update(id: string, patch: Partial<{ name: string; description: string | null; instructions: string | null }>): Client | undefined {
+  update(
+    id: string,
+    patch: Partial<{ name: string; description: string | null; instructions: string | null; salesforceAuthMode: 'external_app' | 'browser_session' }>,
+  ): Client | undefined {
     if (patch.name !== undefined) this.db.prepare('UPDATE clients SET name=? WHERE id=?').run(patch.name, id);
     if (patch.description !== undefined) this.db.prepare('UPDATE clients SET description=? WHERE id=?').run(patch.description, id);
     if (patch.instructions !== undefined) this.db.prepare('UPDATE clients SET instructions=? WHERE id=?').run(patch.instructions || null, id);
+    if (patch.salesforceAuthMode !== undefined) this.db.prepare('UPDATE clients SET salesforce_auth_mode=? WHERE id=?').run(patch.salesforceAuthMode, id);
     return this.byId(id);
   }
   delete(id: string): void {
@@ -143,9 +148,11 @@ export class OrgsRepo {
     consumerSecretEnc?: string | null;
   }): OrgRow {
     const id = newId('org');
+    const loginHost = new URL(input.loginUrl).hostname.toLowerCase();
+    const myDomainHost = /^(login|test)\.salesforce\.com$/.test(loginHost) ? null : loginHost;
     this.db
       .prepare(
-        `INSERT INTO orgs (id, client_id, label, kind, login_url, consumer_key, consumer_secret_enc, api_version, status, protected, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'disconnected', ?, ?)`,
+        `INSERT INTO orgs (id, client_id, label, kind, login_url, my_domain_host, consumer_key, consumer_secret_enc, api_version, status, protected, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'disconnected', ?, ?)`,
       )
       .run(
         id,
@@ -153,6 +160,7 @@ export class OrgsRepo {
         input.label,
         input.kind,
         input.loginUrl,
+        myDomainHost,
         input.consumerKey ?? null,
         input.consumerSecretEnc ?? null,
         input.apiVersion,
@@ -203,7 +211,7 @@ export class OrgsRepo {
       instructions: 'instructions',
     };
     const sets: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);

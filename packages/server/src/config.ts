@@ -50,6 +50,7 @@ const Env = z.object({
   DEEPSEEK_API_KEY: z.string().default(''),
   DEEPINFRA_API_KEY: z.string().default(''),
   GITHUB_TOKEN: z.string().default(''),
+  BRAVE_SEARCH_API_KEY: z.string().default(''),
   NODE_ENV: z.string().default('development'),
 });
 

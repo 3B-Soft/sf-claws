@@ -77,6 +77,10 @@ export function highlightXml(xml) {
   });
 }
 export const ROLE_COLORS = {
+  general: 'bg-violet-500/15 text-violet-700 border-violet-500/30',
+  explore: 'bg-sky-500/15 text-sky-700 border-sky-500/30',
+  plan: 'bg-brand-500/15 text-brand-700 border-brand-500/30',
+  verify: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
   orchestrator: 'bg-brand-500/15 text-brand-700 border-brand-500/30',
   analyst: 'bg-sky-500/15 text-sky-700 border-sky-500/30',
   metadata_builder: 'bg-violet-500/15 text-violet-700 border-violet-500/30',

@@ -35,7 +35,7 @@ body {
 #app { min-height: 100%; }
 /* Light-DOM custom elements default to inline. Tab hosts get class="contents" in their templates
    so their flex-column children sit directly in <main>; these two only need to be blocks. */
-x-transcript-item, x-tool-step { display: block; min-width: 0; }
+x-transcript-item, x-tool-step, x-activity-card { display: block; min-width: 0; }
 
 * { scrollbar-width: thin; scrollbar-color: #c9c9c9 transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }

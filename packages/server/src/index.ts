@@ -66,8 +66,7 @@ async function main() {
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
 }
 
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
-if (isMain)
+if (import.meta.main)
   main().catch((e) => {
     console.error(e);
     process.exit(1);

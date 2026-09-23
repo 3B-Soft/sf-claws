@@ -2,7 +2,7 @@
 import { createStore } from './store.js';
 import { createApi, apiEvents } from './api.js';
 import { storage, KEYS, normalizeServerUrl } from './storage.js';
-import { getContext, onMessage, hasHostPermission, hasChrome, armRecorder } from './bridge.js';
+import { getContext, onMessage, hasHostPermission, hasChrome, armRecorder, getSalesforceSession } from './bridge.js';
 import { toApiPageContext } from './context.js';
 
 export const TABS = [
@@ -217,6 +217,12 @@ export async function refreshOrg() {
     if (!org) {
       appStore.set({ orgState: 'unregistered', org: null, client: null });
       return;
+    }
+    if (client?.salesforceAuthMode === 'browser_session') {
+      const browserSession = await getSalesforceSession(host, org.sfOrgId);
+      if (browserSession.error) throw new Error(browserSession.error);
+      await api.attachBrowserSession(org.id, browserSession.accessToken, browserSession.instanceUrl);
+      org.status = 'connected';
     }
     const byHost = (await storage.local.get(KEYS.orgByHost, {})) || {};
     byHost[host] = { org, client, at: new Date().toISOString() };

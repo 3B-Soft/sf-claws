@@ -32,6 +32,9 @@ import type { TestLevel, DeployOutcome } from '../salesforce/service.js';
 import { FactCache, OrgReadLimiter } from './fact-cache.js';
 import { preHydrate, hydrationPrompt } from './pre-hydration.js';
 import { toolingEligible } from '../salesforce/tooling-compile.js';
+import { canonicalRole } from './built-in/index.js';
+import { forkMessages, FORK_DIRECTIVE } from './fork.js';
+import type { LlmMessage } from '../ai/types.js';
 import { executeCheckpoint, classifyFailure } from './validation-recovery.js';
 import {
   applyCompileResult,
@@ -97,6 +100,7 @@ interface ConfirmationAnswer {
 export class SessionRuntime {
   readonly bus: SessionEventBus;
   private active = new Map<string, ActiveTurn>();
+  private workers = new Map<string, { sessionId: string; abort: AbortController; promise: Promise<{ agentId: string; report: string; ok: boolean }> }>();
   private waiters = new Map<string, Waiter>();
   /** In-flight browser capture requests, keyed by requestId. See `captureBrowser`. */
   private browserWaiters = new Map<string, { sessionId: string; resolve: (r: BrowserCaptureResponse) => void }>();
@@ -276,7 +280,9 @@ export class SessionRuntime {
         this.bus.emit(sessionId, { type: 'session.error', agentId: null, message: (e as Error).message, recoverable: false });
         this.setStatus(sessionId, 'failed', (e as Error).message);
       })
-      .finally(() => {
+      .finally(async () => {
+        for (const worker of this.workers.values()) if (worker.sessionId === sessionId) worker.abort.abort();
+        await Promise.all([...this.workers.values()].filter((w) => w.sessionId === sessionId).map((w) => w.promise));
         clearTimeout(this.compileTimers.get(sessionId));
         this.compileTimers.delete(sessionId);
         // Every listener the turn opened goes with it: a completed turn must not keep counting
@@ -327,18 +333,42 @@ export class SessionRuntime {
       ctx,
     );
     let outcome = await agent.run(text);
+    // Reconcile both worker completions and open work; a completion nudge may itself launch workers.
+    let completionNudges = 0;
+    for (let round = 0; round < 8 && !turn.abort.signal.aborted && outcome.stoppedBy === 'end_turn'; round++) {
+      const workers = [...this.workers.values()].filter((w) => w.sessionId === sessionId);
+      const messages = this.app.repos.agentState.get(sessionId).messages.some((m) => m.to === 'orchestrator');
+      if (workers.length || messages) {
+        await Promise.all(workers.map((w) => w.promise));
+        outcome = await agent.run(
+          '[Harness] Background work or agent messages arrived. Read the delivered reports, resolve remaining work, and give the user the supported outcome.',
+        );
+        continue;
+      }
+      const open = this.app.repos.todos.get(sessionId).filter((t) => t.status === 'pending' || t.status === 'in_progress');
+      if (!open.length || completionNudges >= 2 || turn.awaitingUser || this.waitingOnUser(outcome.text)) break;
+      completionNudges++;
+      this.bus.emit(sessionId, { type: 'session.status', status: 'running', message: `${open.length} todo item(s) still open — continuing` });
+      const board = this.app.repos.agentState.get(sessionId).tasks.length > 0;
+      outcome = await agent.run(
+        `[Harness] Your ${board ? 'task' : 'todo'} list still has open items:\n${open.map((t) => `- [${t.status}] ${t.content}`).join('\n')}\nContinue the work, or ask a clear question starting with "QUESTION FOR YOU:" if you need the user. If blocked, record the reason ${board ? 'using task_update metadata.blocker; keep the task open' : 'and mark the item blocked via todo_write'}. Do not silently abandon open work.`,
+      );
+    }
     if (turn.abort.signal.aborted) {
       this.setStatus(sessionId, 'cancelled', 'Cancelled by user');
       return;
     }
-    // Completion drive: the lead agent may not stop with open todo items unless it is explicitly waiting on the user.
-    for (let nudges = 0; nudges < 2 && outcome.stoppedBy === 'end_turn' && !turn.abort.signal.aborted; nudges++) {
-      const open = this.app.repos.todos.get(sessionId).filter((t) => t.status === 'pending' || t.status === 'in_progress');
-      if (!open.length || turn.awaitingUser || this.waitingOnUser(outcome.text)) break;
-      this.bus.emit(sessionId, { type: 'session.status', status: 'running', message: `${open.length} todo item(s) still open — continuing` });
-      outcome = await agent.run(
-        `[Harness] Your todo list still has open items:\n${open.map((t) => `- [${t.status}] ${t.content}`).join('\n')}\nEither continue the work now, or if you genuinely need something from the user, end with a clear question starting with "QUESTION FOR YOU:"; if an item cannot be done, mark it blocked with the reason via todo_write. Do not stop with items silently open.`,
-      );
+    if (
+      outcome.stoppedBy === 'end_turn' &&
+      ([...this.workers.values()].some((w) => w.sessionId === sessionId) ||
+        this.app.repos.agentState.get(sessionId).messages.some((m) => m.to === 'orchestrator'))
+    ) {
+      const message = 'Worker coordination limit reached. Remaining workers are being stopped and their reports are saved; resume the session to continue.';
+      for (const worker of this.workers.values()) if (worker.sessionId === sessionId) worker.abort.abort();
+      await Promise.all([...this.workers.values()].filter((w) => w.sessionId === sessionId).map((w) => w.promise));
+      this.bus.emit(sessionId, { type: 'assistant.message', agentId: 'orchestrator', role: 'orchestrator', messageId: newId('am'), text: message });
+      this.setStatus(sessionId, 'failed', message);
+      return;
     }
     // Documentation guarantee: if meaningful work happened without docs, generate them.
     const workspace = this.app.repos.workspace.list(sessionId);
@@ -489,7 +519,7 @@ export class SessionRuntime {
     const unsub = this.bus.subscribe(sessionId, (ev) => {
       if (ev.type === 'tool.call') {
         turn.toolCalls++;
-        turn.callsSinceTodoWrite = ev.tool === 'todo_write' ? 0 : turn.callsSinceTodoWrite + 1;
+        turn.callsSinceTodoWrite = ['todo_write', 'task_create', 'task_update'].includes(ev.tool) ? 0 : turn.callsSinceTodoWrite + 1;
       }
       if (ev.type === 'doc.written') turn.docsWritten++;
     });
@@ -530,75 +560,215 @@ export class SessionRuntime {
     context?: string,
     research?: { sourceId: string; thoroughness: string },
     specialist?: CustomAgent,
+    execution?: { agentId: string; signal: AbortSignal; history?: LlmMessage[] },
   ): Promise<{ agentId: string; report: string; ok: boolean }> {
     const turn = this.active.get(sessionId);
     if (!turn) throw new Error('No active turn');
     const stopped = this.app.repos.compileControl.get(sessionId).stopped;
     if (stopped) return { agentId: parentId, report: stopped, ok: false };
     if (role === 'orchestrator' || role === 'summarizer') throw badRequest('Cannot delegate to that role');
-    const agentId = newId(role);
+    const agentId = execution?.agentId ?? newId(role);
+    this.app.repos.agentState.change(sessionId, (state) => {
+      if (!state.workers.some((w) => w.id === agentId))
+        state.workers.push({ id: agentId, parentId, role, objective, status: 'running', report: '', ok: false });
+      const worker = state.workers.find((w) => w.id === agentId)!;
+      if (specialist) worker.specialistId = specialist.id;
+      if (research) worker.research = research;
+    });
     // A researcher's file-read budget scales with the thoroughness the caller asked for: without a
     // ceiling an open-ended question can read a whole repository into the context window.
     const scope = research
       ? { sourceId: research.sourceId, readBudget: { used: 0, max: READ_BUDGETS[research.thoroughness] ?? READ_BUDGETS.medium } }
       : undefined;
     const ctx = this.toolContext(sessionId, { id: agentId, role, parentId }, turn, scope);
-    const resolved = this.app.ai.resolve(role, ctx.session.userId);
-    this.bus.emit(sessionId, { type: 'agent.spawned', agentId, parentAgentId: parentId, role, modelId: resolved.model.modelId, objective });
-    // A specialist's instructions are appended to the base role's prompt (in the dynamic half),
-    // never substituted for it: the role's safety rules and tool guidance must survive whatever
-    // an admin writes.
-    const system = await this.systemPrompt(role, ctx, specialist);
-    const agent = new AgentRun(
-      {
-        agentId,
-        parentId,
-        role,
-        model: resolved.model,
-        provider: resolved.provider,
-        effort: resolved.effort,
-        // Thoroughness bounds the researcher's steps as well as its reads: a "quick" question must
-        // not be allowed forty iterations of searching.
-        maxIterations: research
-          ? Math.min(resolved.maxIterations, ITERATION_BUDGETS[research.thoroughness] ?? ITERATION_BUDGETS.medium)
-          : resolved.maxIterations,
-        system: system.system,
-        promptSections: system.sections,
-        tools: toolsForRole(role),
-        persistent: false,
-        fallback: resolved.fallback,
-        compactInstructions: compactInstructionsFrom(ctx.client.instructions),
-      },
-      ctx,
-    );
-    const staged = this.app.repos.workspace.list(sessionId);
-    const prompt = [
-      `## Your objective for this run\n${objective}`,
-      context ? `Context from the lead agent:\n${context}` : '',
-      staged.length
-        ? `Files currently staged in the workspace:\n${staged.map((f) => `- ${f.action} ${f.path}`).join('\n')}`
-        : 'The workspace is currently empty.',
-      (() => {
-        const t = this.app.repos.todos.get(sessionId);
-        return t.length ? `Session todo list:\n${t.map((i) => `- [${i.status}] ${i.content}`).join('\n')}` : '';
-      })(),
-      (() => {
-        const n = this.app.repos.notes.list(sessionId);
-        return n.length ? `Scratchpad notes (read with scratchpad_read): ${n.map((x) => `"${x.title}"`).join(', ')}` : '';
-      })(),
-      role === 'doc_writer' ? `Session transcript summary:\n${this.transcriptSummary(sessionId)}` : '',
-    ]
-      .filter(Boolean)
-      .join('\n\n');
+    if (execution) ctx.signal = execution.signal;
     try {
+      const resolved = this.app.ai.resolve(role, ctx.session.userId);
+      this.bus.emit(sessionId, { type: 'agent.spawned', agentId, parentAgentId: parentId, role, modelId: resolved.model.modelId, objective });
+      // A specialist's instructions are appended to the base role's prompt (in the dynamic half),
+      // never substituted for it: the role's safety rules and tool guidance must survive whatever
+      // an admin writes.
+      const system = await this.systemPrompt(role, ctx, specialist);
+      const agent = new AgentRun(
+        {
+          agentId,
+          parentId,
+          role,
+          model: resolved.model,
+          provider: resolved.provider,
+          effort: resolved.effort,
+          // Thoroughness bounds the researcher's steps as well as its reads: a "quick" question must
+          // not be allowed forty iterations of searching.
+          maxIterations: research
+            ? Math.min(resolved.maxIterations, ITERATION_BUDGETS[research.thoroughness] ?? ITERATION_BUDGETS.medium)
+            : resolved.maxIterations,
+          system: system.system,
+          promptSections: system.sections,
+          tools: toolsForRole(role),
+          persistent: true,
+          initialMessages: execution?.history,
+          fallback: resolved.fallback,
+          compactInstructions: compactInstructionsFrom(ctx.client.instructions),
+        },
+        ctx,
+      );
+      const staged = this.app.repos.workspace.list(sessionId);
+      const prompt = [
+        execution?.history ? FORK_DIRECTIVE : '',
+        `## Your objective for this run\n${objective}`,
+        context ? `Context from the lead agent:\n${context}` : '',
+        staged.length
+          ? `Files currently staged in the workspace:\n${staged.map((f) => `- ${f.action} ${f.path}`).join('\n')}`
+          : 'The workspace is currently empty.',
+        (() => {
+          const t = this.app.repos.todos.get(sessionId);
+          return t.length ? `Session todo list:\n${t.map((i) => `- [${i.status}] ${i.content}`).join('\n')}` : '';
+        })(),
+        (() => {
+          const n = this.app.repos.notes.list(sessionId);
+          return n.length ? `Scratchpad notes (read with scratchpad_read): ${n.map((x) => `"${x.title}"`).join(', ')}` : '';
+        })(),
+        role === 'doc_writer' ? `Session transcript summary:\n${this.transcriptSummary(sessionId)}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+      const reviewedHash = this.workspaceHash(sessionId);
       const outcome = await agent.run(prompt);
-      if (role === 'reviewer') this.recordReviewVerdict(sessionId, agentId, outcome.text);
+      if (canonicalRole(role) === 'verify') {
+        const report =
+          reviewedHash === this.workspaceHash(sessionId) && outcome.ok
+            ? outcome.text
+            : 'Verification did not complete against an unchanged workspace.\nVERDICT: PARTIAL';
+        if (report !== outcome.text) outcome.text = `${outcome.text}\n\n${report}`;
+        this.recordReviewVerdict(sessionId, agentId, report);
+      }
       this.bus.emit(sessionId, { type: 'agent.finished', agentId, role, ok: outcome.ok, summary: outcome.text.slice(0, 500) });
+      this.app.repos.agentState.change(sessionId, (state) => {
+        Object.assign(state.workers.find((w) => w.id === agentId)!, {
+          status: ctx.signal.aborted ? 'cancelled' : outcome.ok ? 'completed' : 'failed',
+          report: outcome.text || '(no report)',
+          ok: outcome.ok,
+        });
+      });
       return { agentId, report: outcome.text || '(no report)', ok: outcome.ok };
     } catch (e) {
       this.bus.emit(sessionId, { type: 'agent.finished', agentId, role, ok: false, summary: (e as Error).message });
+      this.app.repos.agentState.change(sessionId, (state) => {
+        Object.assign(state.workers.find((w) => w.id === agentId)!, {
+          status: ctx.signal.aborted ? 'cancelled' : 'failed',
+          report: `Sub-agent failed: ${(e as Error).message}`,
+          ok: false,
+        });
+      });
       return { agentId, report: `Sub-agent failed: ${(e as Error).message}`, ok: false };
     }
+  }
+
+  async startWorker(ctx: ToolContext, role: AgentRole, objective: string, context?: string, background = false, fork = false) {
+    if (ctx.agent.role !== 'orchestrator') throw badRequest('Workers cannot spawn other workers.');
+    return this.launchWorker(ctx.session.id, ctx.agent.id, role, objective, context, background, fork ? forkMessages(ctx.conversation?.() ?? []) : undefined);
+  }
+
+  private async launchWorker(
+    sessionId: string,
+    parentId: string,
+    role: AgentRole,
+    objective: string,
+    context?: string,
+    background = false,
+    history?: LlmMessage[],
+    resumeId?: string,
+  ) {
+    const turn = this.active.get(sessionId);
+    if (!turn || turn.abort.signal.aborted) throw badRequest('No active turn.');
+    if (background && !READ_ONLY_SUBAGENT_ROLES.has(role))
+      throw badRequest('Background workers must use a read-only role. Run implementation workers in the foreground.');
+    if ([...this.workers.values()].filter((w) => w.sessionId === sessionId).length >= 4) throw badRequest('At most four workers may run in a session.');
+    const agentId = resumeId ?? newId(role);
+    const prior = this.app.repos.agentState.get(sessionId).workers.find((w) => w.id === agentId);
+    const clientId = this.app.repos.sessions.byId(sessionId)!.clientId;
+    const specialist = prior?.specialistId ? this.app.repos.customAgents.resolve(clientId, prior.specialistId) : undefined;
+    if (prior?.specialistId && !specialist) throw badRequest('The specialist is no longer available.');
+    const abort = new AbortController();
+    const signal = AbortSignal.any([turn.abort.signal, abort.signal]);
+    this.app.repos.agentState.change(sessionId, (state) => {
+      const old = state.workers.find((w) => w.id === agentId);
+      if (old) {
+        old.status = 'running';
+        old.objective = objective;
+        old.report = '';
+        old.ok = false;
+      } else state.workers.push({ id: agentId, parentId, role, objective, status: 'running', report: '', ok: false });
+    });
+    const promise = this.runSubagent(sessionId, parentId, role, objective, context, prior?.research, specialist, { agentId, signal, history })
+      .catch((error) => ({ agentId, report: `Worker failed: ${(error as Error).message}`, ok: false }))
+      .then((result) => {
+        this.app.repos.agentState.change(sessionId, (state) => {
+          const worker = state.workers.find((w) => w.id === agentId)!;
+          Object.assign(worker, { report: result.report, ok: result.ok, status: signal.aborted ? 'cancelled' : result.ok ? 'completed' : 'failed' });
+          if (background) state.messages.push({ id: newId('msg'), from: agentId, to: parentId, message: `Worker ${worker.status}:\n${result.report}` });
+        });
+        return result;
+      })
+      .finally(() => this.workers.delete(agentId));
+    this.workers.set(agentId, { sessionId, abort, promise });
+    if (background) return { agentId, report: 'Worker started in background. Its result will be delivered automatically.', ok: true };
+    return promise;
+  }
+
+  async workerOutput(sessionId: string, agentId: string, timeoutMs = 0, signal?: AbortSignal) {
+    if (!this.app.repos.agentState.get(sessionId).workers.some((w) => w.id === agentId)) throw notFound('Worker in this session');
+    const active = this.workers.get(agentId);
+    if (active && timeoutMs > 0) {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let onAbort: (() => void) | undefined;
+      try {
+        await Promise.race([
+          active.promise,
+          new Promise<void>((resolve) => {
+            timer = setTimeout(resolve, Math.min(timeoutMs, 60000));
+            onAbort = resolve;
+            if (signal?.aborted) resolve();
+            else signal?.addEventListener('abort', onAbort, { once: true });
+          }),
+        ]);
+      } finally {
+        clearTimeout(timer);
+        if (onAbort) signal?.removeEventListener('abort', onAbort);
+      }
+    }
+    return this.app.repos.agentState.get(sessionId).workers.find((w) => w.id === agentId)!;
+  }
+
+  stopWorker(sessionId: string, parentId: string, agentId: string) {
+    const worker = this.app.repos.agentState.get(sessionId).workers.find((w) => w.id === agentId && w.parentId === parentId);
+    if (!worker) throw notFound('Owned worker in this session');
+    const active = this.workers.get(agentId);
+    if (!active) return { requested: false, status: worker.status };
+    active.abort.abort();
+    return { requested: true, status: 'cancelling' };
+  }
+
+  async sendAgentMessage(sessionId: string, from: string, to: string, message: string, resume = false) {
+    const state = this.app.repos.agentState.get(sessionId);
+    if (from !== 'orchestrator' && !state.workers.some((w) => w.id === from)) throw notFound('Sender in this session');
+    if (to === from) throw badRequest('Cannot send a message to yourself.');
+    const targets = to === '*' ? ['orchestrator', ...state.workers.filter((w) => w.status === 'running').map((w) => w.id)].filter((id) => id !== from) : [to];
+    for (const id of targets) if (id !== 'orchestrator' && !state.workers.some((w) => w.id === id)) throw notFound('Recipient in this session');
+    if (resume) {
+      const worker = state.workers.find((w) => w.id === to && w.parentId === from);
+      if (!worker || targets.length !== 1) throw badRequest('Only the parent may resume an individual worker.');
+      if (!this.workers.has(to)) {
+        const denial = this.requireApprovedPlan(sessionId, 'run_subagent', { role: worker.role });
+        if (denial) throw badRequest(denial);
+        return this.launchWorker(sessionId, from, worker.role, message, undefined, READ_ONLY_SUBAGENT_ROLES.has(worker.role), undefined, worker.id);
+      }
+    }
+    this.app.repos.agentState.change(sessionId, (s) => {
+      if (s.messages.length + targets.length > 200) throw badRequest('Session message queue is full.');
+      for (const id of targets) s.messages.push({ id: newId('msg'), from, to: id, message });
+    });
+    return { deliveredTo: targets, note: 'Queued for the next model boundary. Idle workers need their parent to resume them.' };
   }
 
   /** A stable fingerprint of the staged workspace, so a verdict is tied to what was reviewed. */
@@ -2149,9 +2319,12 @@ _Generated by SF Claws_
     const c = this.app.repos.confirmations.byId(confirmationId);
     if (!c || c.sessionId !== sessionId) throw notFound('Confirmation');
     if (c.resolvedAt) throw conflict('Already answered');
-    if (!c.payload.options.some((o: any) => o.id === optionId)) throw badRequest('Unknown option');
+    // A question that allows free text may be answered with just the typed text: the panel sends
+    // optionId 'custom' and no option is chosen.
+    const customAnswer = optionId === 'custom' && c.kind === 'question' && c.payload.details?.allowFreeText !== false && !!answerText?.trim();
+    if (!customAnswer && !c.payload.options.some((o: any) => o.id === optionId)) throw badRequest('Unknown option');
     this.app.repos.confirmations.resolve(confirmationId, optionId, userId, answerText ?? null);
-    this.bus.emit(sessionId, { type: 'confirmation.resolved', confirmationId, optionId, byUserId: userId });
+    this.bus.emit(sessionId, { type: 'confirmation.resolved', confirmationId, optionId, byUserId: userId, answerText: answerText?.trim() || undefined });
     const waiter = this.waiters.get(confirmationId);
     if (waiter) {
       waiter.resolve(optionId, userId);
@@ -2242,6 +2415,9 @@ _Generated by SF Claws_
    * active forever and confuse the resume path into thinking they are still being worked on.
    */
   private markInterruptedTodosBlocked(sessionId: string): void {
+    this.app.repos.agentState.change(sessionId, (state) => {
+      for (const task of state.tasks) if (task.status === 'in_progress') task.metadata.blocker = 'Interrupted. Review the saved worker report before resuming.';
+    });
     const items = this.app.repos.todos.get(sessionId);
     if (!items.some((t) => t.status === 'in_progress')) return;
     const updated = items.map((t) => (t.status === 'in_progress' ? { ...t, status: 'blocked' as const, content: t.content } : t));
@@ -2255,6 +2431,14 @@ _Generated by SF Claws_
     // the answer is applied on the next turn (see confirm and deliverOrphanedAnswers).
     for (const status of ['running', 'awaiting_confirmation', 'awaiting_plan'] as const) {
       for (const s of this.app.repos.sessions.list({ status, limit: 1000 })) {
+        this.app.repos.agentState.change(s.id, (state) => {
+          for (const worker of state.workers)
+            if (worker.status === 'running') {
+              worker.status = 'failed';
+              worker.ok = false;
+              worker.report = 'Interrupted by server restart. Resume this worker to continue from its saved conversation.';
+            }
+        });
         this.app.repos.sessions.update(s.id, { status: 'failed' });
         this.bus.emit(s.id, {
           type: 'session.error',
@@ -2348,7 +2532,7 @@ const READ_BUDGETS: Record<string, number> = { quick: 8, medium: 40, thorough: 7
 const ITERATION_BUDGETS: Record<string, number> = { quick: 12, medium: 30, thorough: 60 };
 
 /** Sub-agent roles that build things — delegating to one is never trivial. */
-const BUILDER_ROLES = new Set(['metadata_builder', 'flow_builder', 'apex_builder']);
+const BUILDER_ROLES = new Set(['general', 'metadata_builder', 'flow_builder', 'apex_builder']);
 /** Metadata types that always need sign-off: code and automation carry runtime behaviour. */
 const PLAN_REQUIRED_TYPES = new Set(['ApexClass', 'ApexTrigger', 'Flow', 'LightningComponentBundle', 'AuraDefinitionBundle']);
 const PLAN_REQUIRED_MESSAGE =

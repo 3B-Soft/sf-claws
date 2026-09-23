@@ -39,6 +39,6 @@ Regenerate rather than editing: they should never drift from the UI they documen
 
 ![One session end to end: every tool call, every result, every token](09-admin-session-detail.png)
 
-`npm run contrast` runs the same harness against every screen and fails any text below WCAG AA on
+`bun run contrast` runs the same harness against every screen and fails any text below WCAG AA on
 its real composited background. Run it after any styling change: a theme flip breaks text in ways a
 screenshot review does not catch, because the text is still there — just unreadable.

@@ -5,11 +5,11 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "build": "vite build && node scripts/postbuild.mjs",
-    "dev": "vite build --watch",
+    "build": "bun --bun vite build && bun scripts/postbuild.mjs",
+    "dev": "bun --bun vite build --watch",
     "typecheck": "echo 'extension: JS-only LWC modules'",
-    "test": "vitest run --passWithNoTests",
-    "build:store": "vite build && node scripts/postbuild.mjs --store"
+    "test": "bun --bun vitest run --pool forks --passWithNoTests",
+    "build:store": "bun --bun vite build && bun scripts/postbuild.mjs --store"
   },
   "dependencies": {
     "@sf-claws/shared": "*",

@@ -47,6 +47,8 @@ export const Client = z.object({
   description: z.string().nullable().optional(),
   /** Client-wide agent instructions, injected into every session's system prompt. */
   instructions: z.string().nullable().optional(),
+  /** How this client's Salesforce orgs authenticate to the control plane. */
+  salesforceAuthMode: z.enum(['external_app', 'browser_session']).default('external_app'),
   createdAt: z.string(),
 });
 export type Client = z.infer<typeof Client>;
@@ -208,6 +210,10 @@ export type AiModel = z.infer<typeof AiModel>;
  */
 export const AgentRole = z.enum([
   'orchestrator', // plans, delegates, talks to the user
+  'general', // multi-step implementation and investigation
+  'explore', // read-only discovery
+  'plan', // read-only architecture and implementation planning
+  'verify', // independent verification with evidence
   'analyst', // reads org: SOQL, describe, debug logs, flow inspection
   'metadata_builder', // writes/edits metadata (objects, fields, layouts, flexipages)
   'flow_builder', // Flow XML specialist
@@ -218,6 +224,19 @@ export const AgentRole = z.enum([
   'summarizer', // cheap: compaction, titles, memory extraction
 ]);
 export type AgentRole = z.infer<typeof AgentRole>;
+
+/** Session work items are distinct from client/project tasks and background agent runs. */
+export const AgentTask = z.object({
+  id: z.string(),
+  subject: z.string(),
+  description: z.string(),
+  activeForm: z.string().optional(),
+  status: z.enum(['pending', 'in_progress', 'completed']),
+  owner: z.string().nullable(),
+  blockedBy: z.array(z.string()),
+  metadata: z.record(z.string(), z.unknown()),
+});
+export type AgentTask = z.infer<typeof AgentTask>;
 
 export const RoleModelBinding = z.object({
   role: AgentRole,

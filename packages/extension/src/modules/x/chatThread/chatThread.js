@@ -17,7 +17,7 @@ import {
   dismissContextPressure,
 } from '../../../lib/sessionController.js';
 import { quickActionsFor } from '../../../lib/context.js';
-import { turnAnswered } from '../../../lib/transcript.js';
+import { turnAnswered, groupThread } from '../../../lib/transcript.js';
 import { validationRequiredToResume } from '../../../lib/sessionRecovery.js';
 import { statusClass, statusLabel, fmtTokens, fmtUsd, roleClass, roleLabel, truncate, fmtRelative } from '../../../lib/format.js';
 
@@ -63,7 +63,10 @@ export default class ChatThread extends LightningElement {
   renderedCallback() {
     // textarea values are set imperatively (LWC does not bind `value` on <textarea>)
     const ta = this.querySelector('textarea[data-draft]');
-    if (ta && ta.value !== this.draft) ta.value = this.draft;
+    if (ta && ta.value !== this.draft) {
+      ta.value = this.draft;
+      this.growDraft(ta);
+    }
     const note = this.querySelector('textarea[data-note]');
     if (note && note.value !== this.feedbackNote) note.value = this.feedbackNote;
     if (this.session.version !== this._lastVersion) {
@@ -94,6 +97,10 @@ export default class ChatThread extends LightningElement {
   }
   get hasItems() {
     return this.items.length > 0;
+  }
+  /** The thread as the user reads it: activity between user-facing items folds into one card. */
+  get groups() {
+    return groupThread(this.items, this.isRunning);
   }
   get status() {
     return this.session.status;
@@ -151,16 +158,28 @@ export default class ChatThread extends LightningElement {
   get sendDisabled() {
     return !this.canSend;
   }
-  get sendLabel() {
-    return this.session.sending ? '…' : 'Send';
+  get headerStatusCls() {
+    const c = { running: 'text-brand-600', awaiting_confirmation: 'text-amber-700', failed: 'text-rose-700', completed: 'text-emerald-700' };
+    return `inline-flex items-center gap-1 font-medium ${c[this.status] || 'text-content-subtle'}`;
+  }
+  get composerCls() {
+    return `rounded-2xl border bg-canvas transition focus-within:border-brand-500 focus-within:bg-surface focus-within:ring-2 focus-within:ring-brand-500/20 ${
+      this.isAwaiting ? 'border-amber-500/50' : 'border-line-strong'
+    }`;
+  }
+  get composerHint() {
+    if (this.offline) return 'Offline';
+    if (this.isAwaiting) return 'A card above is waiting for you';
+    if (this.isRunning) return 'Notes are queued until the agent finishes';
+    return 'Enter to send · Shift+Enter for a new line';
   }
   get composerPlaceholder() {
     return this.offline
       ? 'Offline — reconnect to continue this session'
       : this.isAwaiting
-        ? 'Answer the confirmation above, or type a reply…'
+        ? 'Or type a reply…'
         : this.isRunning
-          ? 'Agent is working… you can queue a note'
+          ? 'Add a note for the agent…'
           : 'Ask about this org, or describe a change…';
   }
   get quickActions() {
@@ -293,6 +312,12 @@ export default class ChatThread extends LightningElement {
 
   onDraft(e) {
     this.draft = e.target.value;
+    this.growDraft(e.target);
+  }
+  growDraft(ta) {
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
   }
   onKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {

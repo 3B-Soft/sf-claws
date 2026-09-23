@@ -8,7 +8,7 @@
       <button class="btn-ghost btn-sm text-rose-700" onclick={remove}><x-icon name="trash" cls="h-3.5 w-3.5"></x-icon></button>
     </x-page-header>
     <div class="mb-6"><x-tabs tabs={tabs} active={tab} onselect={selectTab}></x-tabs></div>
-    <template lwc:if={isOrgs}><x-orgs-tab client-id={clientId}></x-orgs-tab></template>
+    <template lwc:if={isOrgs}><x-orgs-tab client-id={clientId} auth-mode={client.salesforceAuthMode}></x-orgs-tab></template>
     <template lwc:elseif={isMembers}><x-members-tab client-id={clientId}></x-members-tab></template>
     <template lwc:elseif={isGithub}><x-github-tab client-id={clientId}></x-github-tab></template>
     <template lwc:elseif={isSkills}><x-skills-list client-id={clientId} client-name={title}></x-skills-list></template>
@@ -19,6 +19,8 @@
   <x-modal open={editOpen} title="Edit client" size="sm" onclose={closeEdit}>
     <x-form-field label="Name" name="name" value={form.name} required onchange={handleField}></x-form-field>
     <x-form-field label="Description" name="description" type="textarea" rows="3" value={form.description} onchange={handleField}></x-form-field>
+    <x-form-field type="toggle" label="Use the user's Salesforce browser session" name="useBrowserSession" value={form.useBrowserSession} hint="Changing this affects every Salesforce org for the client." onchange={handleField}></x-form-field>
+    <template lwc:if={browserSessionMode}><div class="rounded-lg border border-amber-400/40 bg-amber-50 px-3 py-3 text-xs text-amber-900">The extension will send the active Salesforce session ID to this server. It carries the signed-in user's access, expires on logout or timeout, cannot refresh itself, and is lost on server restart. Only one Salesforce browser identity can supply an org at a time. Changing modes disconnects every org for this client.</div></template>
     <div slot="footer"><button class="btn-secondary" onclick={closeEdit}>Cancel</button><button class="btn-primary" onclick={saveEdit} disabled={busy}>Save</button></div>
   </x-modal>
 </template>

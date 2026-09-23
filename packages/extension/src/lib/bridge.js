@@ -43,6 +43,12 @@ export async function getContext() {
   return { tabId: null, context: emptyContext() };
 }
 
+/** Ask the service worker for the active tab's Salesforce sid; it is never stored by the extension. */
+export async function getSalesforceSession(host, sfOrgId) {
+  if (!hasChrome) return { error: 'Browser-session authentication requires the Chrome extension.' };
+  return (await sendMessage({ type: 'getSalesforceSession', host, sfOrgId })) || { error: 'The extension could not read the Salesforce session.' };
+}
+
 /**
  * Ask the page recorder on the current tab for its console or network buffer. Outside Chrome (the
  * panel also runs as a plain page for development) there is nothing to record, and saying so is

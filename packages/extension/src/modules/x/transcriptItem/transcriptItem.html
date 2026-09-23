@@ -1,16 +1,17 @@
 <template lwc:render-mode="light">
   <template lwc:if={isUser}>
-    <div class="flex justify-end">
-      <div class="max-w-[88%] rounded-2xl rounded-br-md bg-brand-500 px-3 py-2 text-[13px] text-white shadow whitespace-pre-wrap break-words">{text}</div>
+    <div class="flex justify-end pl-8">
+      <div class="max-w-full rounded-2xl rounded-br-sm bg-brand-500 px-3.5 py-2 text-[13px] leading-snug text-white whitespace-pre-wrap break-words shadow-sm shadow-brand-500/20">{text}</div>
     </div>
   </template>
 
   <template lwc:elseif={isAssistant}>
     <template lwc:if={isOrchestrator}>
-      <div class="flex justify-start">
-        <div class="max-w-[94%] rounded-2xl rounded-bl-md border border-line bg-surface px-3 py-2 shadow">
+      <div class="flex gap-2.5 pr-2">
+        <span class="mt-1 h-5 w-5 shrink-0 rounded-md bg-brand-500 shadow-sm shadow-brand-500/30"></span>
+        <div class="min-w-0 flex-1">
           <x-markdown-view text={text}></x-markdown-view>
-          <template lwc:if={streaming}><span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
+          <template lwc:if={streaming}><span class="mt-1 inline-block h-3 w-1.5 bg-brand-500 pulse-dot align-text-bottom"></span></template>
         </div>
       </div>
     </template>
@@ -18,7 +19,7 @@
       <div class="rounded-xl border border-line bg-surface">
         <button class="flex w-full items-center gap-2 px-2.5 py-1.5 text-left" onclick={onToggle}>
           <span class={roleCls}>{roleText}</span>
-          <template lwc:if={subOpen}><span class="text-[11px] text-content-subtle">agent message</span></template>
+          <template lwc:if={subOpen}><span class="text-[11px] text-content-subtle">full message</span></template>
           <template lwc:else><span class="min-w-0 flex-1 truncate text-[11px] text-content-muted">{subPreview}</span></template>
           <template lwc:if={streaming}><span class="h-1.5 w-1.5 rounded-full bg-brand-400 pulse-dot"></span></template>
           <span class="ml-auto text-[11px] text-content-subtle">{toggleGlyph}</span>
@@ -29,7 +30,7 @@
   </template>
 
   <template lwc:elseif={isThinking}>
-    <div class="rounded-lg border border-line bg-surface px-2.5 py-1.5">
+    <div class="border-l-2 border-line pl-2.5">
       <button class="flex w-full items-center gap-2 text-left text-[11px] text-content-subtle" onclick={onToggle}>
         <span class="italic">thinking</span><span class={roleCls}>{roleText}</span>
         <template lwc:if={subOpen}><span class="ml-auto">{toggleGlyph}</span></template>
@@ -40,7 +41,7 @@
   </template>
 
   <template lwc:elseif={isTool}>
-    <x-tool-step item={item} pro={pro} onopenchanges={onOpenChanges}></x-tool-step>
+    <div><x-tool-step item={item} pro={pro} onopenchanges={onOpenChanges}></x-tool-step></div>
   </template>
 
   <template lwc:elseif={isAgent}>
@@ -118,9 +119,7 @@
   </template>
 
   <template lwc:elseif={isStatus}>
-    <div class="flex items-center justify-center gap-2 py-1 text-[11px] text-content-subtle">
-      <span class={statusCls}>{statusText}</span><template lwc:if={statusMessage}><span class="truncate">{statusMessage}</span></template><span>{at}</span>
-    </div>
+    <div class="flex items-center gap-2 py-1 text-[10.5px] text-content-subtle"><span class="h-px flex-1 bg-line"></span><span class={statusCls}>{statusText}</span><template lwc:if={statusMessage}><span class="max-w-[50%] truncate">{statusMessage}</span></template><span>{at}</span><span class="h-px flex-1 bg-line"></span></div>
   </template>
 
   <template lwc:elseif={isError}>

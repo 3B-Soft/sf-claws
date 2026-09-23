@@ -1,6 +1,7 @@
 <template lwc:render-mode="light">
   <div class="mb-4 flex items-center justify-between gap-3">
-    <p class="text-sm text-content-muted">Connected via Salesforce OAuth (web-server flow with PKCE). Production and protected orgs require explicit confirmation for every deploy.</p>
+    <template lwc:if={browserAuth}><p class="text-sm text-content-muted">Uses each user's active Salesforce browser session. The extension supplies it when the org is open.</p></template>
+    <template lwc:else><p class="text-sm text-content-muted">Connected via Salesforce OAuth (web-server flow with PKCE). Production and protected orgs require explicit confirmation for every deploy.</p></template>
     <button class="btn-primary btn-sm shrink-0" onclick={openCreate}><x-icon name="plus" cls="h-3.5 w-3.5"></x-icon>Add org</button>
   </div>
   <template lwc:if={error}><x-error-state error={error} onretry={load}></x-error-state></template>
@@ -27,7 +28,8 @@
               <button class="btn-ghost btn-sm text-rose-700" data-id={o.id} onclick={disconnect} disabled={o.busy}>Disconnect</button>
             </template>
             <template lwc:else>
-              <button class="btn-primary btn-sm" data-id={o.id} onclick={connect} disabled={o.busy}><template lwc:if={o.busy}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template><template lwc:else><x-icon name="external" cls="h-3.5 w-3.5"></x-icon></template>Connect to Salesforce</button>
+              <template lwc:if={o.browserAuth}><span class="text-xs text-content-muted">Open this org in the Chrome extension to connect</span></template>
+              <template lwc:else><button class="btn-primary btn-sm" data-id={o.id} onclick={connect} disabled={o.busy}><template lwc:if={o.busy}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template><template lwc:else><x-icon name="external" cls="h-3.5 w-3.5"></x-icon></template>Connect to Salesforce</button></template>
             </template>
             <button class={o.toggleCls} data-id={o.id} onclick={toggleProtected} disabled={o.busy} title="Protected orgs require confirmation + policies for every deploy"><x-icon name="shield" cls="h-3.5 w-3.5"></x-icon>{o.toggleLabel}</button>
             <template lwc:if={o.connected}><button class={o.limitsCls} data-id={o.id} onclick={toggleLimits}><x-icon name="gauge" cls="h-3.5 w-3.5"></x-icon>{o.limitsLabel}</button></template>
@@ -40,14 +42,20 @@
     </div>
   </template>
 
-  <x-modal open={modalOpen} title="Add Salesforce org" subtitle="After saving you will be taken to the Salesforce login to authorize the harness." size="sm" onclose={closeCreate}>
+  <x-modal open={modalOpen} title="Add Salesforce org" subtitle="Configure how SF Claws identifies and connects to this org." size="sm" onclose={closeCreate}>
     <x-form-field label="Label" name="label" value={form.label} placeholder="UAT sandbox" required onchange={handleField}></x-form-field>
     <x-form-field label="Kind" name="kind" type="select" value={form.kind} options={kindOptions} onchange={handleField}></x-form-field>
-    <x-form-field label="Login URL" name="loginUrl" type="url" value={form.loginUrl} hint="login.salesforce.com, test.salesforce.com or a MyDomain URL." mono onchange={handleField}></x-form-field>
-    <x-form-field label="Consumer Key" name="consumerKey" value={form.consumerKey} hint="From the Connected App this org authorizes through. Its callback URL is this server's URL followed by /api/v1/oauth/salesforce/callback." required mono onchange={handleField}></x-form-field>
-    <x-form-field label="Consumer Secret" name="consumerSecret" type="password" value={form.consumerSecret} hint="Leave empty for a PKCE-only app. Stored encrypted." mono onchange={handleField}></x-form-field>
+    <x-form-field label="Login URL" name="loginUrl" type="url" value={form.loginUrl} hint="For browser sessions, enter this org's exact My Domain URL. External apps may use login.salesforce.com or test.salesforce.com." mono onchange={handleField}></x-form-field>
+    <template lwc:if={browserAuth}>
+      <div class="rounded-lg border border-amber-400/40 bg-amber-50 px-3 py-3 text-xs text-amber-900"><p class="font-semibold">Session-cookie access</p><p class="mt-1">The user must be signed in to this exact org in Chrome. The session ID is sent to SF Claws in memory and grants the server the user's Salesforce access. It expires with the browser session, cannot refresh itself, and is lost when the server restarts. Only one Salesforce browser identity can supply an org at a time.</p></div>
+    </template>
+    <template lwc:else>
+      <div class="rounded-lg border border-sky-400/30 bg-sky-50 px-3 py-3 text-xs text-sky-900"><p class="font-semibold">Create an External Client App in Salesforce</p><ol class="mt-1 list-decimal space-y-1 pl-4"><li>In Setup, open External Client App Manager and create an app.</li><li>Enable OAuth and add callback URL <span class="mono break-all">{callbackUrl}</span>.</li><li>Add scopes <span class="mono">api</span>, <span class="mono">refresh_token/offline_access</span>, <span class="mono">web</span>, and <span class="mono">openid</span>.</li><li>Require PKCE. A client secret is optional when the app does not require one for the web-server flow.</li><li>Copy the Consumer Key below, save, then authorize the org.</li></ol></div>
+      <x-form-field label="Consumer Key" name="consumerKey" value={form.consumerKey} hint="The External Client App consumer key." required mono onchange={handleField}></x-form-field>
+      <x-form-field label="Consumer Secret" name="consumerSecret" type="password" value={form.consumerSecret} hint="Leave empty for a PKCE-only app. Stored encrypted." mono onchange={handleField}></x-form-field>
+    </template>
     <x-form-field label="API version" name="apiVersion" value={form.apiVersion} mono onchange={handleField}></x-form-field>
     <x-form-field type="toggle" label="Protected" name="protected" value={form.protected} hint="Require explicit confirmation and policy checks for every deploy (always on for production)." onchange={handleField}></x-form-field>
-    <div slot="footer"><button class="btn-secondary" onclick={closeCreate}>Cancel</button><button class="btn-primary" onclick={create} disabled={cannotCreate}>Add &amp; connect</button></div>
+    <div slot="footer"><button class="btn-secondary" onclick={closeCreate}>Cancel</button><button class="btn-primary" onclick={create} disabled={cannotCreate}>Add org</button></div>
   </x-modal>
 </template>

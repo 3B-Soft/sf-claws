@@ -1,0 +1,4 @@
+[run]
+# Respect Node shebangs for tools such as Vite. Bun remains the package runner,
+# while scripts that require the Bun runtime invoke `bun` explicitly.
+bun = false

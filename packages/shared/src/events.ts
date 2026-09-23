@@ -75,6 +75,8 @@ export const AssistantMessageEvent = z.object({
   role: AgentRole,
   messageId: z.string(),
   text: z.string(),
+  status: z.enum(['normal', 'proactive']).optional(),
+  attachments: z.array(z.string()).optional(),
 });
 
 /** Thinking summary (when the provider exposes it). */
@@ -174,6 +176,8 @@ export const ConfirmationResolvedEvent = z.object({
   confirmationId: z.string(),
   optionId: z.string(),
   byUserId: z.string(),
+  /** The typed answer on a question card, so the thread shows it after a reload. */
+  answerText: z.string().optional(),
 });
 
 export const DeployResultEvent = z.object({

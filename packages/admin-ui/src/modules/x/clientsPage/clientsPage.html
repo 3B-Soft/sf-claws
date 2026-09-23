@@ -23,6 +23,16 @@
     <x-form-field label="Name" name="name" value={form.name} placeholder="Acme Corp" required onchange={handleField}></x-form-field>
     <x-form-field label="Slug" name="slug" value={form.slug} placeholder="acme-corp" hint="Used in URLs and branch names." error={slugError} mono required onchange={handleField}></x-form-field>
     <x-form-field label="Description" name="description" type="textarea" rows="3" value={form.description} placeholder="What we do for this client…" onchange={handleField}></x-form-field>
+    <x-form-field type="toggle" label="Use the user's Salesforce browser session" name="useBrowserSession" value={form.useBrowserSession} hint="Off uses a Salesforce External Client App with OAuth and refresh tokens." onchange={handleField}></x-form-field>
+    <template lwc:if={browserSessionMode}>
+      <div class="rounded-lg border border-amber-400/40 bg-amber-50 px-3 py-3 text-xs text-amber-900">
+        <p class="font-semibold">Browser-session mode has important limitations</p>
+        <p class="mt-1">The extension reads the active Salesforce <span class="mono">sid</span> cookie and sends it to this SF Claws server. It has the same access as the signed-in user, expires on logout or timeout, cannot be refreshed, and must be supplied again after a server restart. Only one Salesforce browser identity can supply an org at a time. Work may stop if the session expires.</p>
+      </div>
+    </template>
+    <template lwc:else>
+      <div class="rounded-lg border border-sky-400/30 bg-sky-50 px-3 py-3 text-xs text-sky-900">External Client App mode is recommended for reliable long-running and resumable work. Each org is connected through OAuth with PKCE.</div>
+    </template>
     <div slot="footer"><button class="btn-secondary" onclick={closeCreate}>Cancel</button><button class="btn-primary" onclick={create} disabled={cannotCreate}>Create client</button></div>
   </x-modal>
 </template>

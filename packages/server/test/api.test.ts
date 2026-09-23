@@ -108,6 +108,35 @@ describe('http api', () => {
     expect(resolve3.json().org.id).toBe(orgId);
   });
 
+  it('configures browser-session clients without external-app credentials', async () => {
+    const c = await app.inject({
+      method: 'POST',
+      url: '/api/v1/clients',
+      headers: auth(),
+      payload: { name: 'Browser Auth', slug: 'browser-auth', salesforceAuthMode: 'browser_session' },
+    });
+    expect(c.statusCode).toBe(201);
+    expect(c.json().salesforceAuthMode).toBe('browser_session');
+
+    const generic = await app.inject({
+      method: 'POST',
+      url: `/api/v1/clients/${c.json().id}/orgs`,
+      headers: auth(),
+      payload: { label: 'Wrong URL', kind: 'sandbox', loginUrl: 'https://test.salesforce.com' },
+    });
+    expect(generic.statusCode).toBe(400);
+
+    const org = await app.inject({
+      method: 'POST',
+      url: `/api/v1/clients/${c.json().id}/orgs`,
+      headers: auth(),
+      payload: { label: 'UAT', kind: 'sandbox', loginUrl: 'https://acme--uat.sandbox.my.salesforce.com' },
+    });
+    expect(org.statusCode).toBe(201);
+    expect(org.json().consumerKey).toBeNull();
+    expect(org.json().myDomainHost).toBe('acme--uat.sandbox.my.salesforce.com');
+  });
+
   it('device pairing flow', async () => {
     const start = await app.inject({ method: 'POST', url: '/api/v1/auth/device/start' });
     const { code } = start.json();

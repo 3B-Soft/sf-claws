@@ -4,6 +4,11 @@ SF Claws holds Salesforce OAuth refresh tokens, GitHub tokens and AI provider ke
 metadata to production Salesforce orgs. It is designed to be self-hosted, often by an agency running
 it for several clients at once. Security reports matter here more than they would for a library.
 
+Clients configured for browser-session authentication additionally send the active Salesforce
+`sid` bearer credential from the Chrome extension to the control plane. It is validated against the
+configured My Domain and Salesforce org id and held in process memory only. It is intentionally not
+written to SQLite, logs, audit details, or model context.
+
 ## Reporting a vulnerability
 
 Please report privately, not as a public issue:

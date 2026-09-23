@@ -123,6 +123,19 @@ export async function orgRoutes(app: FastifyInstance, ctx: AppContext) {
     ctx.repos.audit.log({ userId: admin.id, action: 'org.disconnect', target: o.id });
     return publicOrg(ctx.repos.orgs.byId(o.id)!);
   });
+  app.post('/orgs/:orgId/browser-session', async (req) => {
+    const { user, org: o } = requireOrgAccess(ctx, req, (req.params as any).orgId);
+    const body = parse(z.object({ accessToken: z.string().min(20), instanceUrl: z.string().url() }), req.body);
+    const identity = await ctx.sf.attachBrowserSession(o.id, body.accessToken, body.instanceUrl);
+    ctx.repos.audit.log({
+      userId: user.id,
+      action: 'org.browser_session_attached',
+      target: o.id,
+      details: { username: identity.username, sfOrgId: identity.orgId },
+      ip: ip(req),
+    });
+    return { ok: true, identity };
+  });
   app.get('/orgs/:orgId/status', async (req) => ctx.sf.status(orgFor(req).id));
 
   // ---- Data & metadata (read) ----

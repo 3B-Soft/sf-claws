@@ -55,6 +55,9 @@ Apex without SOQL limits; use them for configurable thresholds and mappings. Cus
 
 ## Deployment mechanics
 
+The step-by-step loop (package, validate, read errors, fix, deploy) is "Playbook — validate, fix and
+deploy metadata"; this section is the platform rules it relies on.
+
 - Source format, one file per component, package built from the workspace. `validate_deployment`
   is a `checkOnly` deploy: nothing changes until `request_deploy` and the user's confirmation.
 - Test levels: `NoTestRun` is refused in production when Apex is included; `RunLocalTests` runs

@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from 'bun:sqlite';
 import type { AiModel, AiProvider, AgentRole, RoleModelBinding, Skill, PolicyRules } from '@sf-claws/shared';
 import { type Db, nowIso, rowToObj } from '../db.js';
 import { newId } from '../../lib/crypto.js';
@@ -106,7 +107,7 @@ export class ModelsRepo {
       topP: 'top_p',
     };
     const sets: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);
@@ -152,7 +153,7 @@ export class SkillsRepo {
   list(filter: { clientId?: string | null; orgId?: string | null; enabledOnly?: boolean } = {}): Skill[] {
     // Global skills + skills scoped to the client + skills scoped to the org.
     const where: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     const scopes = ["scope='global'"];
     if (filter.clientId) {
       scopes.push("(scope='client' AND client_id=?)");
@@ -216,11 +217,11 @@ export class SkillsRepo {
       updatedBy: 'updated_by',
     };
     const sets: string[] = ['version=version+1', 'updated_at=?'];
-    const vals: unknown[] = [nowIso()];
+    const vals: SQLQueryBindings[] = [nowIso()];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);
-      vals.push(k === 'roles' ? JSON.stringify(v) : typeof v === 'boolean' ? (v ? 1 : 0) : v);
+      vals.push(k === 'roles' ? JSON.stringify(v) : typeof v === 'boolean' ? (v ? 1 : 0) : (v as SQLQueryBindings));
     }
     this.db.prepare(`UPDATE skills SET ${sets.join(', ')} WHERE id=?`).run(...vals, id);
     return this.byId(id);

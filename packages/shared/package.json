@@ -13,9 +13,9 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "build": "bun --bun tsc -p tsconfig.json",
+    "typecheck": "bun --bun tsc -p tsconfig.json --noEmit",
+    "test": "bun --bun vitest run --pool forks --passWithNoTests"
   },
   "dependencies": {
     "zod": "^4.0.0"

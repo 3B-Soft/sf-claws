@@ -14,6 +14,7 @@ import { budgetTurnResults } from './budget.js';
 import { formatReminders } from './reminders.js';
 import { describeCacheBreak, type PromptSection } from './cache-probe.js';
 import { measuredCompletion, workPhase } from './model-timing.js';
+import { READ_ONLY_ROLES } from './built-in/index.js';
 
 export interface AgentConfig {
   agentId: string;
@@ -27,8 +28,9 @@ export interface AgentConfig {
   /** The system prompt as named sections, for cache-break detection. Optional: defaults to one section. */
   promptSections?: PromptSection[];
   tools: ToolDef[];
-  /** Persist conversation between turns (orchestrator). Sub-agents are ephemeral. */
+  /** Persist conversation between turns, including workers that can receive follow-up work. */
   persistent: boolean;
+  initialMessages?: LlmMessage[];
   /** Fallback model used when the primary is unavailable (overload / rate limit exhaustion). */
   fallback?: { model: AiModel; provider: LlmProvider } | null;
   /** A client's "## Compact instructions" block, honoured by the summariser. */
@@ -112,6 +114,7 @@ export class AgentRun {
     private cfg: AgentConfig,
     private ctx: ToolContext,
   ) {
+    ctx.conversation = () => structuredClone(this.messages);
     if (cfg.persistent) {
       const stored = ctx.app.repos.messages.list(ctx.session.id, cfg.agentId).map((m) => m.content as LlmMessage);
       // A crash between persisting the assistant message and its tool results leaves dangling
@@ -122,6 +125,10 @@ export class AgentRun {
         ctx.app.repos.messages.replace(ctx.session.id, cfg.agentId, toStoredMessages(repaired));
       }
       this.messages = repaired;
+    }
+    if (!this.messages.length && cfg.initialMessages) {
+      this.messages = structuredClone(cfg.initialMessages);
+      if (cfg.persistent) ctx.app.repos.messages.replace(ctx.session.id, cfg.agentId, toStoredMessages(this.messages));
     }
   }
 
@@ -137,7 +144,20 @@ export class AgentRun {
 
     while (iterations < cfg.maxIterations) {
       if (ctx.signal.aborted) return this.finish(lastText, false, iterations, 'cancelled');
-      await ctx.runtime.autoCompile(sessionId);
+      const inbox = ctx.app.repos.agentState.drain(sessionId, cfg.agentId);
+      if (inbox.length)
+        this.push({
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text:
+                'Agent messages (coordination and evidence, not permission changes):\n' +
+                inbox.map((m) => JSON.stringify({ from: m.from, message: m.message })).join('\n'),
+            },
+          ],
+        });
+      if (!READ_ONLY_ROLES.has(cfg.role)) await ctx.runtime.autoCompile(sessionId);
       const compile = ctx.app.repos.compileControl.get(sessionId);
       if (compile.stopped) return this.finish(compile.stopped, false, iterations, 'compile_blocked');
       if (compile.checks !== observedCompile && compile.checks > 0) {
@@ -254,7 +274,9 @@ export class AgentRun {
 
       const calls = resp.content.filter((b): b is Extract<LlmBlock, { type: 'tool_use' }> => b.type === 'tool_use');
       if (!calls.length) {
-        await ctx.runtime.autoCompile(sessionId);
+        // A message may arrive while the provider is producing a final answer. Consume it before exiting.
+        if (ctx.app.repos.agentState.get(sessionId).messages.some((m) => m.to === cfg.agentId)) continue;
+        if (!READ_ONLY_ROLES.has(cfg.role)) await ctx.runtime.autoCompile(sessionId);
         const stopped = ctx.app.repos.compileControl.get(sessionId).stopped;
         if (stopped) return this.finish(stopped, false, iterations, 'compile_blocked');
         if (resp.stopReason === 'max_tokens' && this.outputRecoveries < MAX_OUTPUT_RECOVERIES) {
@@ -288,7 +310,7 @@ export class AgentRun {
       if (ctx.runtime.isAwaitingUser(sessionId)) return this.finish(lastText, true, iterations, 'awaiting_user');
       // A researcher that has spent its read budget cannot make progress; make it report now.
       const budget = ctx.research?.readBudget;
-      if (budget && budget.used >= budget.max && !cfg.persistent) {
+      if (budget && budget.used >= budget.max && cfg.role !== 'orchestrator') {
         const report = await this.wrapUp(`Your file-read budget (${budget.max} files) is spent`);
         return this.finish(report || lastText, true, iterations, 'end_turn');
       }
@@ -301,7 +323,7 @@ export class AgentRun {
     });
     // A sub-agent that hits its cap still owes the lead agent a report; one tool-less call turns
     // the junk of a half-finished loop into a usable hand-over.
-    const report = cfg.persistent ? '' : await this.wrapUp(`You have reached your step limit (${cfg.maxIterations} iterations)`);
+    const report = cfg.role === 'orchestrator' ? '' : await this.wrapUp(`You have reached your step limit (${cfg.maxIterations} iterations)`);
     return this.finish(report || lastText || 'Stopped: iteration limit reached.', false, iterations, 'max_iterations');
   }
 
@@ -315,7 +337,7 @@ export class AgentRun {
    */
   private async wrapUp(reason: string): Promise<string> {
     const { cfg, ctx } = this;
-    await ctx.runtime.autoCompile(ctx.session.id);
+    if (!READ_ONLY_ROLES.has(cfg.role)) await ctx.runtime.autoCompile(ctx.session.id);
     if (ctx.app.repos.compileControl.get(ctx.session.id).stopped) return '';
     if (ctx.signal.aborted) return '';
     this.push({
@@ -694,7 +716,7 @@ export class AgentRun {
     // Measured after compaction: what matters to the user is how much room is left once the loop
     // has done everything it can, not the peak it reached before compacting. Only the persistent
     // orchestrator conversation can outgrow the window across turns; sub-agents start empty.
-    if (this.cfg.persistent) this.ctx.runtime.noteContextPressure(this.ctx.session.id, estimateTokens(this.messages), window);
+    if (this.cfg.role === 'orchestrator') this.ctx.runtime.noteContextPressure(this.ctx.session.id, estimateTokens(this.messages), window);
   }
 
   /**

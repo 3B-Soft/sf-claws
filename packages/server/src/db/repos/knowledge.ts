@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from 'bun:sqlite';
 import type { AgentRole, CustomAgent, KnowledgeSource, KnowledgeSourceKind } from '@sf-claws/shared';
 import { type Db, nowIso, rowToObj } from '../db.js';
 import { newId } from '../../lib/crypto.js';
@@ -97,7 +98,7 @@ export class KnowledgeSourcesRepo {
       clientId: 'client_id',
     };
     const sets: string[] = ['updated_at=?'];
-    const vals: unknown[] = [nowIso()];
+    const vals: SQLQueryBindings[] = [nowIso()];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);
@@ -187,7 +188,7 @@ export class CustomAgentsRepo {
       clientId: 'client_id',
     };
     const sets: string[] = ['updated_at=?'];
-    const vals: unknown[] = [nowIso()];
+    const vals: SQLQueryBindings[] = [nowIso()];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);

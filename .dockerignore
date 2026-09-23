@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+**/dist
+**/release
+.git
+**/.env
+**/.env.*
+!**/.env.example
+**/data
+_long_session_logs

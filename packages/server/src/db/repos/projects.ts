@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from 'bun:sqlite';
 import type { Project, Task, TaskStatus } from '@sf-claws/shared';
 import { type Db, nowIso, rowToObj } from '../db.js';
 import { newId } from '../../lib/crypto.js';
@@ -31,7 +32,7 @@ export class ProjectsRepo {
   update(id: string, patch: Partial<{ name: string; description: string | null; status: 'active' | 'archived' }>): Project | undefined {
     const map: Record<string, string> = { name: 'name', description: 'description', status: 'status' };
     const sets: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);
@@ -49,7 +50,7 @@ export class TasksRepo {
   constructor(private db: Db) {}
   list(filter: { projectId?: string; orgId?: string; assigneeId?: string; status?: TaskStatus } = {}): Task[] {
     const where: string[] = [];
-    const vals: unknown[] = [];
+    const vals: SQLQueryBindings[] = [];
     if (filter.projectId) {
       where.push('project_id=?');
       vals.push(filter.projectId);
@@ -90,7 +91,7 @@ export class TasksRepo {
   ): Task | undefined {
     const map: Record<string, string> = { title: 'title', description: 'description', status: 'status', assigneeId: 'assignee_id', orgId: 'org_id' };
     const sets: string[] = ['updated_at=?'];
-    const vals: unknown[] = [nowIso()];
+    const vals: SQLQueryBindings[] = [nowIso()];
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || !map[k]) continue;
       sets.push(`${map[k]}=?`);

@@ -118,9 +118,9 @@ const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
 // overwritten here and silently drift, so the one that matters is the one nobody edits by hand.
 if (manifest.version) throw new Error('src/manifest.json must not declare "version": bump it in package.json instead');
 manifest.version = pkg.version;
-// The Chrome Web Store lists every optional origin on the install prompt. localhost is only ever
-// useful to someone running the control plane on their own machine from an unpacked build.
-if (store) manifest.optional_host_permissions = (manifest.optional_host_permissions ?? []).filter((o) => !o.includes('localhost'));
+// The Chrome Web Store lists every optional origin on the install prompt. Plain HTTP is only for
+// unpacked development builds, where the control plane may be on localhost or another LAN host.
+if (store) manifest.optional_host_permissions = (manifest.optional_host_permissions ?? []).filter((o) => !o.startsWith('http://'));
 fs.writeFileSync(path.join(dist, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 
 // sanity: every referenced file must exist
@@ -138,7 +138,7 @@ const refs = [
 fs.mkdirSync(path.join(dist, 'icons'), { recursive: true });
 for (const size of [16, 32, 48, 128]) {
   const src = path.join(root, 'src/icons', `icon-${size}.png`);
-  if (!fs.existsSync(src)) throw new Error(`missing icon asset: ${src} — run node tools/render-icons.mjs`);
+  if (!fs.existsSync(src)) throw new Error(`missing icon asset: ${src} — run bun tools/render-icons.mjs`);
   fs.copyFileSync(src, path.join(dist, 'icons', `icon-${size}.png`));
 }
 for (const r of refs) if (!fs.existsSync(path.join(dist, r))) throw new Error(`manifest references missing file: ${r}`);

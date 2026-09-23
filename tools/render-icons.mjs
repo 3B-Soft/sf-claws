@@ -4,7 +4,7 @@
  * The build must not depend on a browser, so the PNGs are committed next to the SVG and
  * scripts/postbuild.mjs only copies them. Run this when the logo changes, and commit the result:
  *
- *   node tools/render-icons.mjs
+ *   bun tools/render-icons.mjs
  */
 import fs from 'node:fs';
 import path from 'node:path';
