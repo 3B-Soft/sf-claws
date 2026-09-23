@@ -7,9 +7,8 @@ roles: []
 
 # Salesforce Apex and LWC
 
-Load when the change needs code: an Apex trigger, class, test, invocable method, asynchronous job,
-or a Lightning Web Component (including GraphQL queries and mutations in LWC), or when debugging
-an Apex exception or a component that shows wrong or missing data.
+Load when the change needs Apex: a trigger, class, test, invocable method, asynchronous job, or
+Apex behind a Lightning Web Component, or when debugging an Apex exception or governor limit.
 
 ## Before writing code
 
@@ -135,78 +134,9 @@ expire and logs truncate at 20 MB, so a missing or cut-off log is not proof noth
 
 ## LWC
 
-- Files: `.html`, `.js`, `.js-meta.xml` with `<isExposed>` and `<targets>` (record page, app page,
-  Experience site page). Light DOM is opt-in; shadow DOM is the default.
-- `@api recordId` is only populated on record pages.
-- Import fields from `@salesforce/schema` rather than string names where the API allows it.
-- Test with Jest (`sfdx-lwc-jest`), mocking wire adapters and imported modules.
-- Lightning Message Service for communication between unrelated components.
-
-### Data access: GraphQL first
-
-New components get their data without Apex wherever possible. Choose in this order and stop at
-the first that fits:
-
-1. **Base record components** (`lightning-record-form`, `lightning-record-edit-form`,
-   `lightning-record-view-form`) for a form over one record.
-2. **GraphQL wire** (`graphql` from `lightning/graphql`) for every other read: lists, related
-   records, several objects in one request, filtering, sorting, pagination, aggregates.
-3. **`executeMutation`** from `lightning/graphql` for create, update and delete.
-4. **Apex**, only for a reason from the list below, named in the plan.
-
-Use `lightning/graphql`, not the older `lightning/uiGraphQLApi`, except for Mobile Offline, which
-only the older module supports. Do not add a new `@AuraEnabled` method for a read or write that
-GraphQL can do; when editing an existing component that uses Apex for simple reads, propose
-migrating it rather than extending the Apex.
-
-**Apex is still justified for component data when:** the object is not supported by UI API;
-the component needs access the running user lacks (`without sharing` or system-mode logic, with
-the reason documented); the operation needs a callout; the write must run server-side business
-logic that cannot live in a trigger or flow; the query needs SOQL features the GraphQL API
-lacks, more than 10 subqueries, or result volumes pagination cannot reasonably handle.
-
-**Writing GraphQL queries:**
-
-- Wrap queries in `gql` and always name the operation (`query OpenCasesForAccount`), which makes
-  server-side debugging possible.
-- Pass inputs through `variables`, exposed via a getter so the wire re-runs reactively. Never
-  build query text by concatenating user input, even though v2 supports dynamic queries.
-- Field values come wrapped: read `node.Name.value` (and `displayValue` for formatted output),
-  under `uiapi.query.<Object>.edges[].node`.
-- Only the first 10 records return by default; set `first` explicitly. Each query allows up to
-  10 subqueries, each returning at most 2,000 records. For larger sets use cursor pagination
-  (`first` and `after`); with `upperBound`, `first` must be 200 to 2,000 and the upper bound
-  must stay constant for a given paginated collection.
-- The adapter returns `errors` (an array), not `error`. Handle `data` and `errors` together:
-  a response can carry partial data alongside errors.
-- Queries run with the current user's object and field security. Use v2's optional-field
-  support for fields some users cannot see, so one inaccessible field does not fail the query.
-- Check field filterability before using it in `where`; not every field can be filtered.
-
-**Writing mutations:**
-
-- Call `executeMutation({ query, variables, operationName })` imperatively from an event
-  handler, and check the returned `errors` before showing success.
-- Mutations are ordinary saves: validation rules, duplicate rules, triggers and flows all run.
-  A validation failure comes back in `errors`; surface its message to the user.
-- After a create or update, call `refresh` on the stored wire result, since new or changed
-  records are not guaranteed to appear in existing query results. Deletes are removed from
-  wire results automatically.
-- When several writes must succeed or fail together and you are not certain the mutation gives
-  that guarantee, check the current GraphQL mutation docs; if it cannot, use Apex.
-
-**Other data paths:** `getRecord` and other UI API adapters remain fine for a single record's
-fields. When Apex is justified, use `@AuraEnabled(cacheable=true)` for reads and non-cacheable
-methods for writes, the Apex checks access itself, `refreshApex` works only on the stored
-value from a wired property or function, and `notifyRecordUpdateAvailable` tells other
-components on the page to refresh after an imperative write.
-
-### Experience sites
-
-The guest or community profile needs object and field access for GraphQL queries to return data,
-and the Apex class on the profile if Apex is used; the component's target must include the site
-page type. The browser's console and network tabs (`read_console_logs`, `read_network_requests`)
-show the GraphQL request and its `errors` when nothing else does.
+For component data access (GraphQL queries and mutations instead of Apex) and component design,
+load "Lightning Web Components — GraphQL data and bold design". Apex for a component follows this
+skill: `@AuraEnabled(cacheable=true)` for reads, non-cacheable for writes, user mode, and a test.
 
 ## Definition of done
 
@@ -214,4 +144,3 @@ show the GraphQL request and its `errors` when nothing else does.
 - User-mode access enforced in Apex; no hardcoded IDs, endpoints or secrets.
 - User-facing errors surface through `addError` or the component UI.
 - New LWC data access uses base components or GraphQL, or the plan names why Apex is needed.
-- GraphQL operations are named, use variables, handle `errors`, and refresh after writes.
