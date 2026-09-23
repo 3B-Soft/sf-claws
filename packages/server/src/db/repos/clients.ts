@@ -31,8 +31,7 @@ export class ClientsRepo {
     if (patch.name !== undefined) this.db.prepare('UPDATE clients SET name=? WHERE id=?').run(patch.name, id);
     if (patch.description !== undefined) this.db.prepare('UPDATE clients SET description=? WHERE id=?').run(patch.description, id);
     if (patch.instructions !== undefined) this.db.prepare('UPDATE clients SET instructions=? WHERE id=?').run(patch.instructions || null, id);
-    if (patch.salesforceAuthMode !== undefined)
-      this.db.prepare('UPDATE clients SET salesforce_auth_mode=? WHERE id=?').run(patch.salesforceAuthMode, id);
+    if (patch.salesforceAuthMode !== undefined) this.db.prepare('UPDATE clients SET salesforce_auth_mode=? WHERE id=?').run(patch.salesforceAuthMode, id);
     return this.byId(id);
   }
   delete(id: string): void {

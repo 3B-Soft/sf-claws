@@ -195,7 +195,7 @@ export class SalesforceService {
     const url = new URL(instanceUrl);
     if (url.protocol !== 'https:' || !isSalesforceHost(url.hostname)) throw badRequest('Session instance must be an HTTPS Salesforce host');
     if (!sameSalesforceDomain(new URL(org.loginUrl).hostname, url.hostname))
-      throw badRequest('The browser session does not belong to this org\'s configured My Domain');
+      throw badRequest("The browser session does not belong to this org's configured My Domain");
 
     const jsforce = (await import('jsforce')).default;
     const conn = new jsforce.Connection({ instanceUrl: url.origin, accessToken, version: org.apiVersion });
@@ -212,7 +212,7 @@ export class SalesforceService {
         throw new HttpError(
           409,
           'BROWSER_SESSION_USER_CONFLICT',
-          'A different Salesforce user already supplies this org\'s browser session. Disconnect the org before switching users.',
+          "A different Salesforce user already supplies this org's browser session. Disconnect the org before switching users.",
         );
       this.connections.setBrowserSession(org.id, accessToken, url.origin, identity.user_id);
       this.repos.orgs.update(org.id, {
@@ -1031,23 +1031,13 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function isSalesforceHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
-  return (
-    h === 'salesforce.com' ||
-    h.endsWith('.salesforce.com') ||
-    h.endsWith('.force.com') ||
-    h.endsWith('.visualforce.com')
-  );
+  return h === 'salesforce.com' || h.endsWith('.salesforce.com') || h.endsWith('.force.com') || h.endsWith('.visualforce.com');
 }
 
 /** Treat the Lightning, API and Setup faces of one My Domain as the same configured org. */
 function sameSalesforceDomain(configuredHost: string, sessionHost: string): boolean {
   const key = (host: string) =>
-    host
-      .toLowerCase()
-      .replace(
-        /\.(?:sandbox\.|develop\.|scratch\.)?(?:lightning\.force|my\.salesforce|my\.salesforce-setup|vf\.force|visualforce)\.com$/,
-        '',
-      );
+    host.toLowerCase().replace(/\.(?:sandbox\.|develop\.|scratch\.)?(?:lightning\.force|my\.salesforce|my\.salesforce-setup|vf\.force|visualforce)\.com$/, '');
   return key(configuredHost) === key(sessionHost);
 }
 

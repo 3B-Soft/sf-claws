@@ -94,7 +94,7 @@ export async function clientRoutes(app: FastifyInstance, ctx: AppContext) {
     if (client.salesforceAuthMode === 'browser_session') {
       const host = new URL(body.loginUrl).hostname.toLowerCase();
       if (/^(login|test)\.salesforce\.com$/.test(host))
-        throw badRequest('Browser-session clients require the org\'s My Domain URL, not login.salesforce.com or test.salesforce.com');
+        throw badRequest("Browser-session clients require the org's My Domain URL, not login.salesforce.com or test.salesforce.com");
     }
     const org = ctx.repos.orgs.create({
       clientId,
