@@ -269,6 +269,22 @@ export default class SessionDetailPage extends LightningElement {
   get showSse() {
     return this.isLive && !!this.sseLabel;
   }
+  get memoryActionLabel() {
+    return this.session?.excludedFromMemory ? 'Include in AI memory' : 'Exclude from AI memory';
+  }
+  async toggleMemory() {
+    if (this.busy) return;
+    this.busy = true;
+    try {
+      const session = await Api.updateSession(this.sessionId, { excludedFromMemory: !this.session.excludedFromMemory });
+      this.detail = { ...this.detail, session };
+      toast.success(session.excludedFromMemory ? 'Excluded from AI memory' : 'Included in AI memory');
+    } catch (err) {
+      toast.error('Could not update AI memory setting', err.message);
+    } finally {
+      this.busy = false;
+    }
+  }
   get helpfulUp() {
     return this.session?.helpful === true;
   }

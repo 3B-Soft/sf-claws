@@ -20,7 +20,7 @@ export interface SessionRow extends Session {
   pageContext: unknown;
   branchName: string | null;
 }
-const toSession = (r: any) => rowToObj<SessionRow>(r, { bools: ['helpful'], json: ['pageContext'] });
+const toSession = (r: any) => rowToObj<SessionRow>(r, { bools: ['helpful', 'excludedFromMemory'], json: ['pageContext'] });
 
 export class SessionsRepo {
   constructor(private db: Db) {}
@@ -102,6 +102,7 @@ export class SessionsRepo {
     patch: Partial<{
       title: string;
       status: SessionStatus;
+      excludedFromMemory: boolean;
       helpful: boolean | null;
       feedbackNote: string | null;
       completedAt: string | null;
@@ -117,6 +118,7 @@ export class SessionsRepo {
     const map: Record<string, string> = {
       title: 'title',
       status: 'status',
+      excludedFromMemory: 'excluded_from_memory',
       helpful: 'helpful',
       feedbackNote: 'feedback_note',
       completedAt: 'completed_at',
@@ -449,6 +451,14 @@ export class DocsRepo {
   byOrg(orgId: string, limit = 50): DocEntry[] {
     return this.db.prepare('SELECT * FROM docs WHERE org_id=? ORDER BY created_at DESC LIMIT ?').all(orgId, limit).map(toDoc);
   }
+  /** AI-only retrieval; human document browsing keeps excluded sessions visible. */
+  memoryByOrg(orgId: string, limit = 50): DocEntry[] {
+    return this.db
+      .prepare(`SELECT d.* FROM docs d JOIN sessions s ON s.id=d.session_id
+        WHERE d.org_id=? AND s.excluded_from_memory=0 ORDER BY d.created_at DESC LIMIT ?`)
+      .all(orgId, limit)
+      .map(toDoc);
+  }
   byClient(clientId: string, limit = 50): DocEntry[] {
     return this.db.prepare('SELECT * FROM docs WHERE client_id=? ORDER BY created_at DESC LIMIT ?').all(clientId, limit).map(toDoc);
   }
@@ -462,15 +472,17 @@ export class DocsRepo {
       .split(/\s+/)
       .filter((t) => t.length > 2)
       .slice(0, 12);
-    if (!terms.length) return this.byOrg(orgId, limit);
+    if (!terms.length) return this.memoryByOrg(orgId, limit);
     const match = terms.map((t) => `"${t.replace(/"/g, '')}"`).join(' OR ');
     try {
       return this.db
-        .prepare(`SELECT d.* FROM docs_fts f JOIN docs d ON d.rowid=f.rowid WHERE docs_fts MATCH ? AND d.org_id=? ORDER BY bm25(docs_fts) LIMIT ?`)
+        .prepare(
+          `SELECT d.* FROM docs_fts f JOIN docs d ON d.rowid=f.rowid JOIN sessions s ON s.id=d.session_id WHERE docs_fts MATCH ? AND d.org_id=? AND s.excluded_from_memory=0 ORDER BY bm25(docs_fts) LIMIT ?`,
+        )
         .all(match, orgId, limit)
         .map(toDoc);
     } catch {
-      return this.byOrg(orgId, limit);
+      return this.memoryByOrg(orgId, limit);
     }
   }
 }

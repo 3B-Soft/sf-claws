@@ -454,6 +454,7 @@ export const Session = z.object({
   outputTokens: z.number().default(0),
   cachedInputTokens: z.number().default(0),
   costUsd: z.number().default(0),
+  excludedFromMemory: z.boolean().optional(),
   helpful: z.boolean().nullable().optional(),
   feedbackNote: z.string().nullable().optional(),
   /** GitHub branch used by this session once the first commit happened. */

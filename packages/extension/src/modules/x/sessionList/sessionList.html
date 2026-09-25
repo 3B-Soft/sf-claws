@@ -11,6 +11,7 @@
     </div>
 
     <template lwc:if={error}><div class="mx-3 mt-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-700">{error}</div></template>
+    <template lwc:if={memoryError}><div role="alert" class="px-3 py-2 text-[12px] text-rose-700">{memoryError}</div></template>
     <template lwc:if={cacheNote}><div class="mx-3 mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-700">{cacheNote}</div></template>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
@@ -54,6 +55,10 @@
                   <template lwc:if={s.unhelpful}><span class="ml-auto rounded bg-rose-500/15 px-1.5 text-rose-700">not helpful</span></template>
                 </div>
               </button>
+              <div class="px-3 py-1 text-[11px] text-content-muted">
+                <template lwc:if={s.excludedFromMemory}><span>Excluded from AI memory · </span></template>
+                <button class="underline hover:text-content-strong disabled:opacity-50" data-id={s.id} onclick={toggleMemory} disabled={memoryBusy} title="Controls future AI memory lookups. Keeps your records; does not remove information already in a conversation.">{s.memoryActionLabel}</button>
+              </div>
             </li>
           </template>
         </ul>

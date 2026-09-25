@@ -93,7 +93,12 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
   app.patch('/sessions/:id', async (req) => {
     const { session } = access(req);
     const body = parse(
-      z.object({ title: z.string().min(1).optional(), projectId: z.string().nullable().optional(), taskId: z.string().nullable().optional() }),
+      z.object({
+        title: z.string().min(1).optional(),
+        projectId: z.string().nullable().optional(),
+        taskId: z.string().nullable().optional(),
+        excludedFromMemory: z.boolean().optional(),
+      }),
       req.body,
     );
     return ctx.repos.sessions.update(session.id, body);

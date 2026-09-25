@@ -562,4 +562,8 @@ ALTER TABLE clients ADD COLUMN salesforce_auth_mode TEXT NOT NULL DEFAULT 'exter
       state TEXT NOT NULL
     );`,
   },
+  {
+    name: 'session_memory_exclusion',
+    sql: `ALTER TABLE sessions ADD COLUMN excluded_from_memory INTEGER NOT NULL DEFAULT 0 CHECK (excluded_from_memory IN (0, 1));`,
+  },
 ];

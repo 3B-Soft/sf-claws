@@ -232,6 +232,7 @@ export const Api = {
   // sessions
   listSessions: (params) => api.get(`/sessions${qs(params)}`),
   adminSessions: (params) => api.get(`/admin/sessions${qs(params)}`),
+  updateSession: (id, body) => api.patch(`/sessions/${enc(id)}`, body),
   getSession: (id) => api.get(`/sessions/${enc(id)}`),
   sessionHistory: async (id, after = 0, through) => {
     const events = [];

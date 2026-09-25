@@ -24,6 +24,13 @@
       <template lwc:if={feedbackNote}><div class="w-full text-xs text-content-muted">Feedback: “{feedbackNote}”</div></template>
     </div>
 
+    <div class="card mb-4 flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
+      <div class="flex-1">
+        <template lwc:if={session.excludedFromMemory}><strong>Excluded from AI memory</strong><p class="text-xs text-content-muted">This session’s documentation is hidden from future AI memory lookups. Information already loaded into a conversation is not removed.</p></template>
+        <template lwc:else><strong>Included in AI memory</strong><p class="text-xs text-content-muted">AI can use this session’s documentation in future sessions. Excluding it keeps your records available here.</p></template>
+      </div>
+      <template lwc:if={canInteract}><button class="btn-secondary btn-sm" onclick={toggleMemory} disabled={busy}>{memoryActionLabel}</button></template>
+    </div>
     <template lwc:if={isResumable}><div class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-700"><x-icon name="error" cls="h-4 w-4 text-rose-700"></x-icon><span class="flex-1">This session failed but can be recovered: the orchestrator continues from its persisted memory and plan.</span><button class="btn-primary btn-sm" onclick={resume} disabled={busy}><x-icon name="play" cls="h-3.5 w-3.5"></x-icon>Resume session</button></div></template>
     <template lwc:if={hasPending}><div class="mb-4 flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-700"><x-icon name="warning" cls="h-4 w-4 text-amber-700"></x-icon>{pendingCount} decision(s) waiting — see the approval cards in the transcript.</div></template>
     <template lwc:if={hasPermissions}>

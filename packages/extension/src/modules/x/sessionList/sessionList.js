@@ -11,6 +11,8 @@ export default class SessionList extends LightningElement {
   @api error = '';
   @api canback = false;
   sessions = [];
+  memoryBusy = false;
+  memoryError = '';
   view = 'active'; // 'active' | 'completed'
   loading = true;
   loadError = '';
@@ -96,6 +98,8 @@ export default class SessionList extends LightningElement {
       .filter((s) => (s.status === 'completed') === (this.view === 'completed'))
       .map((s) => ({
         id: s.id,
+        excludedFromMemory: s.excludedFromMemory,
+        memoryActionLabel: s.excludedFromMemory ? 'Include in AI memory' : 'Exclude from AI memory',
         title: s.title || 'Untitled session',
         when: fmtRelative(s.updatedAt || s.createdAt),
         statusCls: statusClass(s.status),
@@ -124,6 +128,23 @@ export default class SessionList extends LightningElement {
     return this.state.org?.label || '';
   }
 
+  async toggleMemory(e) {
+    if (this.memoryBusy) return;
+    const id = e.currentTarget.dataset.id;
+    const session = this.sessions.find((s) => s.id === id);
+    if (!session) return;
+    this.memoryBusy = true;
+    this.memoryError = '';
+    try {
+      const updated = await http.updateSession(id, { excludedFromMemory: !session.excludedFromMemory });
+      this.sessions = this.sessions.map((s) => (s.id === id ? updated : s));
+      if (this.state.org?.id === updated.orgId) putCachedSessionList(updated.orgId, this.sessions);
+    } catch (err) {
+      this.memoryError = err.message;
+    } finally {
+      this.memoryBusy = false;
+    }
+  }
   onPick(e) {
     this.dispatchEvent(new CustomEvent('select', { detail: { id: e.currentTarget.dataset.id } }));
   }

@@ -339,6 +339,14 @@ prompt with a human-readable age per entry ("47 days ago"), and `search_memory` 
 full text on demand. Ages are prose rather than timestamps because that is what makes a model
 re-check a stale claim instead of asserting it.
 
+Sessions can be marked **Exclude from AI memory** from the extension session list or admin session
+detail. The persisted `excludedFromMemory` flag defaults to false and can be reversed through
+`PATCH /sessions/:id` under the normal session access checks. Both the prompt index and memory
+search (including empty-query and FTS-error fallbacks) filter out documentation belonging to
+excluded sessions before applying limits. Human session and document browsing stays available.
+This affects future memory retrieval; it does not erase content already loaded into conversations,
+remove committed GitHub documentation, or prevent an explicitly resumed session reading its own history.
+
 ## Recovery
 
 Everything in a session is persisted: events, orchestrator messages, todo list, notes, workspace,

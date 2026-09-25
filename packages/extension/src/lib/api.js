@@ -136,6 +136,7 @@ export function createApi({ getBaseUrl, getToken }) {
     metadataRead: (orgId, type, fullName) => api.get(`/orgs/${orgId}/metadata/read`, { query: { type, fullName }, timeoutMs: 60000 }),
 
     // ---- sessions
+    updateSession: (id, body) => api.patch(`/sessions/${id}`, { body }),
     listSessions: (q) => api.get('/sessions', { query: q }),
     createSession: (body) => api.post('/sessions', { body }),
     session: (id) => api.get(`/sessions/${id}`),

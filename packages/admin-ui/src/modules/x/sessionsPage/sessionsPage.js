@@ -83,6 +83,7 @@ export default class SessionsPage extends LightningElement {
     ];
     if (this.admin) cols.push({ key: 'userName', label: 'User' }, { key: 'clientName', label: 'Client' });
     cols.push(
+      { key: 'excludedFromMemory', label: 'AI memory', format: (s) => (s.excludedFromMemory ? 'Excluded' : 'Included') },
       { key: 'uiMode', label: 'Mode', type: 'badge' },
       { key: 'inputTokens', label: 'In', type: 'tokens', align: 'right' },
       { key: 'outputTokens', label: 'Out', type: 'tokens', align: 'right' },

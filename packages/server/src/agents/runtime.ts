@@ -558,7 +558,7 @@ export class SessionRuntime {
       rules: ctx.rules,
       skillsSection: this.app.skills.promptSection(role, ctx.session.clientId, ctx.org.id),
       // An index, not the documents: full text comes from search_memory when it is actually needed.
-      memoryIndex: buildMemoryIndex(this.app.repos.docs.byOrg(ctx.org.id, MEMORY_INDEX_MAX_LINES)),
+      memoryIndex: buildMemoryIndex(this.app.repos.docs.memoryByOrg(ctx.org.id, MEMORY_INDEX_MAX_LINES)),
       knowledgeSection: await this.app.knowledge.promptSection(ctx.session.clientId),
       specialists: role === 'orchestrator' ? this.app.repos.customAgents.forClient(ctx.session.clientId) : [],
       githubConfigured: this.app.github.hasToken(ctx.session.clientId),
