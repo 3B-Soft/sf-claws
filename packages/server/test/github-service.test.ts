@@ -114,4 +114,40 @@ describe('GithubService.commit', () => {
     expect(stub.git.createCommit).toHaveBeenCalledWith(expect.objectContaining({ message: 'Remove Dead, add Foo', parents: ['head1'], tree: 'tree1' }));
     expect(stub.git.updateRef).toHaveBeenCalledWith(expect.objectContaining({ ref: 'heads/main', sha: 'commit1', force: false }));
   });
+
+  it('seeds an empty repository before the first commit', async () => {
+    const ctx = makeContext();
+    const { client } = await seedClientOrgUser(ctx);
+    ctx.repos.github.upsert(client.id, {
+      owner: 'o',
+      repo: 'r',
+      defaultBranch: 'main',
+      sourceRoot: 'force-app/main/default',
+      docsRoot: 'docs',
+      commitStrategy: 'direct',
+      branchPrefix: 'sf-claws/',
+      tokenEnc: ctx.secrets.encrypt('ghp_test'),
+    });
+    const stub = stubOctokit();
+    const empty = Object.assign(new Error('Git Repository is empty.'), { status: 409 });
+    let seeded = false;
+    stub.git.getRef.mockImplementation(async () => {
+      if (!seeded) throw empty;
+      return { data: { object: { sha: 'head1' } } };
+    });
+    const repos = {
+      createOrUpdateFileContents: vi.fn(async () => {
+        seeded = true;
+        return {};
+      }),
+    };
+    const gh = new GithubService(ctx.repos, ctx.secrets, ctx.log, '', () => ({ ...stub, repos }) as any);
+
+    expect(await gh.treeShas(client.id, 'main', 'force-app/')).toBeNull();
+    const r = await gh.commit(client.id, 'main', [{ path: 'a.txt', content: 'A' }], 'Pull org', { name: 'Dev', email: 'dev@example.com' });
+
+    expect(repos.createOrUpdateFileContents).toHaveBeenCalledWith(expect.objectContaining({ path: 'README.md', branch: 'main' }));
+    expect(r.sha).toBe('commit1');
+    ctx.db.close();
+  });
 });

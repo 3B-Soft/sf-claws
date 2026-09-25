@@ -72,6 +72,19 @@ export class GithubService {
       const { data } = await gh.git.getRef({ owner: r.owner, repo: r.repo, ref: `heads/${branch}` });
       return { created: false, sha: data.object.sha };
     } catch (e: any) {
+      if (isEmptyRepo(e)) {
+        // The Git Data API cannot write the first commit; the contents API can, and it creates the default branch.
+        await gh.repos.createOrUpdateFileContents({
+          owner: r.owner,
+          repo: r.repo,
+          path: 'README.md',
+          message: 'Initial commit',
+          content: Buffer.from(`# ${r.repo}\n`).toString('base64'),
+          branch: r.defaultBranch,
+        });
+        this.log.info({ clientId }, 'Seeded empty GitHub repository');
+        return this.ensureBranch(clientId, branch, from);
+      }
       if (e.status !== 404) throw e;
     }
     const base = await gh.git.getRef({ owner: r.owner, repo: r.repo, ref: `heads/${from ?? r.defaultBranch}` });
@@ -113,7 +126,7 @@ export class GithubService {
     try {
       head = (await gh.git.getRef({ owner: r.owner, repo: r.repo, ref: `heads/${branch}` })).data.object.sha;
     } catch (e: any) {
-      if (e.status === 404) return null;
+      if (e.status === 404 || isEmptyRepo(e)) return null;
       throw e;
     }
     const { data } = await gh.git.getTree({ owner: r.owner, repo: r.repo, tree_sha: head, recursive: 'true' });
@@ -224,6 +237,11 @@ export interface TreeEntry {
 }
 
 /** Tree entries for a commit: one blob per file, a `sha: null` entry per deletion. */
+/** GitHub answers 409 "Git Repository is empty" for ref lookups on a repo with no commits. */
+function isEmptyRepo(e: any): boolean {
+  return e?.status === 409 && /empty/i.test(e.message ?? '');
+}
+
 export async function buildTreeEntries(files: CommitFile[], createBlob: (f: CommitFile) => Promise<string>): Promise<TreeEntry[]> {
   const tree: TreeEntry[] = [];
   for (const f of files) {
