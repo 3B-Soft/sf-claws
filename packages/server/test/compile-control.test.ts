@@ -40,6 +40,44 @@ const outcome = (failures: DeployFailure[] = []): DeployOutcome => ({
 });
 
 describe('compile controller', () => {
+  it('allows bundle repairs from compiler descriptors and clears the repaired slice', async () => {
+    const bundle = ['html', 'js', 'js-meta.xml', 'css'].map(
+      (ext): WorkspaceFile => ({
+        ...file('jobComplianceMatcher'),
+        path: `lwc/jobComplianceMatcher/jobComplianceMatcher.${ext}`,
+        metadataType: 'LightningComponentBundle',
+        content: ext === 'js' ? "import run from '@salesforce/apex/Matcher.run';" : 'broken template',
+      }),
+    );
+    const files = [...bundle, file('Matcher'), file('Unrelated')];
+    const diagnostic = { ...failure('markup://c:jobComplianceMatcher', 'LWC1210: ConditionalExpression'), componentType: 'LightningComponentBundle' };
+    const state = applyCompileResult(initialCompileState(), files, [diagnostic], false, 'failed');
+    expect(state.roots[0].key).toBe('LightningComponentBundle:jobComplianceMatcher');
+    expect(state.repairKeys).toContain('ApexClass:Matcher');
+    expect(state.repairKeys).not.toContain('ApexClass:Unrelated');
+    const ctx = makeContext();
+    try {
+      const { user, org } = await seedClientOrgUser(ctx);
+      const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+      for (const f of files) ctx.repos.workspace.upsert(session.id, f);
+      // Reproduce the old persisted state, including its unresolvable repair key.
+      const legacyKey = 'LightningComponentBundle:markup://c:jobComplianceMatcher';
+      ctx.repos.compileControl.set(session.id, {
+        ...state,
+        roots: [{ ...state.roots[0], key: legacyKey, components: [legacyKey] }],
+        repairKeys: [legacyKey],
+      });
+      for (const f of bundle) expect(ctx.runtime.workspaceWriteRefusal(session.id, f)).toBeNull();
+      expect(ctx.runtime.workspaceWriteRefusal(session.id, file('Unrelated'))).toMatch(/Only failing/);
+      expect(ctx.runtime.workspaceWriteRefusal(session.id, file('NewComponent'))).toMatch(/New components/);
+      const restored = createRepos(ctx.db).compileControl.get(session.id);
+      expect(applyCompileResult(restored, [file('Unrelated')], [], true, 'other').roots).toHaveLength(1);
+      expect(applyCompileResult(restored, bundle, [], true, 'repaired').roots).toEqual([]);
+    } finally {
+      ctx.db.close();
+    }
+  });
+
   it('forces a compile after ten minutes even while a model call is pending', async () => {
     let release!: () => void;
     const gate = new Promise<void>((r) => {

@@ -1,11 +1,17 @@
 import type { Db } from '../db.js';
-import { initialCompileState, type CompileState } from '../../agents/compile-control.js';
+import { initialCompileState, normalizeComponentKey, type CompileState } from '../../agents/compile-control.js';
 
 export class CompileControlRepo {
   constructor(private db: Db) {}
   get(sessionId: string): CompileState {
     const row = this.db.prepare('SELECT state FROM session_compile_control WHERE session_id=?').get(sessionId) as { state: string } | undefined;
-    return row ? JSON.parse(row.state) : initialCompileState();
+    if (!row) return initialCompileState();
+    const state: CompileState = JSON.parse(row.state);
+    // Upgrade saved failure gates so existing sessions can repair bundle errors too.
+    state.roots = state.roots.map((root) => ({ ...root, key: normalizeComponentKey(root.key), components: root.components.map(normalizeComponentKey) }));
+    state.repairKeys = state.repairKeys.map(normalizeComponentKey);
+    state.scopeKeys = state.scopeKeys.map(normalizeComponentKey);
+    return state;
   }
   set(sessionId: string, state: CompileState): void {
     this.db

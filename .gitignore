@@ -24,3 +24,4 @@ PRIVATE_README.md
 packages/admin-ui/certs/
 .enola/
 _long_session_logs
+_investigations

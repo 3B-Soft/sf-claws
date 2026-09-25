@@ -32,8 +32,10 @@ export const initialCompileState = (): CompileState => ({
   stopped: null,
   checks: 0,
 });
+/** Salesforce compiler bundle descriptors differ from Metadata API full names. */
+export const normalizeComponentKey = (key: string) => key.replace(/^(LightningComponentBundle|AuraDefinitionBundle):markup:\/\/c:/, '$1:');
 export const componentKey = (f: Pick<WorkspaceFile, 'path' | 'metadataType' | 'fullName'>) =>
-  f.metadataType && f.fullName ? `${f.metadataType}:${f.fullName}` : `file:${f.path}`;
+  f.metadataType && f.fullName ? normalizeComponentKey(`${f.metadataType}:${f.fullName}`) : `file:${f.path}`;
 export const fileHash = (f: WorkspaceFile) => sha256(`${f.action}\n${f.content}`);
 export const compileHash = (files: WorkspaceFile[], options: unknown) =>
   sha256(JSON.stringify([files.map((f) => [f.path, fileHash(f)]).sort((a, b) => a[0].localeCompare(b[0])), options]));
@@ -51,7 +53,7 @@ export function rootDiagnostics(failures: DeployFailure[]): RootDiagnostic[] {
     if (/UNKNOWN_EXCEPTION/i.test(f.problem)) continue;
     // Infrastructure failures are not compiler diagnostics.
     if (!f.componentType && !f.fullName && !f.fileName) continue;
-    const component = `${f.componentType ?? 'file'}:${f.fullName ?? f.fileName ?? 'unknown'}`;
+    const component = normalizeComponentKey(`${f.componentType ?? 'file'}:${f.fullName ?? f.fileName ?? 'unknown'}`);
     const cascade = /Dependent class is invalid/i.test(f.problem) ? [...f.problem.matchAll(/Class\s+([\w]+)\s*:/g)].at(-1)?.[1] : null;
     const missing = /Variable does not exist:\s*(\w+)\s*$/i.exec(f.problem)?.[1];
     const key = cascade ? `ApexClass:${cascade}` : missing && primaryNames.has(missing) ? `ApexClass:${missing}` : component;

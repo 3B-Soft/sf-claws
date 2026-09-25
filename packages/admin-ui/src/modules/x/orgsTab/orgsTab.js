@@ -16,6 +16,7 @@ export default class OrgsTab extends LightningElement {
   error = null;
   modalOpen = false;
   form = {};
+  editingId = null;
   busy = false;
   busyOrg = null;
   limitsOpen = new Set();
@@ -69,8 +70,22 @@ export default class OrgsTab extends LightningElement {
   get kindOptions() {
     return ORG_KINDS.map((k) => ({ value: k, label: k[0].toUpperCase() + k.slice(1) }));
   }
+  get modalTitle() {
+    return this.editingId ? 'Edit Salesforce org' : 'Add Salesforce org';
+  }
+  get saveLabel() {
+    return this.editingId ? 'Save changes' : 'Add org';
+  }
+  get secretHint() {
+    return this.editingId ? 'Leave empty to keep the stored secret.' : 'Leave empty for a PKCE-only app. Stored encrypted.';
+  }
   get cannotCreate() {
-    return this.busy || !this.form.label?.trim() || (this.browserAuth ? !this.validMyDomain : !this.form.consumerKey?.trim());
+    return (
+      this.busy ||
+      !this.form.label?.trim() ||
+      !/^\d{2,3}\.0$/.test(this.form.apiVersion || '') ||
+      (this.browserAuth ? !this.validMyDomain : !this.editingId && !this.form.consumerKey?.trim())
+    );
   }
   get browserAuth() {
     return this.authMode === 'browser_session';
@@ -87,7 +102,15 @@ export default class OrgsTab extends LightningElement {
     return `${window.location.origin}/api/v1/oauth/salesforce/callback`;
   }
 
+  openEdit(e) {
+    const org = this.orgs.find((o) => o.id === e.currentTarget.dataset.id);
+    if (!org) return;
+    this.editingId = org.id;
+    this.form = { ...org, consumerSecret: '' };
+    this.modalOpen = true;
+  }
   openCreate() {
+    this.editingId = null;
     this.form = {
       label: '',
       kind: 'sandbox',
@@ -106,7 +129,8 @@ export default class OrgsTab extends LightningElement {
     const { name, value } = e.detail;
     const next = { ...this.form, [name]: value };
     if (name === 'kind') {
-      next.loginUrl = value === 'production' || value === 'developer' ? 'https://login.salesforce.com' : 'https://test.salesforce.com';
+      if (!this.editingId && !this.browserAuth)
+        next.loginUrl = value === 'production' || value === 'developer' ? 'https://login.salesforce.com' : 'https://test.salesforce.com';
       if (value === 'production') next.protected = true;
     }
     this.form = next;
@@ -114,21 +138,29 @@ export default class OrgsTab extends LightningElement {
   async create() {
     this.busy = true;
     try {
-      const org = await Api.createOrg(this.clientId, {
+      const payload = {
         label: this.form.label.trim(),
         kind: this.form.kind,
         loginUrl: this.form.loginUrl,
-        consumerKey: this.browserAuth ? undefined : this.form.consumerKey.trim(),
+        consumerKey: this.browserAuth ? undefined : this.form.consumerKey?.trim() || undefined,
         consumerSecret: this.browserAuth ? undefined : this.form.consumerSecret || undefined,
         apiVersion: this.form.apiVersion || '62.0',
-        protected: !!this.form.protected,
-      });
+        protected: this.form.kind === 'production' || !!this.form.protected,
+      };
+      if (this.editingId) {
+        await Api.updateOrg(this.editingId, payload);
+        toast.success('Org updated');
+        this.modalOpen = false;
+        await this.load();
+        return;
+      }
+      const org = await Api.createOrg(this.clientId, payload);
       toast.success('Org added', this.browserAuth ? 'Open this org in Chrome; SF Claws will use that signed-in session.' : 'Now connect it to Salesforce.');
       this.modalOpen = false;
       await this.load();
       if (org?.id && !this.browserAuth) this.connectOrg(org.id);
     } catch (err) {
-      toast.error('Could not add org', err.message);
+      toast.error(this.editingId ? 'Could not update org' : 'Could not add org', err.message);
     } finally {
       this.busy = false;
     }
