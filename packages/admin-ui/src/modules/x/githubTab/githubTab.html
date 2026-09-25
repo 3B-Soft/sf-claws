@@ -63,6 +63,8 @@
 
     <template lwc:if={isCompare}><x-branch-compare client-id={clientId} branches={branchOptions} base={compareBase} head={compareHead} repo-url={repoUrl}></x-branch-compare></template>
 
+    <template lwc:if={isOrgSync}><x-org-sync client-id={clientId} default-branch={repo.defaultBranch} onpulled={loadBranches}></x-org-sync></template>
+
     <template lwc:if={isCommits}>
       <div class="card">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3"><h3 class="text-sm font-semibold text-content-strong">Commits</h3><div class="flex items-center gap-2"><div class="w-56"><x-form-field name="branch" type="select" value={commitsBranch} options={branchOptions} placeholder="— branch —" compact onchange={handleCommitsBranch}></x-form-field></div><button class="btn-secondary btn-sm" onclick={loadCommits}><x-icon name="refresh" cls="h-3.5 w-3.5"></x-icon></button></div></div>

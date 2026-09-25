@@ -161,6 +161,80 @@ export const CompareResponse = z.object({
   files: z.array(FileDiff),
   url: z.string(),
 });
+
+// POST /clients/:clientId/github/org-diff -> OrgDiffResponse (admin; read-only)
+// POST /clients/:clientId/github/org-pull -> OrgPullResponse (super admin; commits to `branch`)
+// Retrieves the manifest from the org and compares it with `branch` under the repo's source root.
+// In the diff, `added` = only in the org, `removed` = only in the branch (within manifest scope).
+export const OrgSyncRequest = z.object({
+  orgId: z.string().min(1),
+  branch: z.string().min(1).max(200),
+  packageXml: z.string().min(1).max(200_000),
+  message: z.string().max(500).optional(),
+});
+export const OrgDiffResponse = z.object({
+  branch: z.string(),
+  branchExists: z.boolean(),
+  /** Files whose bytes differ only by line endings or trailing whitespace. */
+  identical: z.number(),
+  files: z.array(FileDiff),
+});
+export const OrgPullResponse = z.object({
+  branch: z.string(),
+  sha: z.string().nullable(),
+  url: z.string().nullable(),
+  filesChanged: z.number(),
+});
+
+/**
+ * Default manifest for pulling an org into a repo: the metadata a typical force.com project keeps
+ * under source control. Profiles are left out on purpose — they only carry permissions for
+ * components in the same retrieve and churn on every pull; add them back if the client wants them.
+ */
+export const DEFAULT_PACKAGE_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+${[
+  ['ApexClass', '*'],
+  ['ApexComponent', '*'],
+  ['ApexPage', '*'],
+  ['ApexTrigger', '*'],
+  ['AuraDefinitionBundle', '*'],
+  ['LightningComponentBundle', '*'],
+  ['StaticResource', '*'],
+  ['CustomObject', '*', 'Account', 'Contact', 'Lead', 'Opportunity', 'Case', 'Campaign', 'Task', 'Event', 'User'],
+  ['CustomField', '*'],
+  ['RecordType', '*'],
+  ['ValidationRule', '*'],
+  ['ListView', '*'],
+  ['CompactLayout', '*'],
+  ['BusinessProcess', '*'],
+  ['FieldSet', '*'],
+  ['WebLink', '*'],
+  ['Layout', '*'],
+  ['FlexiPage', '*'],
+  ['CustomTab', '*'],
+  ['CustomApplication', '*'],
+  ['GlobalValueSet', '*'],
+  ['StandardValueSet', 'LeadSource', 'OpportunityStage', 'CaseStatus', 'CaseOrigin', 'Industry', 'AccountType'],
+  ['Flow', '*'],
+  ['PermissionSet', '*'],
+  ['PermissionSetGroup', '*'],
+  ['CustomPermission', '*'],
+  ['CustomLabels', '*'],
+  ['CustomMetadata', '*'],
+  ['QuickAction', '*'],
+  ['EmailTemplate', '*'],
+  ['NamedCredential', '*'],
+  ['RemoteSiteSetting', '*'],
+  ['Workflow', '*'],
+  ['AssignmentRules', '*'],
+  ['SharingRules', '*'],
+]
+  .map(([name, ...members]) => `    <types>\n${members.map((m) => `        <members>${m}</members>`).join('\n')}\n        <name>${name}</name>\n    </types>`)
+  .join('\n')}
+    <version>62.0</version>
+</Package>
+`;
 // GET /clients/:clientId/github/commits?branch=...
 // GET /clients/:clientId/github/file?path=...&ref=...
 
@@ -323,6 +397,9 @@ export type QueryResponse = z.infer<typeof QueryResponse>;
 export type SetGithubRepoRequest = z.infer<typeof SetGithubRepoRequest>;
 export type CompareResponse = z.infer<typeof CompareResponse>;
 export type FileDiff = z.infer<typeof FileDiff>;
+export type OrgSyncRequest = z.infer<typeof OrgSyncRequest>;
+export type OrgDiffResponse = z.infer<typeof OrgDiffResponse>;
+export type OrgPullResponse = z.infer<typeof OrgPullResponse>;
 export type CreateSkillRequest = z.infer<typeof CreateSkillRequest>;
 export type CreateSessionRequest = z.infer<typeof CreateSessionRequest>;
 export type SendMessageRequest = z.infer<typeof SendMessageRequest>;

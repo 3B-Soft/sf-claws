@@ -212,6 +212,8 @@ export const Api = {
   githubBranches: (clientId) => api.get(`/clients/${enc(clientId)}/github/branches`),
   githubCompare: (clientId, base, head) => api.get(`/clients/${enc(clientId)}/github/compare${qs({ base, head })}`),
   githubCommits: (clientId, branch) => api.get(`/clients/${enc(clientId)}/github/commits${qs({ branch })}`),
+  githubOrgDiff: (clientId, body) => api.post(`/clients/${enc(clientId)}/github/org-diff`, body),
+  githubOrgPull: (clientId, body) => api.post(`/clients/${enc(clientId)}/github/org-pull`, body),
   githubFile: (clientId, path, ref) => api.get(`/clients/${enc(clientId)}/github/file${qs({ path, ref })}`),
   // skills & policy
   listSkills: (params) => api.get(`/skills${qs(params)}`),

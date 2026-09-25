@@ -1,0 +1,43 @@
+<template lwc:render-mode="light">
+  <div class="card card-pad mb-4">
+    <div class="grid gap-x-4 sm:grid-cols-2">
+      <x-form-field label="Salesforce org" name="orgId" type="select" value={orgId} options={orgOptions} placeholder="— org —" onchange={handleField}></x-form-field>
+      <x-form-field label="Branch" name="branch" value={branch} mono hint="A branch that does not exist yet is created from the default branch on pull." onchange={handleField}></x-form-field>
+    </div>
+    <x-form-field label="package.xml" name="packageXml" type="textarea" rows="14" value={packageXml} mono hint="What to retrieve and compare. Use * for all members of a type; standard objects must be listed by name." onchange={handleField}></x-form-field>
+    <template lwc:if={canPull}><x-form-field label="Commit message (optional)" name="message" value={message} placeholder="Pull metadata from the org" onchange={handleField}></x-form-field></template>
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      <button class="btn-ghost btn-sm mr-auto" onclick={resetXml}>Reset to default manifest</button>
+      <button class="btn-secondary" onclick={diff} disabled={cannotRun}><template lwc:if={diffing}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template>Compare branch with org</button>
+      <template lwc:if={canPull}><button class="btn-primary" onclick={pull} disabled={cannotRun}><template lwc:if={pulling}><x-icon name="spinner" cls="h-3.5 w-3.5"></x-icon></template>Pull org into branch</button></template>
+    </div>
+  </div>
+
+  <template lwc:if={error}><x-error-state error={error} onretry={diff}></x-error-state></template>
+  <template lwc:elseif={diffing}><div class="mb-2 text-xs text-content-muted">Retrieving from Salesforce — a full manifest can take several minutes.</div><x-skeleton variant="text" rows="8"></x-skeleton></template>
+  <template lwc:elseif={result}>
+    <div class="mb-2 text-xs text-content-muted">{summary}</div>
+    <template lwc:if={hasFiles}>
+      <div class="space-y-2">
+        <template for:each={files} for:item="f">
+          <div key={f.id} class="card overflow-hidden">
+            <button class="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-sunken" data-path={f.path} onclick={toggle}>
+              <x-icon name={f.chevron} cls="h-4 w-4 text-content-subtle"></x-icon>
+              <x-badge value={f.label} color={f.statusColor}></x-badge>
+              <span class="mono min-w-0 flex-1 truncate text-content-strong">{f.path}</span>
+              <template lwc:if={f.component}><span class="hidden text-xs text-content-subtle sm:inline">{f.component}</span></template>
+              <template lwc:if={f.hasPatch}><span class="font-mono text-xs text-emerald-700">+{f.additions}</span><span class="font-mono text-xs text-rose-700">−{f.deletions}</span></template>
+            </button>
+            <template lwc:if={f.open}>
+              <div class="border-t border-line p-2">
+                <template lwc:if={f.hasPatch}><x-diff-viewer patch={f.patch} path={f.path}></x-diff-viewer></template>
+                <template lwc:else><div class="p-3 text-center text-xs text-content-subtle">No line diff: the file exists on one side only, is binary, or is too large.</div></template>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+    <template lwc:else><x-empty-state icon="git" title="Branch matches the org" description="Every file in the manifest is identical (ignoring line endings and trailing whitespace)."></x-empty-state></template>
+  </template>
+</template>

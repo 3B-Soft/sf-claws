@@ -103,6 +103,33 @@ export class GithubService {
   }
 
   /**
+   * Every blob under `prefix` on `branch` as path → blob sha, in one tree call; `null` when the
+   * branch does not exist. GitHub truncates recursive trees past ~100k entries: reported loudly.
+   */
+  async treeShas(clientId: string, branch: string, prefix: string): Promise<Map<string, string> | null> {
+    const r = this.repoFor(clientId);
+    const gh = this.client(r);
+    let head: string;
+    try {
+      head = (await gh.git.getRef({ owner: r.owner, repo: r.repo, ref: `heads/${branch}` })).data.object.sha;
+    } catch (e: any) {
+      if (e.status === 404) return null;
+      throw e;
+    }
+    const { data } = await gh.git.getTree({ owner: r.owner, repo: r.repo, tree_sha: head, recursive: 'true' });
+    if (data.truncated) throw new HttpError(422, 'GITHUB_TREE_TRUNCATED', 'Repository tree is too large to compare in one request');
+    const out = new Map<string, string>();
+    for (const t of data.tree) if (t.type === 'blob' && t.path && t.sha && t.path.startsWith(prefix)) out.set(t.path, t.sha);
+    return out;
+  }
+
+  async blob(clientId: string, sha: string): Promise<Buffer> {
+    const r = this.repoFor(clientId);
+    const { data } = await this.client(r).git.getBlob({ owner: r.owner, repo: r.repo, file_sha: sha });
+    return Buffer.from(data.content, data.encoding === 'base64' ? 'base64' : 'utf8');
+  }
+
+  /**
    * Create a single commit with many files on a branch (Git Data API).
    *
    * A file with `content: null` is deleted: the Git Data API removes a path from a tree built on

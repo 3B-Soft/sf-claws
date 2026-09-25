@@ -451,7 +451,7 @@ export class SalesforceService {
   async retrieve(
     orgId: string,
     components: { type: string; members: string[] }[],
-    opts: { related?: { type: string; members: string[] }[]; keepRelated?: boolean } = {},
+    opts: { related?: { type: string; members: string[] }[]; keepRelated?: boolean; timeoutMs?: number } = {},
   ): Promise<SourceFile[]> {
     return this.wrap(orgId, async () => {
       const conn = await this.conn(orgId);
@@ -464,7 +464,7 @@ export class SalesforceService {
       } as any);
       const start: any = await locator;
       const id: string = start.id;
-      const deadline = Date.now() + 5 * 60_000;
+      const deadline = Date.now() + (opts.timeoutMs ?? 5 * 60_000);
       let result: any;
       for (;;) {
         result = await conn.metadata.checkRetrieveStatus(id);

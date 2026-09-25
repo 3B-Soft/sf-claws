@@ -29,5 +29,26 @@ Global policy + per-client override.
 ## GitHub per client
 Repository, default branch, source root, docs root, commit strategy (`direct`, `branch-per-session`, `branch-per-task`, `pull-request`), branch prefix, token (write-only). Compare and commit views are available to admins and in the extension.
 
+### Org sync (GitHub → Org sync)
+Retrieve a `package.xml` from one of the client's orgs and compare it with a branch, or commit it into the branch — typically to seed a new branch from what is actually in Salesforce. The editor starts from a default manifest covering Apex, triggers, pages, components, LWC/Aura, custom and common standard objects with their fields/record types/validation rules/list views, layouts, FlexiPages, tabs, apps, global and standard value sets, flows, permission sets and groups, custom permissions, labels, custom metadata, quick actions, email templates, named credentials, remote sites, workflow, assignment and sharing rules. Profiles are left out on purpose (they churn on every retrieve); add them if wanted.
+
+- **Compare branch with org** (admins, read-only): lists files that *differ*, exist *only in org*, or exist *only in branch* (only paths the manifest covers). Differences in line endings or trailing whitespace count as identical, so only real metadata changes show.
+- **Pull org into branch** (super admins): commits the org's version of every differing / org-only file, plus the manifest at `manifest/package.xml`. A missing branch is created from the default branch. A pull never deletes branch-only files. Audited as `github.org-pull`.
+
+Salesforce caps a retrieve at 10,000 files; on a large org, narrow the manifest.
+
+```
+POST /clients/:clientId/github/org-diff   (admin)
+POST /clients/:clientId/github/org-pull   (superadmin)
+{ "orgId": "org_123", "branch": "feature/seed", "packageXml": "<?xml ...>", "message": "optional" }
+
+org-diff → { "branch": "feature/seed", "branchExists": true, "identical": 412,
+             "files": [{ "path": "force-app/main/default/classes/Foo.cls", "status": "modified",
+                         "additions": 3, "deletions": 1, "patch": "...", "metadataType": "ApexClass", "fullName": "Foo" }] }
+             status: added = only in org, removed = only in branch, modified = differs
+org-pull → { "branch": "feature/seed", "sha": "abc123…", "url": "https://github.com/…", "filesChanged": 37 }
+             (sha/url null when the branch already matched)
+```
+
 ## Observability
 Sessions (all users) with transcript replay, workspace, deploys, docs, notes, usage per call; Usage summary by user/client/model/role; Audit log. Users mark sessions helpful/unhelpful — filter by `helpful=false` to find prompts/skills to improve.

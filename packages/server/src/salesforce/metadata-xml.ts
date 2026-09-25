@@ -89,3 +89,15 @@ export function xmlToJson(xml: string): unknown {
   });
   return p.parse(xml);
 }
+
+/** Parse a package.xml into retrieve components. Throws on malformed XML or an empty manifest. */
+export function parsePackageXml(xml: string): { type: string; members: string[] }[] {
+  const valid = XMLValidator.validate(xml);
+  if (valid !== true) throw new Error(`package.xml is not well-formed: ${valid.err.msg} (line ${valid.err.line})`);
+  const doc = new XMLParser({ ignoreAttributes: true, parseTagValue: false, isArray: (n) => n === 'types' || n === 'members' }).parse(xml);
+  const out = ((doc?.Package?.types ?? []) as { name?: string; members?: string[] }[])
+    .map((t) => ({ type: String(t.name ?? '').trim(), members: (t.members ?? []).map((m) => String(m).trim()).filter(Boolean) }))
+    .filter((t) => t.type && t.members.length);
+  if (!out.length) throw new Error('package.xml lists no <types> with <members>');
+  return out;
+}

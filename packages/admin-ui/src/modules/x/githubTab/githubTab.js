@@ -166,6 +166,7 @@ export default class GithubTab extends LightningElement {
       { id: 'settings', label: 'Settings' },
       { id: 'branches', label: 'Branches', count: this.branches.length || undefined },
       { id: 'compare', label: 'Compare' },
+      { id: 'org', label: 'Org sync' },
       { id: 'commits', label: 'Commits' },
     ];
   }
@@ -177,6 +178,9 @@ export default class GithubTab extends LightningElement {
   }
   get isCompare() {
     return this.section === 'compare';
+  }
+  get isOrgSync() {
+    return this.section === 'org';
   }
   get isCommits() {
     return this.section === 'commits';
