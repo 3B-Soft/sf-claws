@@ -149,7 +149,7 @@ export const DEFAULT_MODELS: Omit<AiModel, 'id' | 'createdAt'>[] = [
 /** Default role bindings by provider model id (resolved to db ids on seed). */
 export const DEFAULT_BINDINGS: { role: AgentRole; modelId: string; effort: RoleModelBinding['effort']; maxIterations: number }[] = [
   { role: 'general', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 40 },
-  { role: 'explore', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 30 },
+  { role: 'explore', modelId: 'claude-haiku-4-5', effort: 'low', maxIterations: 30 },
   { role: 'plan', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 30 },
   { role: 'verify', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 20 },
   { role: 'orchestrator', modelId: 'deepseek-v4-pro', effort: 'xhigh', maxIterations: 60 },

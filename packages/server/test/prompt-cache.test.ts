@@ -89,8 +89,8 @@ describe('prompt cache split', () => {
     provider.script = [
       () =>
         toolCalls([
-          { name: 'run_subagent', input: { role: 'analyst', objective: 'Count the accounts' } },
-          { name: 'run_subagent', input: { role: 'analyst', objective: 'List the validation rules on Contact' } },
+          { name: 'run_subagent', input: { role: 'explore', objective: 'Count the accounts' } },
+          { name: 'run_subagent', input: { role: 'explore', objective: 'List the validation rules on Contact' } },
         ]),
       () => text('FINDINGS: a'),
       () => text('FINDINGS: b'),
@@ -116,9 +116,9 @@ describe('prompt cache split', () => {
     provider.script = [
       () =>
         toolCalls([
-          { name: 'run_subagent', input: { role: 'analyst', objective: 'Count the accounts', effort: 'low' } },
-          { name: 'run_subagent', input: { role: 'analyst', objective: 'Trace the Contact trigger', effort: 'max' } },
-          { name: 'run_subagent', input: { role: 'analyst', objective: 'List the Contact fields' } },
+          { name: 'run_subagent', input: { role: 'explore', objective: 'Count the accounts', effort: 'low' } },
+          { name: 'run_subagent', input: { role: 'explore', objective: 'Trace the Contact trigger', effort: 'max' } },
+          { name: 'run_subagent', input: { role: 'explore', objective: 'List the Contact fields' } },
         ]),
       () => text('a'),
       () => text('b'),

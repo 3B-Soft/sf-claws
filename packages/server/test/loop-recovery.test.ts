@@ -266,12 +266,12 @@ describe('forced wrap-up', () => {
     const provider = new FakeProvider([]);
     const ctx = makeContext({ provider, sf: {} as never });
     disablePlanMode(ctx);
-    ctx.repos.bindings.setAll(ctx.repos.bindings.list().map((b) => (b.role === 'analyst' ? { ...b, maxIterations: 2 } : b)));
+    ctx.repos.bindings.setAll(ctx.repos.bindings.list().map((b) => (b.role === 'explore' ? { ...b, maxIterations: 2 } : b)));
     const { user, org } = await seedClientOrgUser(ctx);
     const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
     let report = '';
     provider.script = [
-      () => toolCall('run_subagent', { role: 'analyst', objective: 'inventory the workspace' }),
+      () => toolCall('run_subagent', { role: 'explore', objective: 'inventory the workspace' }),
       () => toolCall('list_workspace', {}),
       () => toolCall('todo_read', {}),
       (req) => {
@@ -287,7 +287,7 @@ describe('forced wrap-up', () => {
     ctx.runtime.startTurn(session.id, user.id, 'go');
     await waitForIdle(ctx, session.id);
     expect(report).toContain('FINDINGS: the workspace is empty');
-    expect(ctx.repos.events.listAfter(session.id).some((e) => e.type === 'model.finished' && e.purpose === 'wrap_up' && e.role === 'analyst')).toBe(true);
+    expect(ctx.repos.events.listAfter(session.id).some((e) => e.type === 'model.finished' && e.purpose === 'wrap_up' && e.role === 'explore')).toBe(true);
   });
 });
 
@@ -348,7 +348,7 @@ describe('turn hygiene', () => {
     disablePlanMode(ctx);
     const { user, org } = await seedClientOrgUser(ctx);
     const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
-    provider.script = [() => toolCall('run_subagent', { role: 'analyst', objective: 'x' }), () => text('FINDINGS: none'), () => text('done')];
+    provider.script = [() => toolCall('run_subagent', { role: 'explore', objective: 'x' }), () => text('FINDINGS: none'), () => text('done')];
     ctx.runtime.startTurn(session.id, user.id, 'go');
     await waitForIdle(ctx, session.id);
     expect(ctx.runtime.bus.listenerCount(session.id)).toBe(0);

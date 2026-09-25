@@ -27,6 +27,11 @@ async function setup(provider = new FakeProvider([])) {
 const call = (name: string, input: unknown, ctx: ToolContext) => TOOLS.find((t) => t.name === name)!.run(input, ctx);
 
 describe('agent definitions and capabilities', () => {
+  it('offers exactly three worker types', () => {
+    const schema = TOOLS.find((t) => t.name === 'run_subagent')!.inputSchema as any;
+    expect(schema.properties.role.enum).toEqual(['general', 'explore', 'plan']);
+    expect(toolsForRole('general').map((t) => t.name)).toContain('write_documentation');
+  });
   it('enforces exploration/planning boundaries and preserves implementation and verification tools', () => {
     for (const role of ['explore', 'plan', 'analyst'] as const) {
       const names = toolsForRole(role).map((t) => t.name);

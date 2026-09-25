@@ -320,7 +320,7 @@ export const TOOLS: ToolDef[] = [
     // message that asked for it has actually finished streaming.
     earlyStart: false,
     description:
-      'Ask a researcher sub-agent one specific question about a linked product source repository. Use it when the documentation does not answer the question and you need to know what the code actually does: where a behaviour is implemented, which configuration drives it, what a setting is called. Ask ONE precise question with an explicit extraction contract (exactly what to find and report). Include what you already know from the documentation — the researcher starts from what you tell it. Not for whole-repo summaries, and not for anything a documentation search answers.',
+      'Ask an Explore sub-agent one specific question about a linked product source repository. Use it when the documentation does not answer the question and you need to know what the code actually does: where a behaviour is implemented, which configuration drives it, what a setting is called. Ask ONE precise question with an explicit extraction contract (exactly what to find and report). Include what you already know from the documentation — the researcher starts from what you tell it. Not for whole-repo summaries, and not for anything a documentation search answers.',
     inputSchema: obj(
       {
         repo: { type: 'string', description: 'Name of a linked repository source' },
@@ -350,7 +350,7 @@ export const TOOLS: ToolDef[] = [
       const r = await ctx.runtime.runSubagent(
         ctx.session.id,
         ctx.agent.id,
-        'researcher',
+        'explore',
         String(input.question),
         `Repository: ${source.name} (${source.repoRef})\n${source.guidance}\nThoroughness: ${input.thoroughness ?? 'medium'}`,
         { sourceId: source.id, thoroughness: String(input.thoroughness ?? 'medium') },
@@ -1591,7 +1591,7 @@ export const TOOLS: ToolDef[] = [
       },
       ['title', 'summary', 'technical', 'endUser'],
     ),
-    roles: ['orchestrator', 'doc_writer'],
+    roles: ['orchestrator', 'general', 'doc_writer'],
     run: async (input, ctx) => {
       const doc = await ctx.runtime.writeDoc(ctx.session.id, input);
       return { text: `Documentation written: ${doc.path}`, output: { id: doc.id, path: doc.path, title: doc.title } };
@@ -1605,7 +1605,7 @@ export const TOOLS: ToolDef[] = [
     description: AGENT_PROMPT,
     inputSchema: obj(
       {
-        role: { type: 'string', enum: [...DELEGATABLE_ROLES, 'analyst', 'metadata_builder', 'flow_builder', 'apex_builder', 'reviewer'] },
+        role: { type: 'string', enum: DELEGATABLE_ROLES },
         objective: { type: 'string' },
         description: { type: 'string', description: 'Short description of the assignment' },
         runInBackground: { type: 'boolean' },

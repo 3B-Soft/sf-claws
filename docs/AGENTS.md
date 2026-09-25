@@ -14,36 +14,36 @@ remain before the provider cache boundary. Assignment text remains a user messag
 | `general` | Investigation and implementation across component technologies | Reads, staged changes, existing gated builder operations |
 | `explore` | Find files and trace existing behavior | Reads and coordination; no workspace or org writes |
 | `plan` | Architecture, sequencing, dependencies and acceptance checks | Reads and coordination; cannot implement or approve its own plan |
-| `verify` | Independent checks with observed evidence | Reads, validation and approved tests; no implementation edits or deployment |
-| `researcher` | Bounded investigation of a specific linked repository | Scoped repository tools with a read budget |
-| `doc_writer` | Durable session record | Reads and session documentation |
-| `summarizer` | Conversation compaction | Used by the tool-less compaction workflow |
 
-Existing persisted role names remain supported: `analyst` uses exploration behavior;
-`metadata_builder`, `flow_builder`, and `apex_builder` use general implementation behavior;
-`reviewer` uses verification behavior. Existing model bindings are retained. On startup, missing
-new role bindings inherit the corresponding old binding. Skills assigned to an old role apply to
-its new equivalent, so general agents can load the existing metadata, Flow, and Apex guidance.
-Exploration no longer exposes the old analyst's gated record-mutation tools.
+The delegation tool offers exactly three worker types: `explore`, `plan`, and `general`.
+The orchestrator owns user interaction and synthesis. Explore defaults to Haiku with low effort
+for new installations; existing model bindings and the explicit DeepSeek seed profile are retained.
+Summarization is an internal service, not a delegatable worker type. Legacy definitions and model
+bindings remain readable for persisted sessions and custom specialists.
+
+Repository investigations now launch Explore with the existing repository scope and read budget.
+Documentation belongs to the orchestrator; the documentation fallback uses General-purpose.
+A configured independent-review policy is still enforced, using a General-purpose assignment with
+an unchanged-workspace verdict. A worker that changes files cannot certify those edits as an
+independent review. The prompt no longer mandates a Verify agent or duplicate validation.
 
 ## Reference design adaptations
 
-The reference's general-purpose, exploration, planning, and verification split informs these
-definitions. The prompts are adapted to this runtime: explicit scope and acceptance criteria,
-efficient search, concrete evidence, adversarial verification, and self-contained worker reports.
-The delegation prompt explains when delegation is useful, how to brief a fresh worker, and how to
-distinguish a running worker from a completed result.
+Inspected the reference source under `claude-code-leak/src/tools/AgentTool/`: the built-in
+`exploreAgent.ts`, `planAgent.ts`, and `generalPurposeAgent.ts`, plus `prompt.ts`, `runAgent.ts`,
+`TaskStopTool/TaskStopTool.ts`, and `SendMessageTool/prompt.ts` in the sibling tools directories.
+Explore performs fast read-only searches and defaults to Haiku; Plan researches a strategy without
+editing; General-purpose executes multi-step work and returns a concise report to the caller.
 
-CLI-only status-line setup and Claude-specific product guidance have no direct counterpart in this
-application. They are not registered as nonfunctional agents. Existing documentation search,
-repository research, and web search serve product-guidance investigations. There is no Bash tool,
-host-filesystem access, temporary test-script execution, worktree isolation, or implicit git commit.
+Fresh workers need a self-contained brief. Foreground calls return a report; background workers
+report completion automatically. Stop requests use an abort signal, and messages are delivered at
+model boundaries. SF Claws already implements these lifecycle operations with persisted worker IDs,
+reports, messages, and resumable transcripts. Unlike the reference CLI, it has no shell processes
+or worktree isolation; background work remains limited to read-only roles sharing the workspace.
 
-Forking is explicit (`forkContext: true`) and copies the conversation as context while retaining the
-child role's tool restrictions and policy. It does not copy an unrestricted parent tool pool or
-claim a cache-identical system prefix. All outstanding tool calls receive placeholder results in
-the copied history, without modifying the parent; provider-bound raw reasoning is removed. The
-assignment tells the worker to re-read potentially stale shared files and not recursively delegate.
+Forking is explicit (`forkContext: true`) and retains child-role tool restrictions and policy.
+Outstanding calls receive placeholder results in copied history; provider reasoning is removed.
+Workers cannot recursively delegate. Messages and cancellation do not grant approval or undo edits.
 
 ## Tools
 
@@ -73,6 +73,11 @@ cycle, and must complete before dependent work starts. Conflicting ownership cla
 values of null remove keys. Use `metadata.blocker` to explain blocked work while keeping its task
 status open; the UI checklist shows it as blocked. The board projects into the existing persisted
 checklist and `todo.updated` events. Once a board exists, `todo_write` cannot overwrite it.
+Successful full-workspace validation reconciles narrowly identified validation steps in both stores
+and emits `todo.updated`. Test-required steps need observed tests with zero failures; slice checks,
+failed checks, compound deploy steps, and manual acceptance work are not auto-completed. Task-board
+entries retain the Salesforce validation ID as evidence. Other checklist wording remains the
+orchestrator's responsibility.
 
 `run_subagent` defaults to foreground execution. `runInBackground: true` is accepted for read-only
 roles only; staged implementations share a workspace and remain foreground to avoid write races.
@@ -90,7 +95,7 @@ their saved transcript. Session tasks, worker reports, and queued messages are s
 ## Search scope and configuration
 
 `glob`, `grep`, and `read_source_file` default to staged workspace files. Pass `repo` with the name
-of a linked repository to inspect its snapshot. Repository-bound researchers cannot switch to a
+of a linked repository to inspect its snapshot. Repository-bound Explore workers cannot switch to a
 different source. Search does not enumerate live org metadata: use the existing org tools for that.
 Paths are sorted alphabetically, since snapshots lack trustworthy file modification times.
 Glob syntax supports `**`, `*`, and `?`, including a globstar matching zero directories; extended

@@ -385,8 +385,8 @@ export class SessionRuntime {
         await this.runSubagent(
           sessionId,
           'orchestrator',
-          'doc_writer',
-          `Document this session turn. The user asked: "${text.slice(0, 1000)}". The lead agent's final reply was: "${outcome.text.slice(0, 3000)}". Cover the investigation and any staged/validated/deployed changes.`,
+          'general',
+          `Call write_documentation exactly once to document this session turn. Do not modify the workspace. ${this.transcriptSummary(sessionId)}\nDocument this session turn. The user asked: "${text.slice(0, 1000)}". The lead agent's final reply was: "${outcome.text.slice(0, 3000)}". Cover the investigation and any staged/validated/deployed changes.`,
         );
       } catch (e) {
         this.app.log.warn({ err: e }, 'auto documentation failed');
@@ -562,7 +562,7 @@ export class SessionRuntime {
       knowledgeSection: await this.app.knowledge.promptSection(ctx.session.clientId),
       specialists: role === 'orchestrator' ? this.app.repos.customAgents.forClient(ctx.session.clientId) : [],
       githubConfigured: this.app.github.hasToken(ctx.session.clientId),
-      tools: toolsForRole(role).map((t) => t.name),
+      tools: toolsForRole(ctx.research ? 'researcher' : role).map((t) => t.name),
       specialistInstructions: specialist ? { name: specialist.name, instructions: specialist.instructions } : null,
     });
     sections.push({ name: 'hydration', text: this.hydrationPrompt(ctx.session.id) });
@@ -625,7 +625,7 @@ export class SessionRuntime {
             : resolved.maxIterations,
           system: system.system,
           promptSections: system.sections,
-          tools: toolsForRole(role),
+          tools: toolsForRole(research ? 'researcher' : role),
           persistent: true,
           initialMessages: execution?.history,
           fallback: resolved.fallback,
@@ -655,7 +655,7 @@ export class SessionRuntime {
         .join('\n\n');
       const reviewedHash = this.workspaceHash(sessionId);
       const outcome = await agent.run(prompt);
-      if (canonicalRole(role) === 'verify') {
+      if (canonicalRole(role) === 'verify' || (canonicalRole(role) === 'general' && parseReviewVerdict(outcome.text))) {
         const report =
           reviewedHash === this.workspaceHash(sessionId) && outcome.ok
             ? outcome.text
@@ -1172,8 +1172,10 @@ export class SessionRuntime {
         this.bus.emit(sessionId, { type: 'workspace.file', path: file.path, action: 'deleted', metadataType: file.metadataType, fullName: file.fullName });
       this.bus.emit(sessionId, { type: 'session.error', agentId: null, message: restored.stopped, recoverable: true });
     }
-    if (ok && scope === 'full') this.validatedFingerprints.set(sessionId, workspaceFingerprint(files));
-    else this.validatedFingerprints.delete(sessionId);
+    if (ok && scope === 'full') {
+      this.validatedFingerprints.set(sessionId, workspaceFingerprint(files));
+      this.completeValidationTasks(sessionId, updated);
+    } else this.validatedFingerprints.delete(sessionId);
     this.bus.emit(sessionId, {
       type: 'deploy.validation',
       scope,
@@ -1189,6 +1191,47 @@ export class SessionRuntime {
     });
     if (this.active.has(sessionId)) this.bus.emit(sessionId, { type: 'session.status', status: 'running', message: null });
     return updated;
+  }
+
+  /** Complete only narrowly identified validation steps from observed full-workspace evidence. */
+  private completeValidationTasks(sessionId: string, run: DeployRun): void {
+    if (
+      !run.checkOnly ||
+      run.scope !== 'full' ||
+      run.status !== 'succeeded' ||
+      !run.sfDeployId ||
+      run.failures.length ||
+      run.componentsFailed !== 0 ||
+      run.testsFailed !== 0
+    )
+      return;
+    const matches = (content: string) => {
+      // Do not auto-complete compound work such as "Validate and deploy" or manual acceptance checks.
+      if (!/^validate\b/i.test(content) || /\b(deploy(?!ment)|review|document|manual|acceptance|ui)\b/i.test(content)) return false;
+      if (!/\b(checkOnly|deployment|workspace)\b/i.test(content)) return false;
+      return !/\btests?\b/i.test(content) || (run.testLevel !== 'NoTestRun' && (run.testsTotal ?? 0) > 0);
+    };
+    const completed = new Set<string>();
+    this.app.repos.agentState.change(sessionId, (state) => {
+      for (const task of state.tasks) {
+        if (task.status === 'completed' || !matches(task.subject) || task.blockedBy.some((id) => state.tasks.find((t) => t.id === id)?.status !== 'completed'))
+          continue;
+        task.status = 'completed';
+        delete task.metadata.blocker;
+        task.metadata.validationId = run.sfDeployId;
+        completed.add(task.id);
+      }
+    });
+    const taskIds = new Set(this.app.repos.agentState.get(sessionId).tasks.map((t) => t.id));
+    let changed = false;
+    const items = this.app.repos.todos.get(sessionId).map((item) => {
+      if (item.status === 'completed' || !(completed.has(item.id) || (!taskIds.has(item.id) && matches(item.content)))) return item;
+      changed = true;
+      return { ...item, status: 'completed' as const };
+    });
+    if (!changed) return;
+    this.app.repos.todos.set(sessionId, items, 'orchestrator');
+    this.bus.emit(sessionId, { type: 'todo.updated', agentId: 'orchestrator', items });
   }
 
   /** True when the latest validation succeeded and the workspace has not changed since. */
@@ -1221,7 +1264,7 @@ export class SessionRuntime {
       const review = this.latestReviewVerdict(sessionId);
       if (!review?.current || !review.verdict)
         return {
-          text: 'Cannot request deploy: no reviewer verdict exists for the workspace as it is staged now. Run a "reviewer" sub-agent on the current files (it must end with a VERDICT line), address blockers, then request the deploy.',
+          text: 'Cannot request deploy: no reviewer verdict exists for the workspace as it is staged now. Assign a general sub-agent an independent read-only review of the current files (it must end with a VERDICT line), address blockers, then request the deploy.',
           ok: false,
         };
       if (review.verdict === 'FAIL')

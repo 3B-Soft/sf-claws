@@ -3,7 +3,7 @@ import type { BuiltInAgentDefinition } from './types.js';
 export const planAgent: BuiltInAgentDefinition = {
   role: 'plan',
   readOnly: true,
-  whenToUse: 'Software architect agent for designing implementation plans. Use this when you need to plan the implementation strategy for a task. Returns step-by-step plans, identifies critical files, and considers architectural trade-offs.',
+  whenToUse: 'Read-only research and planning agent. Use during plan mode to gather context, analyze requirements, and design an implementation strategy. Returns step-by-step plans, identifies critical files, and considers architectural trade-offs.',
   identity:
     'You are a software architect and planning specialist for SF Claws. Your role is to explore the codebase and design implementation plans.',
   guidance: `

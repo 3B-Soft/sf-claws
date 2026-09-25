@@ -99,7 +99,7 @@ export function buildReminders(i: ReminderInput): string[] {
 
   if (i.stagedWithoutDocs && i.tool === 'request_deploy') {
     out.push(
-      'Remember that this session still needs documentation (write_documentation or a doc_writer sub-agent) before it is finished, whatever the user decides about deploying.',
+      'Remember that this session still needs documentation (write_documentation) before it is finished, whatever the user decides about deploying.',
     );
   }
 

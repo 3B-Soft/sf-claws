@@ -74,7 +74,7 @@ describe('session runtime', () => {
           markdown: '## Plan\n- Add Renewal_Date__c (Date) to Account\n- Validate against the org\n- Add it to the Sales permission set',
           impact: 'Every sales user sees one new date field on Account; no existing records or automations change.',
         }),
-      () => toolCall('run_subagent', { role: 'metadata_builder', objective: 'Add Renewal_Date__c to Account' }),
+      () => toolCall('run_subagent', { role: 'general', objective: 'Add Renewal_Date__c to Account' }),
       // sub-agent (fresh conversation)
       () => toolCall('write_workspace_file', { path: 'objects/Account/fields/Renewal_Date__c.field-meta.xml', content: fieldXml }),
       () => toolCall('validate_deployment', {}),
@@ -140,7 +140,7 @@ describe('session runtime', () => {
     expect(s.inputTokens).toBeGreaterThan(0);
     expect(s.costUsd).toBeGreaterThan(0);
     expect(ctx.repos.usage.bySession(session.id).length).toBe(11);
-    expect(ctx.repos.usage.bySession(session.id).some((u) => u.role === 'metadata_builder')).toBe(true);
+    expect(ctx.repos.usage.bySession(session.id).some((u) => u.role === 'general')).toBe(true);
     // doc persisted & searchable
     const docs = ctx.repos.docs.bySession(session.id);
     expect(docs).toHaveLength(1);
@@ -184,7 +184,7 @@ describe('session runtime', () => {
     expect(ctx.repos.docs.bySession(session.id)).toHaveLength(1);
     expect(ctx.repos.docs.bySession(session.id)[0].title).toBe('Auto doc');
     const spawned = ctx.repos.events.listAfter(session.id).filter((e) => e.type === 'agent.spawned') as any[];
-    expect(spawned[0].role).toBe('doc_writer');
+    expect(spawned[0].role).toBe('general');
   });
 
   it('enforces policy in write_workspace_file and rejects concurrent turns', async () => {
@@ -262,5 +262,58 @@ describe('session runtime', () => {
 
     expect(ctx.runtime.completeSession(b.id).status).toBe('completed');
     expect(ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' }).id).not.toBe(b.id);
+  });
+});
+
+describe('validation checklist reconciliation', () => {
+  it.each([
+    { name: 'full validation with passing tests', scope: 'full', ok: true, tests: 7, completed: true },
+    { name: 'slice validation', scope: 'slice', ok: true, tests: 7, completed: false },
+    { name: 'failed validation', scope: 'full', ok: false, tests: 7, completed: false },
+    { name: 'validation without tests', scope: 'full', ok: true, tests: 0, completed: false },
+  ])('$name updates only proven validation steps', async ({ scope, ok, tests, completed }) => {
+    const { sf } = fakeSf([{ ok, testsTotal: tests, testsFailed: ok ? 0 : 1, codeCoverage: 89 }]);
+    const app = makeContext({ sf: sf as any });
+    try {
+      const { user, org } = await seedClientOrgUser(app);
+      const session = app.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'pro' });
+      const path = 'objects/Account/fields/Renewal_Date__c.field-meta.xml';
+      app.repos.workspace.upsert(session.id, {
+        path,
+        content: fieldXml,
+        metadataType: 'CustomField',
+        fullName: 'Account.Renewal_Date__c',
+        action: 'created',
+        original: null,
+      });
+      const subject = 'Validate (checkOnly) with tests, zero failures';
+      const task = app.repos.agentState.createTask(session.id, { subject, description: 'Full workspace check' });
+      app.repos.agentState.updateTask(session.id, task.id, { metadata: { blocker: 'Earlier validation failed' } });
+      app.repos.todos.set(
+        session.id,
+        [
+          { id: 'legacy', content: subject, status: 'in_progress' },
+          { id: task.id, content: subject, status: 'blocked' },
+          { id: 'compound', content: 'Validate workspace and deploy', status: 'pending' },
+          { id: 'manual', content: 'Validate workspace UI acceptance', status: 'pending' },
+        ],
+        'orchestrator',
+      );
+      await app.runtime.validate(session.id, { testLevel: 'RunSpecifiedTests', runTests: ['RenewalTest'], ...(scope === 'slice' ? { paths: [path] } : {}) });
+      const items = app.repos.todos.get(session.id);
+      expect(items.find((t) => t.id === 'legacy')?.status).toBe(completed ? 'completed' : ok ? 'in_progress' : 'pending');
+      expect(items.find((t) => t.id === task.id)?.status).toBe(completed ? 'completed' : 'blocked');
+      expect(items.find((t) => t.id === 'compound')?.status).toBe('pending');
+      expect(items.find((t) => t.id === 'manual')?.status).toBe('pending');
+      const saved = app.repos.agentState.get(session.id).tasks[0];
+      expect(saved.status).toBe(completed ? 'completed' : 'pending');
+      if (completed) {
+        expect(saved.metadata.validationId).toBe('0Af000');
+        expect(saved.metadata.blocker).toBeUndefined();
+        expect(app.repos.events.listAfter(session.id).some((e) => e.type === 'todo.updated')).toBe(true);
+      }
+    } finally {
+      app.db.close();
+    }
   });
 });

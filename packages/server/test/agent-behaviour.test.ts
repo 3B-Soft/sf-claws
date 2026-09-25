@@ -28,7 +28,7 @@ describe('plan mode', () => {
     const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
 
     provider.script = [
-      () => toolCall('run_subagent', { role: 'metadata_builder', objective: 'build it' }),
+      () => toolCall('run_subagent', { role: 'general', objective: 'build it' }),
       (req) => {
         const last = req.messages.at(-1)!.content[0] as { content: string; isError: boolean };
         expect(last.isError).toBe(true);

@@ -254,7 +254,7 @@ function planSection(rules: PolicyRules): string | null {
   if (rules.requirePlanApproval === 'never') return null;
   const scope =
     rules.requirePlanApproval === 'always'
-      ? 'Every change needs an approved plan before you stage anything. Read-only delegation (an analyst, a reviewer, a researcher) is allowed while planning.'
+      ? 'Every change needs an approved plan before you stage anything. Read-only delegation (Explore or Plan) is allowed while planning.'
       : 'Anything beyond a single straightforward component change needs an approved plan: delegating to a builder, touching Apex or Flow, or changing more than one component.';
   return `## Plan first
 ${scope}

@@ -159,13 +159,13 @@ describe('reviewer verdict gate', () => {
       () => toolCall('request_deploy', { summary: 'two fields, no review yet', impact: 'Two new Account fields visible to every sales user.' }),
       (req) => {
         refusals.push((req.messages.at(-1)!.content[0] as { content: string }).content);
-        return toolCall('run_subagent', { role: 'reviewer', objective: 'review the two fields' });
+        return toolCall('run_subagent', { role: 'general', objective: 'review the two fields' });
       },
       () => text('BLOCKERS: B__c has no description.\nVERDICT: FAIL'),
       () => toolCall('request_deploy', { summary: 'two fields, failed review', impact: 'Two new Account fields visible to every sales user.' }),
       (req) => {
         refusals.push((req.messages.at(-1)!.content[0] as { content: string }).content);
-        return toolCall('run_subagent', { role: 'reviewer', objective: 'review again' });
+        return toolCall('run_subagent', { role: 'general', objective: 'review again' });
       },
       () => text('No blockers.\nVERDICT: PASS'),
       () => toolCall('request_deploy', { summary: 'two fields, reviewed', impact: 'Two new Account fields visible to every sales user.' }),
@@ -193,9 +193,9 @@ describe('plan gate and read-only delegation', () => {
     const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
     let builderResult = '';
     provider.script = [
-      () => toolCall('run_subagent', { role: 'analyst', objective: 'look' }),
+      () => toolCall('run_subagent', { role: 'explore', objective: 'look' }),
       () => text('FINDINGS: nothing'),
-      () => toolCall('run_subagent', { role: 'metadata_builder', objective: 'build' }),
+      () => toolCall('run_subagent', { role: 'general', objective: 'build' }),
       (req) => {
         builderResult = (req.messages.at(-1)!.content[0] as { content: string }).content;
         return text('need a plan first');
@@ -204,7 +204,7 @@ describe('plan gate and read-only delegation', () => {
     ctx.runtime.startTurn(session.id, user.id, 'go');
     await waitForIdle(ctx, session.id);
     const spawned = ctx.repos.events.listAfter(session.id).filter((e) => e.type === 'agent.spawned') as { role: string }[];
-    expect(spawned.map((e) => e.role)).toEqual(['analyst']);
+    expect(spawned.map((e) => e.role)).toEqual(['explore']);
     expect(builderResult).toContain('no approved plan');
   });
 });

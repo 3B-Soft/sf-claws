@@ -36,5 +36,5 @@ export function definitionFor(role: AgentRole) {
 export function guidanceFor(role: AgentRole): string {
   return definitionFor(role)?.guidance ?? '';
 }
-export const DELEGATABLE_ROLES: AgentRole[] = ['general', 'explore', 'plan', 'verify', 'doc_writer'];
+export const DELEGATABLE_ROLES: AgentRole[] = ['general', 'explore', 'plan'];
 export const READ_ONLY_ROLES = new Set<AgentRole>(['explore', 'plan', 'verify', 'analyst', 'reviewer', 'researcher']);

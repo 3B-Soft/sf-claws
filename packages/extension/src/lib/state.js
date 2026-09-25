@@ -202,12 +202,22 @@ export async function refreshOrg() {
   const id = ++orgReq;
   appStore.set({ orgState: 'resolving', orgError: null });
   const applyResolved = async (org, client) => {
-    appStore.set({ orgState: 'resolved', org, client, orgError: null, orgLimits: appStore.get().org?.id === org.id ? appStore.get().orgLimits : null });
+    // Read the previous org before overwriting it: a session belongs to one org, so switching
+    // tabs to another org must never keep showing the old org's session.
+    const orgChanged = appStore.get().org?.id !== org.id;
+    appStore.set({
+      orgState: 'resolved',
+      org,
+      client,
+      orgError: null,
+      orgLimits: orgChanged ? null : appStore.get().orgLimits,
+      ...(orgChanged ? { sessionId: null } : {}),
+    });
     refreshLimits();
     // Session continuity per org
     const map = await storage.local.get(KEYS.lastSessionByOrg, {});
-    const prevSession = appStore.get().sessionId;
-    if (!prevSession || appStore.get().org?.id !== org.id) appStore.set({ sessionId: map?.[org.id] || null });
+    if (id !== orgReq) return;
+    if (!appStore.get().sessionId) appStore.set({ sessionId: map?.[org.id] || null });
   };
   try {
     const res = await api.resolveOrg(host);

@@ -38,7 +38,7 @@ export default class RoleBindings extends LightningElement {
     return EFFORTS.map((e) => ({ value: e, label: e }));
   }
   get rows() {
-    return AGENT_ROLES.map((role) => {
+    return ['orchestrator', 'explore', 'plan', 'general', 'summarizer'].map((role) => {
       const d = this.draft[role] || {};
       const model = (this.models || []).find((m) => m.id === d.modelId);
       return {
