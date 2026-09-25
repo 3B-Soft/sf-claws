@@ -2,6 +2,7 @@
   <section class="card p-5 space-y-4">
     <div class="flex items-center justify-between gap-4">
       <h2 class="text-lg font-semibold text-content">Session timing</h2>
+      <template lwc:if={canDownloadAudit}><button class="btn-secondary btn-sm" onclick={downloadAudit} disabled={exporting}>Download full audit ZIP</button></template>
       <button class="btn-secondary btn-sm" onclick={download} disabled={exporting}>Download events (NDJSON)</button>
     </div>
     <p class="text-sm text-content">{summary}</p>

@@ -163,7 +163,7 @@ describe('session runtime', () => {
     const { user, org } = await seedClientOrgUser(ctx);
     const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'pro', title: 'Deploy gate' });
     provider.script = [
-      () => toolCall('write_workspace_file', { path: 'flows/X.flow-meta.xml', content: `<?xml version="1.0"?><Flow xmlns="${NS}"><label>X</label></Flow>` }),
+      () => toolCall('write_workspace_file', { path: 'objects/Account/fields/Renewal_Date__c.field-meta.xml', content: fieldXml }),
       (req) => {
         const last = req.messages.at(-1)!.content[0] as any;
         expect(last.isError).toBe(false);
@@ -226,7 +226,7 @@ describe('session runtime', () => {
     const { user, org } = await seedClientOrgUser(ctx);
     const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
     provider.script = [
-      () => toolCall('write_workspace_file', { path: 'flows/X.flow-meta.xml', content: `<?xml version="1.0"?><Flow xmlns="${NS}"><label>X</label></Flow>` }),
+      () => toolCall('write_workspace_file', { path: 'objects/Account/fields/Renewal_Date__c.field-meta.xml', content: fieldXml }),
       () => toolCall('validate_deployment', {}),
       () => toolCall('request_deploy', { summary: 's', impact: 'Adds one flow that runs for every new Account.' }),
       () => text('never reached'),

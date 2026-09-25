@@ -1,5 +1,6 @@
 <template lwc:render-mode="light">
   <div class={cls}>
+    <template lwc:if={canDownload}><button class="btn-secondary btn-xs mb-2" onclick={download} disabled={downloading}>Download validation details</button></template>
     <div class="flex flex-wrap items-center gap-2"><x-icon name={icon} cls={iconCls}></x-icon><span class="text-sm font-semibold text-content-strong">{title}</span><x-badge value={statusLabel}></x-badge><template lwc:if={sfId}><span class="mono ml-auto text-content-subtle">{sfId}</span></template></div>
     <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
       <div><div class="text-[11px] uppercase tracking-wide text-content-subtle">Components OK</div><div class="text-lg font-semibold text-emerald-700">{componentsOk}</div></div>

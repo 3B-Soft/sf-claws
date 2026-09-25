@@ -1,5 +1,7 @@
 <template lwc:render-mode="light">
   <div class={cardCls}>
+    <template lwc:if={canDownload}><button class="mb-2 text-[11px] underline" onclick={download} disabled={downloading}>Download validation details</button></template>
+    <template lwc:if={downloadError}><p class="text-rose-700">{downloadError}</p></template>
     <div class="flex items-center gap-2">
       <template lwc:if={pending}><span class="h-2 w-2 rounded-full bg-brand-400 pulse-dot"></span></template>
       <span class={titleCls}>{title}</span>

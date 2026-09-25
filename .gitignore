@@ -23,3 +23,4 @@ PRIVATE_README.md
 # Local HTTPS certificates and private keys
 packages/admin-ui/certs/
 .enola/
+_long_session_logs

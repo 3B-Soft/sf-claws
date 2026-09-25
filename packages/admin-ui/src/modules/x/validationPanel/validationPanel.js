@@ -1,3 +1,5 @@
+import { Api } from '../../../lib/api.js';
+import { toast } from '../../../lib/store.js';
 import { LightningElement, api } from 'lwc';
 /** Deploy validation / deploy run panel. Accepts a `deploy.validation` event or a DeployRun. */
 export default class ValidationPanel extends LightningElement {
@@ -58,6 +60,27 @@ export default class ValidationPanel extends LightningElement {
   }
   get testsFailedCls() {
     return `text-lg font-semibold ${this.d.testsFailed ? 'text-rose-700' : 'text-content'}`;
+  }
+  downloading = false;
+  get canDownload() {
+    return !!this.d.sessionId && !!(this.d.id || this.d.deployId);
+  }
+  async download() {
+    this.downloading = true;
+    try {
+      const id = this.d.id || this.d.deployId;
+      const blob = await Api.exportValidation(this.d.sessionId, id);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `validation-${id}.json`;
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      toast.error('Could not download validation', err.message);
+    } finally {
+      this.downloading = false;
+    }
   }
   get sfId() {
     return this.d.sfDeployId || '';

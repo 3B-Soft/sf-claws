@@ -198,7 +198,19 @@ export function createTranscript() {
           kind: 'validation',
           seq: ev.seq,
           at,
-          ...pick(ev, ['deployId', 'scope', 'ok', 'attempt', 'componentsTotal', 'componentsFailed', 'testsTotal', 'testsFailed', 'codeCoverage', 'failures']),
+          ...pick(ev, [
+            'sessionId',
+            'deployId',
+            'scope',
+            'ok',
+            'attempt',
+            'componentsTotal',
+            'componentsFailed',
+            'testsTotal',
+            'testsFailed',
+            'codeCoverage',
+            'failures',
+          ]),
         });
         break;
       case 'confirmation.requested': {

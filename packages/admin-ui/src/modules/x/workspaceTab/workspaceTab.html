@@ -1,5 +1,6 @@
 <template lwc:render-mode="light">
   <template lwc:if={hasFiles}>
+    <div class="mb-3"><button class="btn-secondary btn-sm" onclick={download} disabled={busy}>Export workspace ZIP</button></div>
     <div class="grid gap-4 lg:grid-cols-[18rem_1fr]">
       <aside class="card max-h-[70vh] overflow-y-auto p-2">
         <template for:each={list} for:item="f">

@@ -1,3 +1,4 @@
+import { api as http } from '../../../lib/state.js';
 import { LightningElement, api } from 'lwc';
 import { fmtDate, statusClass, statusLabel } from '../../../lib/format.js';
 
@@ -98,6 +99,29 @@ export default class ValidationPanel extends LightningElement {
     return `width:${this.componentsTotal ? (this.componentsOk / this.componentsTotal) * 100 : 0}%`;
   }
 
+  downloading = false;
+  downloadError = '';
+  get canDownload() {
+    return !!this.run?.sessionId && !!(this.run?.id || this.run?.deployId);
+  }
+  async download() {
+    this.downloading = true;
+    this.downloadError = '';
+    try {
+      const id = this.run.id || this.run.deployId;
+      const data = await http.exportValidation(this.run.sessionId, id);
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `validation-${id}.json`;
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      this.downloadError = err.message;
+    } finally {
+      this.downloading = false;
+    }
+  }
   onMore() {
     this.showAll = true;
   }

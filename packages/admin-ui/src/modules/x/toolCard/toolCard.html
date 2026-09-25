@@ -8,6 +8,7 @@
       <template lwc:if={duration}><span class="text-[11px] text-content-subtle">{duration}</span></template>
       <x-icon name={statusIcon} cls={statusCls}></x-icon>
     </button>
+    <template lwc:if={failed}><div class="border-t border-line px-3 py-2 text-xs text-rose-700 whitespace-pre-wrap break-words">{genericSummary}</div></template>
     <template lwc:if={isWrite}>
       <div class="flex flex-wrap items-center gap-2 border-t border-line px-3 py-2 text-xs"><x-badge value={writeAction}></x-badge><span class="mono min-w-0 flex-1 truncate text-content">{writePath}</span><button class="link" onclick={openFile}>View diff</button></div>
     </template>

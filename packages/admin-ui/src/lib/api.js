@@ -244,6 +244,9 @@ export const Api = {
       after = next;
     }
   },
+  exportValidation: (id, deployId) => api.get(`/sessions/${enc(id)}/deploys/${enc(deployId)}/export`, { blob: true }),
+  exportWorkspace: (id) => api.get(`/sessions/${enc(id)}/workspace/export`, { blob: true }),
+  exportAudit: (id) => api.get(`/sessions/${enc(id)}/audit/export`, { blob: true }),
   exportSession: (id) => api.get(`/sessions/${enc(id)}/export`, { blob: true }),
   sessionWorkspace: (id) => api.get(`/sessions/${enc(id)}/workspace`),
   putWorkspaceFile: (id, body) => api.put(`/sessions/${enc(id)}/workspace/file`, body),

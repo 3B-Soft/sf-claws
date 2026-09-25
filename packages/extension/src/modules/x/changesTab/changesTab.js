@@ -24,6 +24,24 @@ export default class ChangesTab extends LightningElement {
   _unsubs = [];
   _lastTick = -1;
 
+  exporting = false;
+  async onExport() {
+    this.exporting = true;
+    try {
+      const blob = await http.exportWorkspace(this.sessionId);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `workspace-${this.sessionId}.zip`;
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      this.message = err.message;
+      this.messageTone = 'rose';
+    } finally {
+      this.exporting = false;
+    }
+  }
   connectedCallback() {
     this._unsubs.push(
       appStore.subscribe((s) => {

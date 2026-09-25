@@ -514,9 +514,8 @@ export async function resume() {
   sessionStore.set({ resuming: true, error: null });
   try {
     await api.resume(id);
-    transcript.status = 'running';
-    transcript.statusMessage = 'Resuming…';
-    publish();
+    // The turn can finish before this response arrives; use persisted status.
+    await resync();
   } catch (e) {
     sessionStore.set({ error: e.message });
     throw e;

@@ -51,7 +51,7 @@
     <template lwc:elseif={isDocs}><x-docs-tab docs={docs} selected-id={selectedDoc}></x-docs-tab></template>
     <template lwc:elseif={isNotes}><x-notes-panel session-id={sessionId} version={notesVersion} selected-id={selectedNote}></x-notes-panel></template>
     <template lwc:elseif={isUsage}><x-usage-records-tab session-id={sessionId}></x-usage-records-tab></template>
-    <template lwc:elseif={isTiming}><x-session-timing events={events} session-id={sessionId}></x-session-timing></template>
+    <template lwc:elseif={isTiming}><x-session-timing can-download-audit={detail.canDownloadAudit} events={events} session-id={sessionId}></x-session-timing></template>
     <template lwc:elseif={isEvents}>
       <div class="space-y-2">
         <template for:each={rawEvents} for:item="e"><details key={e.id} class="card px-4 py-2"><summary class="flex cursor-pointer items-center gap-3 text-xs"><span class="kbd">#{e.seq}</span><span class="font-mono text-brand-600">{e.type}</span><span class="ml-auto text-content-subtle">{e.at}</span></summary><div class="py-2"><x-json-tree value={e.event} max-depth="3"></x-json-tree></div></details></template>

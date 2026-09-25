@@ -27,13 +27,15 @@ export function classifyFailure(value: unknown): FailureKind {
     value instanceof Error
       ? `${value.message} ${JSON.stringify((value as any).details ?? {})}`
       : outcome
-        ? `${outcome.status} ${outcome.errorMessage ?? ''} ${JSON.stringify(outcome.failures)}`
+        ? `${outcome.status} ${outcome.errorMessage ?? ''} ${JSON.stringify(outcome.failures)} ${JSON.stringify(outcome.coverageWarnings ?? [])}`
         : JSON.stringify(value);
   if (/INVALID_SESSION_ID|INVALID_LOGIN|INSUFFICIENT_ACCESS|insufficient privileges|unauthorized/i.test(text)) return 'auth';
   if (/REQUEST_LIMIT_EXCEEDED|API limit|quota/i.test(text)) return 'quota';
   if (/UNKNOWN_EXCEPTION|UNABLE_TO_LOCK_ROW|ENTITY_IS_LOCKED/i.test(text)) return 'platform';
   if (/ECONNRESET|ETIMEDOUT|network|fetch failed|socket|timed out/i.test(text)) return 'transport';
   if (/CodeCoverage|coverage/i.test(text)) return 'coverage';
+  if (outcome && !outcome.ok && !outcome.failures.length && outcome.testsTotal > 0 && outcome.codeCoverage !== null && outcome.codeCoverage < 75)
+    return 'coverage';
   if (/TestFailure/i.test(text)) return 'test';
   if (/Canceled|Canceling|Aborted/i.test(text)) return 'cancelled';
   if (typeof value === 'object' && value && 'failures' in value && (value as DeployOutcome).failures.some((f) => f.componentType)) return 'component';

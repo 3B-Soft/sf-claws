@@ -97,6 +97,8 @@ export function missingCompanions(files: WorkspaceFile[]): string[] {
 
 export function repairComponents(roots: RootDiagnostic[], files: WorkspaceFile[]): string[] {
   const keys = new Set(roots.flatMap((r) => [r.key, ...r.components]));
+  if (roots.some((r) => /^(CodeCoverage|ApexTest):/.test(r.key)))
+    for (const f of files) if (/^Apex(Class|Trigger)$/.test(f.metadataType ?? '')) keys.add(componentKey(f));
   const failing = files.filter((f) => keys.has(componentKey(f)));
   // Direct dependencies in either direction, not an unbounded permission to edit the whole workspace.
   for (const f of files) if (failing.some((root) => references(root.content, f) || references(f.content, root))) keys.add(componentKey(f));
@@ -120,7 +122,8 @@ export function applyCompileResult(
   // A slice may repair its own failures; it cannot clear failures belonging to a different slice.
   const untouched = full ? [] : state.roots.filter((r) => !keys.includes(r.key) && !r.components.some((k) => keys.includes(k)));
   const merged = [...new Map([...untouched, ...roots].map((r) => [r.key, r])).values()];
-  const noProgress = state.roots.length > 0 && merged.length >= state.roots.length ? state.noProgress + 1 : 0;
+  const sameDiagnostics = JSON.stringify(merged) === JSON.stringify(state.roots);
+  const noProgress = state.roots.length > 0 && sameDiagnostics ? state.noProgress + 1 : 0;
   const checkedFiles = { ...state.checkedFiles };
   for (const f of files) checkedFiles[f.path] = fileHash(f);
   const checkedPaths = new Set(files.map((f) => f.path));
@@ -138,7 +141,7 @@ export function applyCompileResult(
     checks: state.checks + 1,
     stopped:
       noProgress >= 2
-        ? `Stopped after two compiles without a smaller root-error set (${merged.length} roots). Staged work is preserved; repair manually and validate before resuming.`
+        ? `Stopped after two compiles with unchanged root diagnostics (${merged.length} roots). Staged work is preserved; Resume to delegate another bounded repair attempt, or repair manually and validate.`
         : null,
   };
 }

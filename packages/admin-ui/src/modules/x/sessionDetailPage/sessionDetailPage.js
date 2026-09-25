@@ -440,7 +440,6 @@ export default class SessionDetailPage extends LightningElement {
       await Api.resumeSession(this.sessionId);
       toast.success('Session resuming', 'The orchestrator continues from its persisted memory.');
       await this.refreshDetail();
-      this.detail = { ...this.detail, running: true, session: { ...this.session, status: 'running' } };
       this.maybeConnect();
     } catch (err) {
       toast.error('Could not resume', err.message);

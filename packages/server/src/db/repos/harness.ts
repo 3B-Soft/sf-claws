@@ -74,10 +74,10 @@ export class HarnessRepo {
   get(sessionId: string, id: string): Checkpoint | undefined {
     return decode(this.db.prepare('SELECT * FROM validation_checkpoints WHERE session_id=? AND id=?').get(sessionId, id));
   }
-  list(sessionId: string): Checkpoint[] {
+  list(sessionId: string, limit = 100): Checkpoint[] {
     return this.db
-      .prepare('SELECT * FROM validation_checkpoints WHERE session_id=? ORDER BY rowid DESC LIMIT 100')
-      .all(sessionId)
+      .prepare('SELECT * FROM validation_checkpoints WHERE session_id=? ORDER BY rowid DESC LIMIT ?')
+      .all(sessionId, limit)
       .map((r) => decode(r)!);
   }
   active(orgId: string): Checkpoint | undefined {

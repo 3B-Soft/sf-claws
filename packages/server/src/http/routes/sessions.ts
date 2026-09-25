@@ -1,3 +1,4 @@
+import { workspaceArchive, auditArchive } from '../session-export.js';
 import type { FastifyInstance } from 'fastify';
 import { Readable } from 'node:stream';
 import { z } from 'zod';
@@ -85,6 +86,7 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
       pendingConfirmations: ctx.repos.confirmations.pending(session.id).map((c) => ({ id: c.id, kind: c.kind, title: c.title, ...c.payload })),
       lastSeq: ctx.repos.events.lastSeq(session.id),
       running: ctx.runtime.isRunning(session.id),
+      canDownloadAudit: isClientAdmin(ctx, requireUser(req), session.clientId),
     };
   });
 
@@ -193,6 +195,29 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
       }
     }
     return reply.send(Readable.from(lines()));
+  });
+
+  app.get('/sessions/:id/workspace/export', async (req, reply) => {
+    const { user, session } = access(req);
+    const archive = workspaceArchive(ctx, session.id);
+    ctx.repos.audit.log({ userId: user.id, action: 'workspace.export', target: session.id });
+    reply
+      .type('application/zip')
+      .header('Cache-Control', 'no-store')
+      .header('Content-Disposition', `attachment; filename="workspace-${session.id.replace(/[^a-zA-Z0-9_-]/g, '_')}.zip"`);
+    return reply.send(await archive.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }));
+  });
+
+  app.get('/sessions/:id/audit/export', async (req, reply) => {
+    const { user, session } = access(req);
+    if (!isClientAdmin(ctx, user, session.clientId)) throw forbidden('Admin access required for session audit downloads');
+    ctx.repos.audit.log({ userId: user.id, action: 'session.audit.export', target: session.id });
+    const archive = auditArchive(ctx, session.id);
+    reply
+      .type('application/zip')
+      .header('Cache-Control', 'no-store')
+      .header('Content-Disposition', `attachment; filename="audit-${session.id.replace(/[^a-zA-Z0-9_-]/g, '_')}.zip"`);
+    return reply.send(await archive.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }));
   });
 
   /** Server-Sent Events stream; replays events after ?after= then streams live. */
@@ -312,8 +337,23 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
     const { session } = access(req);
     return ctx.repos.deploys.list(session.id);
   });
-  app.post('/sessions/:id/validate', async (req) => {
+  app.get('/sessions/:id/deploys/:deployId/export', async (req, reply) => {
     const { session } = access(req);
+    const deployId = (req.params as { deployId: string }).deployId;
+    const run = ctx.repos.deploys.list(session.id).find((d) => d.id === deployId);
+    if (!run) throw notFound('Validation');
+    const checkpoints = ctx.repos.harness
+      .list(session.id, Number.MAX_SAFE_INTEGER)
+      .filter((c) => c.deployId === run.id)
+      .map((checkpoint) => ({ checkpoint, attempts: ctx.repos.harness.attempts(session.id, checkpoint.id) }));
+    reply
+      .type('application/json')
+      .header('Cache-Control', 'no-store')
+      .header('Content-Disposition', `attachment; filename="validation-${run.id.replace(/[^a-zA-Z0-9_-]/g, '_')}.json"`);
+    return { run, checkpoints };
+  });
+  app.post('/sessions/:id/validate', async (req) => {
+    const { user, session } = access(req);
     if (ctx.runtime.isRunning(session.id)) throw badRequest('Session is running; the agent will validate');
     const body = parse(
       z.object({
@@ -322,7 +362,9 @@ export async function sessionRoutes(app: FastifyInstance, ctx: AppContext) {
       }),
       req.body ?? {},
     );
-    return ctx.runtime.validate(session.id, body);
+    const run = await ctx.runtime.validate(session.id, body);
+    ctx.runtime.repairManualValidation(session.id, user.id, run);
+    return run;
   });
   // Deploy and commit run the same permission rules as the agent path (`checkCommand` inside
   // executeDeploy/executeCommit): a deny rule has to stop the human pressing the button too.

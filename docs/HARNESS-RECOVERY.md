@@ -30,6 +30,16 @@ All paths below use the existing session membership/ownership checks under `/api
   acknowledged remote job. A Tooling container can recover its lost request ID. Remaining bounded
   check-only platform retries may continue; real deploys are never automatically resubmitted.
 - `GET /sessions/:id/hydration`: full persisted evidence manifest.
+- `GET /sessions/:id/workspace/export`: ZIP of staged source, originals and deletion manifest.
+- `GET /sessions/:id/deploys/:deployId/export`: validation/deploy payload and archived attempts.
+- `GET /sessions/:id/audit/export`: admin-only ZIP of retained session evidence, including full
+  tool audit records, agent messages/reports and validation responses. Membership checks still apply.
+
+Coverage warnings are actionable validation failures. Resume can recover historical coverage
+failures misclassified as unknown and hand their diagnostics to builders. Manual validation also
+feeds repairable failures into the agent loop; an unchanged failing payload is not blindly retried.
+An explicit Resume can renew an exhausted compiler repair budget, preserving the payload guard.
+See [the compliance session investigation](SESSION-COMPLIANCE-INCIDENT.md) for the regression evidence.
 
 Manual validation also reconciles an outstanding check-only checkpoint before doing anything new.
 After reconciliation, run another full validation of the **current** workspace. The old job's success

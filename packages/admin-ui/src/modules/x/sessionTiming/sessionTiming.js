@@ -17,6 +17,7 @@ export default class SessionTiming extends LightningElement {
     this._timing = analyzeSessionTiming(this._events);
   }
   @api sessionId;
+  @api canDownloadAudit = false;
   exporting = false;
 
   get timing() {
@@ -55,14 +56,20 @@ export default class SessionTiming extends LightningElement {
       cached: fmtTokens(r.usage.cachedInputTokens),
     }));
   }
-  async download() {
+  downloadAudit() {
+    return this.downloadFile(true);
+  }
+  download() {
+    return this.downloadFile(false);
+  }
+  async downloadFile(audit) {
     this.exporting = true;
     try {
-      const blob = await Api.exportSession(this.sessionId);
+      const blob = await (audit ? Api.exportAudit(this.sessionId) : Api.exportSession(this.sessionId));
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `session-${this.sessionId}.ndjson`;
+      anchor.download = audit ? `audit-${this.sessionId}.zip` : `session-${this.sessionId}.ndjson`;
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {

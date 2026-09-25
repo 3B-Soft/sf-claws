@@ -129,6 +129,12 @@ export class AuditRepo {
         entry.ip ?? null,
       );
   }
+  forTarget(target: string): AuditEntry[] {
+    return this.db
+      .prepare('SELECT * FROM audit_log WHERE target=? ORDER BY at, rowid')
+      .all(target)
+      .map((r) => rowToObj<AuditEntry>(r, { json: ['details'] }));
+  }
   list(limit = 200): AuditEntry[] {
     return this.db
       .prepare('SELECT * FROM audit_log ORDER BY at DESC LIMIT ?')

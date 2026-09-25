@@ -53,6 +53,7 @@ export default class ToolCard extends LightningElement {
     return this.b.output;
   }
   get kind() {
+    if (this.failed || this.pending) return 'generic';
     const t = String(this.b.tool || '');
     const o = this.out;
     if ((t === 'soql_query' || t === 'tooling_query' || /query/i.test(t)) && o && Array.isArray(o.records)) return 'soql';
@@ -151,7 +152,8 @@ export default class ToolCard extends LightningElement {
     return typeof this.out === 'string' ? this.out : safeJson(this.out);
   }
   get genericSummary() {
-    return this.resultLabel || (typeof this.out === 'string' ? truncate(this.out, 200) : '');
+    if (this.failed) return this.out?.text || this.out?.error || this.out?.message || this.outputText;
+    return this.resultLabel || this.out?.text || (typeof this.out === 'string' ? truncate(this.out, 200) : '');
   }
   openFile(e) {
     e.stopPropagation();

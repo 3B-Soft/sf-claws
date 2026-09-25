@@ -20,6 +20,22 @@ export default class WorkspaceTab extends LightningElement {
   draft = '';
   busy = false;
 
+  async download() {
+    this.busy = true;
+    try {
+      const blob = await Api.exportWorkspace(this.sessionId);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `workspace-${this.sessionId}.zip`;
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      toast.error('Could not export workspace', err.message);
+    } finally {
+      this.busy = false;
+    }
+  }
   get list() {
     return (this.files || []).map((f) => ({
       ...f,

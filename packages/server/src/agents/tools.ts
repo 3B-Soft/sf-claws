@@ -168,6 +168,11 @@ export async function stageWorkspaceFile(
   const inferred = inferComponentFromPath(path);
   const metadataType = inferred?.metadataType ?? input.metadataType ?? null;
   const fullName = inferred?.fullName ?? input.fullName ?? null;
+  if (ctx.agent.role === 'orchestrator' && /^(ApexClass|ApexTrigger|LightningComponentBundle|AuraDefinitionBundle|Flow)$/.test(metadataType ?? ''))
+    return {
+      text: 'Implementation must be delegated. Call run_subagent with role general and provide the requirements, API names, paths, and test acceptance criteria. Use the builder for code repairs too.',
+      ok: false,
+    };
   const refusal = ctx.runtime.workspaceWriteRefusal(ctx.session.id, { path, metadataType, fullName });
   if (refusal) return { text: refusal, ok: false };
   if (path.endsWith('.xml')) {
@@ -1097,6 +1102,38 @@ export const TOOLS: ToolDef[] = [
     },
   },
   {
+    name: 'read_validation_result',
+    readOnly: true,
+    concurrencySafe: true,
+    description:
+      'Read the latest validation (or a specific deployId), its exact staged paths, test level and selected tests, archived attempts, Salesforce job IDs, coverage warnings and original terminal response. Use this to diagnose failures before repairing code or retrying.',
+    inputSchema: obj({ deployId: { type: 'string' } }),
+    roles: READERS,
+    run: async (input, ctx) => {
+      const run = input.deployId
+        ? ctx.app.repos.deploys.list(ctx.session.id).find((r) => r.id === input.deployId)
+        : ctx.app.repos.deploys.latest(ctx.session.id, true);
+      if (!run) return { text: 'No matching validation in this session.', ok: false };
+      const checkpoints = ctx.app.repos.harness
+        .list(ctx.session.id, Number.MAX_SAFE_INTEGER)
+        .filter((c) => c.deployId === run.id)
+        .map((c) => ({
+          id: c.id,
+          engine: c.engine,
+          scope: c.scope,
+          status: c.status,
+          payloadHash: c.payloadHash,
+          paths: c.payload.files.map((f) => f.path),
+          deleted: c.payload.deleted,
+          testLevel: c.payload.testLevel,
+          runTests: c.payload.runTests,
+          attempts: ctx.app.repos.harness.attempts(ctx.session.id, c.id),
+        }));
+      const output = { run, checkpoints };
+      return { text: jsonFull(output), output };
+    },
+  },
+  {
     name: 'validate_deployment',
     readOnly: false,
     interruptBehavior: 'block',
@@ -1118,7 +1155,7 @@ export const TOOLS: ToolDef[] = [
       const ok = run.status === 'succeeded';
       const text = ok
         ? `VALIDATION OK: ${run.componentsTotal} components, ${run.testsTotal} tests (${run.testsFailed} failed), coverage ${run.codeCoverage ?? 'n/a'}%.`
-        : `VALIDATION FAILED (attempt ${run.attempt}): ${run.componentsFailed} component failures, ${run.testsFailed} test failures.\n${run.failures.map((f) => `- [${f.componentType ?? '?'}] ${f.fullName ?? f.fileName ?? ''}${f.lineNumber ? ` line ${f.lineNumber}` : ''}: ${f.problem}`).join('\n')}`;
+        : `VALIDATION FAILED (attempt ${run.attempt}): ${run.componentsFailed} component failures, ${run.testsFailed} test failures, coverage ${run.codeCoverage ?? 'unknown'}%.\n${run.failures.map((f) => `- [${f.componentType ?? '?'}] ${f.fullName ?? f.fileName ?? ''}${f.lineNumber ? ` line ${f.lineNumber}` : ''}: ${f.problem}`).join('\n')}`;
       return { text: `${run.scope === 'slice' ? 'SLICE COMPILE ONLY — full validation still required.\n' : ''}${text}`, output: run, ok };
     },
   },

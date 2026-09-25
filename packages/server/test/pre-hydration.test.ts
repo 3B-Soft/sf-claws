@@ -150,7 +150,14 @@ describe('deterministic pre-hydration', () => {
   });
 
   it('refuses staging when an original lookup fails instead of pretending the file is new', async () => {
-    const provider = new FakeProvider([() => toolCall('write_workspace_file', { path: 'classes/A.cls', content: 'public class A {}' }), () => text('Blocked')]);
+    const provider = new FakeProvider([
+      () =>
+        toolCall('write_workspace_file', {
+          path: 'objects/Account/fields/A__c.field-meta.xml',
+          content: '<CustomField><fullName>A__c</fullName><type>Text</type></CustomField>',
+        }),
+      () => text('Blocked'),
+    ]);
     const ctx = makeContext({
       provider,
       sf: {

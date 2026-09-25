@@ -28,6 +28,8 @@ export interface QueryResult {
   columns: string[];
 }
 export interface DeployOutcome {
+  /** Original terminal Metadata API response, archived with each validation attempt. */
+  rawResult?: unknown;
   ok: boolean;
   sfDeployId: string;
   status: string;
@@ -993,6 +995,30 @@ export function normalizeDeployResult(r: any): DeployOutcome {
       lineNumber: null,
       columnNumber: null,
     });
+  // Metadata API reports coverage errors separately from component/test failures.
+  // Keep Salesforce's exact warning text and class name in the repair diagnostics.
+  if (!ok && !cancelled) {
+    for (const warning of arr(rt.codeCoverageWarnings))
+      failures.push({
+        componentType: 'CodeCoverage',
+        fullName: warning.name ?? null,
+        fileName: null,
+        problem: warning.message ?? 'Salesforce reported insufficient code coverage.',
+        problemType: 'Coverage',
+        lineNumber: null,
+        columnNumber: null,
+      });
+    if (!failures.length && !r.errorMessage && testsRan && runCoverage !== null && runCoverage < 75)
+      failures.push({
+        componentType: 'CodeCoverage',
+        fullName: null,
+        fileName: null,
+        problem: `Validation failed with ${runCoverage}% run coverage and no component or test errors. Inspect coverage warnings and test selection; Salesforce requires at least 75% for deployment.`,
+        problemType: 'Coverage',
+        lineNumber: null,
+        columnNumber: null,
+      });
+  }
   if (r.errorMessage && !failures.length)
     failures.push({
       componentType: null,
@@ -1005,6 +1031,7 @@ export function normalizeDeployResult(r: any): DeployOutcome {
     });
   return {
     ok,
+    rawResult: r,
     sfDeployId: r.id,
     status: r.status,
     checkOnly,

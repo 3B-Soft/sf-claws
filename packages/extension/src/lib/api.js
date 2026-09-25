@@ -153,6 +153,15 @@ export function createApi({ getBaseUrl, getToken }) {
     complete: (id) => api.post(`/sessions/${id}/complete`),
     browserCapture: (id, body) => api.post(`/sessions/${id}/browser-capture`, { body }),
     feedback: (id, helpful, note) => api.post(`/sessions/${id}/feedback`, { body: note ? { helpful, note } : { helpful } }),
+    exportValidation: (id, deployId) => api.get(`/sessions/${encodeURIComponent(id)}/deploys/${encodeURIComponent(deployId)}/export`),
+    exportWorkspace: async (id) => {
+      const response = await request('GET', `/sessions/${encodeURIComponent(id)}/workspace/export`, { raw: true, timeoutMs: 120000 });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new ApiError(body?.error?.message || 'Workspace export failed', { status: response.status });
+      }
+      return response.blob();
+    },
     workspace: (id) => api.get(`/sessions/${id}/workspace`),
     saveWorkspaceFile: (id, path, content) => api.put(`/sessions/${id}/workspace/file`, { body: { path, content } }),
     deploys: (id) => api.get(`/sessions/${id}/deploys`),

@@ -6,6 +6,7 @@
           <div class="text-[13px] font-semibold text-content-strong">Changes</div>
           <div class="truncate text-[11px] text-content-subtle">{fileCount} staged file(s) · {deployHint}</div>
         </div>
+        <button class="rounded-md px-2 py-1 text-[11px] text-content-muted hover:bg-surface-sunken" onclick={onExport} disabled={exporting}>Export ZIP</button>
         <button class="rounded-md px-2 py-1 text-[11px] text-content-muted hover:bg-surface-sunken hover:text-content" onclick={onRefresh}>Refresh</button>
       </div>
 

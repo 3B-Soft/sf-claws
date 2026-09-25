@@ -1,3 +1,4 @@
+import { auditData } from '../lib/audit-data.js';
 import type { AgentRole, AiModel } from '@sf-claws/shared';
 import type { LlmMessage, LlmBlock, LlmProvider, LlmResponse, LlmTool, Effort } from '../ai/types.js';
 import { LlmError } from '../ai/types.js';
@@ -114,6 +115,19 @@ export class AgentRun {
     private cfg: AgentConfig,
     private ctx: ToolContext,
   ) {
+    ctx.app.repos.audit.log({
+      action: 'agent.configured',
+      target: ctx.session.id,
+      details: auditData({
+        agentId: cfg.agentId,
+        parentId: cfg.parentId,
+        role: cfg.role,
+        modelId: cfg.model.id,
+        effort: cfg.effort,
+        system: cfg.system,
+        tools: cfg.tools.map((t) => t.name),
+      }),
+    });
     ctx.conversation = () => structuredClone(this.messages);
     if (cfg.persistent) {
       const stored = ctx.app.repos.messages.list(ctx.session.id, cfg.agentId).map((m) => m.content as LlmMessage);
@@ -619,6 +633,11 @@ export class AgentRun {
     const input = coerceArgs(call.input, def?.inputSchema);
     const label = toolLabel(call.name, input);
     bus.emit(ctx.session.id, { type: 'tool.call', agentId: cfg.agentId, role: cfg.role, toolCallId: call.id, tool: call.name, label, input: safeInput(input) });
+    ctx.app.repos.audit.log({
+      action: 'agent.tool.call',
+      target: ctx.session.id,
+      details: auditData({ agentId: cfg.agentId, toolCallId: call.id, tool: call.name, input }),
+    });
     const started = Date.now();
     let text: string;
     let output: unknown;
@@ -665,6 +684,11 @@ export class AgentRun {
       }
     }
     const durationMs = Date.now() - started;
+    ctx.app.repos.audit.log({
+      action: 'agent.tool.result',
+      target: ctx.session.id,
+      details: auditData({ agentId: cfg.agentId, toolCallId: call.id, tool: call.name, ok, durationMs, text, output }),
+    });
     bus.emit(ctx.session.id, {
       type: 'tool.result',
       agentId: cfg.agentId,
@@ -696,6 +720,11 @@ export class AgentRun {
   }
 
   private push(m: LlmMessage): void {
+    this.ctx.app.repos.audit.log({
+      action: 'agent.message',
+      target: this.ctx.session.id,
+      details: auditData({ agentId: this.cfg.agentId, role: this.cfg.role, message: m }),
+    });
     this.messages.push(m);
     if (this.cfg.persistent) this.ctx.app.repos.messages.append(this.ctx.session.id, this.cfg.agentId, m.role, m);
   }

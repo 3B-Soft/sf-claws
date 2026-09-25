@@ -67,7 +67,10 @@ describe('streaming tool execution', () => {
         // A staging write is concurrency-unsafe, so the read behind it must not jump ahead of it.
         setTimeout(() => mark('completion-returned'), 0);
         return toolCalls([
-          { name: 'write_workspace_file', input: { path: 'classes/A.cls', content: 'public class A {}' } },
+          {
+            name: 'write_workspace_file',
+            input: { path: 'objects/Account/fields/A__c.field-meta.xml', content: '<CustomField><fullName>A__c</fullName><type>Text</type></CustomField>' },
+          },
           { name: 'soql_query', input: { soql: 'SELECT Id FROM Account' } },
         ]);
       },
@@ -79,6 +82,6 @@ describe('streaming tool execution', () => {
     expect(events).toContain('query');
     // The read waited for the message to finish; an early start would have put it first.
     expect(events.indexOf('completion-returned')).toBeLessThan(events.indexOf('query'));
-    expect(ctx.repos.workspace.list(session.id).map((f) => f.path)).toEqual(['classes/A.cls']);
+    expect(ctx.repos.workspace.list(session.id).map((f) => f.path)).toEqual(['objects/Account/fields/A__c.field-meta.xml']);
   });
 });

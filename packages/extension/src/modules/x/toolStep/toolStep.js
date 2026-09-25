@@ -160,7 +160,7 @@ export default class ToolStep extends LightningElement {
     return fileName(this.writePath);
   }
   get renderWrite() {
-    return this.isWrite && !!this.writePath;
+    return this.done && !this.failed && this.isWrite && !!this.writePath;
   }
 
   get renderGeneric() {
@@ -168,6 +168,7 @@ export default class ToolStep extends LightningElement {
   }
   get genericText() {
     const o = this.output;
+    if (this.failed) return o?.text || o?.error || o?.message || (typeof o === 'string' ? o : jsonPretty(o));
     if (typeof o === 'string') return truncate(o, 600);
     if (o && typeof o === 'object') {
       if (typeof o.message === 'string') return truncate(o.message, 400);

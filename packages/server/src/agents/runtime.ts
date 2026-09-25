@@ -250,6 +250,7 @@ export class SessionRuntime {
     const org = this.app.repos.orgs.byId(session.orgId);
     if (!org) throw notFound('Org');
     if (org.status !== 'connected') throw new HttpError(409, 'ORG_DISCONNECTED', `Org "${org.label}" is ${org.status}. An admin must (re)connect it.`);
+    this.recoverLegacyCoverageStop(sessionId);
     this.bus.emit(sessionId, { type: 'user.message', userId, text });
     if (session.title.startsWith('Session ') && this.app.repos.events.listAfter(sessionId).filter((e) => e.type === 'user.message').length === 1) {
       this.app.repos.sessions.update(sessionId, { title: text.replace(/\s+/g, ' ').slice(0, 80) });
@@ -445,6 +446,22 @@ export class SessionRuntime {
   private setStatus(sessionId: string, status: SessionRow['status'], message: string | null): void {
     this.app.repos.sessions.update(sessionId, { status, completedAt: status === 'completed' ? new Date().toISOString() : undefined });
     this.bus.emit(sessionId, { type: 'session.status', status, message });
+    if (status === 'failed' || status === 'cancelled') {
+      this.app.repos.agentState.change(sessionId, (state) => {
+        for (const task of state.tasks)
+          if (task.status === 'in_progress') {
+            task.status = 'pending';
+            task.owner = null;
+            task.metadata.interruption = message;
+          }
+      });
+      const todos = this.app.repos.todos.get(sessionId);
+      if (todos.some((t) => t.status === 'in_progress')) {
+        const items = todos.map((t) => (t.status === 'in_progress' ? { ...t, status: 'pending' as const } : t));
+        this.app.repos.todos.set(sessionId, items, 'orchestrator');
+        this.bus.emit(sessionId, { type: 'todo.updated', agentId: 'orchestrator', items });
+      }
+    }
   }
 
   /**
@@ -874,6 +891,8 @@ export class SessionRuntime {
     const state = this.app.repos.compileControl.get(sessionId);
     if (state.stopped) return state.stopped;
     const key = componentKey(file);
+    // Test/coverage repair may need a new test class, not just edits to an existing one.
+    if (state.roots.some((r) => /^(CodeCoverage|ApexTest):/.test(r.key)) && /^Apex(Class|Trigger)$/.test(file.metadataType ?? '')) return null;
     const existing = this.app.repos.workspace.list(sessionId);
     if (state.roots.length && !existing.some((f) => componentKey(f) === key))
       return `New components are blocked while ${state.roots.length} compile root error(s) remain. Repair and compile the current slice before adding ${key}.`;
@@ -887,7 +906,13 @@ export class SessionRuntime {
   noteWorkspaceChange(sessionId: string, path: string): void {
     const state = this.app.repos.compileControl.get(sessionId);
     const file = this.app.repos.workspace.get(sessionId, path);
-    const changed = file ? state.checkedFiles[path] !== fileHash(file) : false;
+    const changed = file ? state.checkedFiles[path] !== fileHash(file) : path in state.checkedFiles;
+    if (!file) {
+      // Removing a failed component is a valid repair (including renaming it).
+      const keys = new Set(this.app.repos.workspace.list(sessionId).map(componentKey));
+      state.roots = state.roots.filter((r) => /^(CodeCoverage|ApexTest):/.test(r.key) || keys.has(r.key) || r.components.some((k) => keys.has(k)));
+      state.repairKeys = repairComponents(state.roots, this.app.repos.workspace.list(sessionId));
+    }
     state.dirtyPaths = state.dirtyPaths.filter((p) => p !== path);
     if (changed) state.dirtyPaths.push(path);
     state.dirtySince = state.dirtyPaths.length ? (state.dirtySince ?? Date.now()) : null;
@@ -936,6 +961,14 @@ export class SessionRuntime {
         return await this.validateLocked(sessionId, opts);
       } finally {
         this.compiling.delete(sessionId);
+        if (!this.active.has(sessionId)) {
+          const latest = this.app.repos.deploys.latest(sessionId, true);
+          this.setStatus(
+            sessionId,
+            latest?.status === 'succeeded' ? 'idle' : 'failed',
+            latest?.status === 'succeeded' ? 'Validation succeeded' : 'Validation failed; review the diagnostics or resume to repair.',
+          );
+        }
       }
     });
     this.trackBlocking(sessionId, pending);
@@ -976,7 +1009,11 @@ export class SessionRuntime {
     const allFiles = this.app.repos.workspace.list(sessionId);
     if (opts.paths && (!opts.paths.length || opts.paths.some((p) => !allFiles.some((f) => f.path === p))))
       throw badRequest('Compile paths must name staged files.');
-    const files = opts.paths ? compileSlice(allFiles, opts.paths) : allFiles;
+    let files = opts.paths ? compileSlice(allFiles, opts.paths) : allFiles;
+    if (opts.paths && files.some((f) => /^Apex(Class|Trigger)$/.test(f.metadataType ?? ''))) {
+      const testPaths = allFiles.filter((f) => f.action !== 'deleted' && f.metadataType === 'ApexClass' && /@IsTest/i.test(f.content)).map((f) => f.path);
+      files = compileSlice(allFiles, [...files.map((f) => f.path), ...testPaths]);
+    }
     const scope = opts.paths ? ('slice' as const) : ('full' as const);
     if (!files.length) throw badRequest('Workspace is empty; nothing to validate.');
     const control = this.app.repos.compileControl.get(sessionId);
@@ -1012,8 +1049,13 @@ export class SessionRuntime {
       runTests = [];
     }
     const hash = compileHash(files, { testLevel, runTests: [...runTests].sort() });
-    if (opts.agentId && control.lastFailedHash === hash)
+    if (control.lastFailedHash === hash && (opts.agentId || !control.stopped)) {
+      if (!opts.agentId) {
+        const last = this.app.repos.deploys.latest(sessionId, true);
+        if (last?.status === 'failed' && last.scope === scope) return last;
+      }
       throw badRequest('This unchanged payload already failed. Repair its root errors before compiling it again.');
+    }
     const zipBase64 = engine === 'metadata' && this.app.sf.prepareDeploy ? await this.app.sf.prepareDeploy(org.id, sourceFiles, deleted) : undefined;
     const run = this.app.repos.deploys.create({
       sessionId,
@@ -1061,12 +1103,12 @@ export class SessionRuntime {
       outcome.ok &&
       !outcome.failures.length &&
       (outcome.codeCoverage === null || !hasApex || outcome.codeCoverage >= rules.minCodeCoverage || testLevel === 'NoTestRun');
-    if (outcome.ok && hasApex && outcome.codeCoverage !== null && outcome.codeCoverage < rules.minCodeCoverage && testLevel !== 'NoTestRun') {
+    if (hasApex && outcome.codeCoverage !== null && outcome.codeCoverage < rules.minCodeCoverage && testLevel !== 'NoTestRun') {
       outcome.failures.push({
         componentType: 'CodeCoverage',
         fullName: null,
         fileName: null,
-        problem: `Code coverage ${outcome.codeCoverage}% is below the policy minimum of ${rules.minCodeCoverage}%.`,
+        problem: `Code coverage ${outcome.codeCoverage}% is below the policy minimum of ${rules.minCodeCoverage}%. Add or repair Apex tests, include their companion files, and validate the full workspace with the intended tests.`,
         problemType: 'Coverage',
         lineNumber: null,
         columnNumber: null,
@@ -1094,7 +1136,7 @@ export class SessionRuntime {
         }
       : applyCompileResult(control, files, outcome.failures, ok, hash, scope === 'full');
     next.repairKeys = repairComponents(next.roots, allFiles);
-    if (!ok && (!next.roots.length || outcome.failures.some((f) => /UNKNOWN_EXCEPTION/i.test(f.problem))))
+    if (!ok && infrastructureFailure && (!next.roots.length || outcome.failures.some((f) => /UNKNOWN_EXCEPTION/i.test(f.problem))))
       next.stopped =
         'Salesforce returned a platform or test-level failure without component diagnostics. Stop code generation and inspect the validation result before retrying.';
     this.app.repos.compileControl.set(sessionId, next);
@@ -1697,12 +1739,68 @@ _Generated by SF Claws_
     };
   }
 
+  /** Upgrade only the historical misclassified coverage stop; preserve real safety stops. */
+  private recoverLegacyCoverageStop(sessionId: string): void {
+    const state = this.app.repos.compileControl.get(sessionId);
+    if (!state.stopped || !/Salesforce unknown failure|platform or test-level failure without component diagnostics/.test(state.stopped)) return;
+    const session = this.app.repos.sessions.byId(sessionId)!;
+    const last = this.app.repos.deploys.latest(sessionId, true);
+    if (
+      this.app.repos.harness.active(session.orgId) ||
+      !last ||
+      last.status !== 'failed' ||
+      last.componentsFailed ||
+      last.testsFailed ||
+      last.testsTotal === 0 ||
+      last.codeCoverage === null ||
+      last.codeCoverage >= Math.max(75, this.app.policy.effective(session.clientId).minCodeCoverage)
+    )
+      return;
+    const failure = {
+      componentType: 'CodeCoverage',
+      fullName: null,
+      fileName: null,
+      problemType: 'Coverage',
+      lineNumber: null,
+      columnNumber: null,
+      problem: `Previous validation failed with ${last.codeCoverage}% coverage. Restore or add the intended Apex tests and validate the full workspace.`,
+    };
+    this.app.repos.deploys.update(last.id, { failures: [...last.failures, failure] });
+    state.stopped = null;
+    state.roots = rootDiagnostics([failure]);
+    state.repairKeys = repairComponents(state.roots, this.app.repos.workspace.list(sessionId));
+    this.app.repos.compileControl.set(sessionId, state);
+    this.app.repos.audit.log({ action: 'validation.coverage_recovered', target: sessionId, details: { deployId: last.id } });
+  }
+
+  /** A panel validation is feedback to the same implementation loop. Never starts a deploy. */
+  repairManualValidation(sessionId: string, userId: string, run: DeployRun): void {
+    if (run.status !== 'failed' || this.isRunning(sessionId) || this.app.repos.compileControl.get(sessionId).stopped) return;
+    this.startTurn(
+      sessionId,
+      userId,
+      `[Harness validation feedback] Manual validation ${run.id} failed. Coverage: ${run.codeCoverage ?? 'unknown'}%. ` +
+        `Diagnostics: ${JSON.stringify(run.failures)}. Delegate repair to a general builder with the original requirements and these diagnostics. ` +
+        'Use read_validation_result to inspect the checkpoint payload and test selection, repair the cause, then revalidate. Do not repeat an unchanged failing payload. Deployment still requires approval.',
+    );
+  }
+
   /** Restart a dead/interrupted session. The orchestrator has its persisted conversation, todo list, notes and workspace. */
   resume(sessionId: string, userId: string): void {
     const session = this.app.repos.sessions.byId(sessionId);
     if (!session) throw notFound('Session');
     if (this.active.has(sessionId)) throw conflict('Session is already running');
-    const compileStop = this.app.repos.compileControl.get(sessionId).stopped;
+    this.recoverLegacyCoverageStop(sessionId);
+    const control = this.app.repos.compileControl.get(sessionId);
+    // An explicit Resume grants another bounded repair attempt, not permission to
+    // resubmit the identical payload or bypass an uncertain remote operation.
+    if (control.stopped?.startsWith('Stopped after two compiles') && control.roots.length && !this.app.repos.harness.active(session.orgId)) {
+      control.stopped = null;
+      control.noProgress = 0;
+      this.app.repos.compileControl.set(sessionId, control);
+      this.app.repos.audit.log({ userId, action: 'validation.repair_resumed', target: sessionId });
+    }
+    const compileStop = control.stopped;
     if (compileStop)
       throw conflict(
         `${compileStop} Open Changes, inspect the failed validation, make only evidence-backed manual repairs if needed, and run a full validation before resuming.`,
@@ -1716,6 +1814,7 @@ _Generated by SF Claws_
         ? `Open todo items:\n${open.map((t) => `- [${t.status}] ${t.content}`).join('\n')}`
         : 'The todo list has no open items; verify the last step actually completed (check workspace, validations, deploys, docs) and finish or report.',
       notes.length ? `Scratchpad notes available: ${notes.map((n) => n.title).join(', ')} (use scratchpad_read).` : '',
+      `Latest validation: ${JSON.stringify(this.app.repos.deploys.latest(sessionId, true) ?? null)}. Delegate code/test repairs to a general builder.`,
       'Re-validate before any deploy; do not assume earlier validations are still current.',
     ]
       .filter(Boolean)

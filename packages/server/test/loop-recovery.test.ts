@@ -255,7 +255,7 @@ describe('stuck-loop detection on validation failures', () => {
     await waitForIdle(ctx, session.id);
     expect(validations).toBe(3);
     expect(calls).toBe(0);
-    expect(ctx.repos.compileControl.get(session.id).stopped).toContain('two compiles without a smaller root-error set');
+    expect(ctx.repos.compileControl.get(session.id).stopped).toContain('two compiles with unchanged root diagnostics');
     expect(provider.requests).toHaveLength(6); // no paid wrap-up or documentation after the hard stop
     expect(ctx.repos.sessions.byId(session.id)!.status).toBe('failed');
   });
