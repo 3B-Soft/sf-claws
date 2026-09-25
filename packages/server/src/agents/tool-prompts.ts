@@ -11,6 +11,9 @@ Foreground execution returns the completed report. Set runInBackground only when
 
 Fresh agents receive your briefing and session context. Set forkContext to inherit the current conversation as additional context; the worker still has its role's restricted tools, policy, and assignment. Forks cannot create more agents. Workers share the staged workspace, so give implementations disjoint ownership and coordinate edits. Background execution is limited to read-only roles to prevent workspace races. No local worktrees or shell processes are provided. The caller remains responsible for reviewing and explaining results to the user.`;
 
+export const EFFORT_HINT =
+  'How hard the worker thinks. Match it to the task: "low" for a lookup or one mechanical change, "medium" for routine build work, "high" or above for design, tricky logic or debugging. Omit it to use the role default. Never exceeds your own effort.';
+
 export const TASK_CREATE_PROMPT = `Create a durable work item in this session's task list. Use for substantial multi-step requests, multiple deliverables, or an explicitly requested checklist. Skip it for a trivial action or a conversational answer. Check task_list first to avoid duplicates.
 Write an imperative subject and a description with the outcome, relevant context, scope and acceptance checks. activeForm optionally describes ongoing work. New tasks are pending and unowned. Use task_update to assign an agent, add prerequisite dependencies, and mark in_progress before starting. This tool tracks work; it does not launch a worker or grant approval.`;
 export const TASK_GET_PROMPT = `Read a session task's full requirements, status, owner, metadata, and dependencies. Read it before starting or changing the task. blockedBy contains unresolved prerequisites; blocks identifies work depending on this task. A task from another session is not accessible.`;

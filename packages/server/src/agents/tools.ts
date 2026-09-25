@@ -2,7 +2,7 @@ import type { AgentRole, PolicyRules, WorkspaceFile, Client, TodoItem } from '@s
 import { inferComponentFromPath } from '@sf-claws/shared';
 import type { AppContext } from '../app-context.js';
 import type { OrgRow, SessionRow } from '../db/repos/index.js';
-import type { LlmTool } from '../ai/types.js';
+import { EFFORTS, type LlmTool } from '../ai/types.js';
 import type { SessionRuntime } from './runtime.js';
 import { validateXml } from '../salesforce/metadata-xml.js';
 import { DEFAULT_RESULT_LIMIT } from './budget.js';
@@ -12,7 +12,7 @@ import { componentSubject, permissionRefusalText } from './policy.js';
 import { classifyAnonymousApex } from './apex-classify.js';
 import { sha256 } from '../lib/crypto.js';
 import { canonicalRole, DELEGATABLE_ROLES, READ_ONLY_ROLES } from './built-in/index.js';
-import { AGENT_PROMPT } from './tool-prompts.js';
+import { AGENT_PROMPT, EFFORT_HINT } from './tool-prompts.js';
 import { TASK_TOOLS } from './task-tools.js';
 import { SEARCH_TOOLS } from './search-tools.js';
 import { WEB_TOOLS } from './web-tools.js';
@@ -245,6 +245,7 @@ export const TOOLS: ToolDef[] = [
         specialist: { type: 'string', description: 'Specialist name from your instructions' },
         objective: { type: 'string' },
         context: { type: 'string', description: 'Facts already established (ids, API names, decisions)' },
+        effort: { type: 'string', enum: [...EFFORTS], description: EFFORT_HINT },
       },
       ['specialist', 'objective'],
     ),
@@ -258,7 +259,17 @@ export const TOOLS: ToolDef[] = [
           ok: false,
         };
       }
-      const r = await ctx.runtime.runSubagent(ctx.session.id, ctx.agent.id, agent.baseRole, String(input.objective), input.context, undefined, agent);
+      const r = await ctx.runtime.runSubagent(
+        ctx.session.id,
+        ctx.agent.id,
+        agent.baseRole,
+        String(input.objective),
+        input.context,
+        undefined,
+        agent,
+        undefined,
+        input.effort,
+      );
       return { text: r.report, output: { agentId: r.agentId, specialist: agent.name }, ok: r.ok };
     },
   },
@@ -1600,12 +1611,13 @@ export const TOOLS: ToolDef[] = [
         runInBackground: { type: 'boolean' },
         forkContext: { type: 'boolean' },
         context: { type: 'string', description: 'Relevant facts gathered so far (ids, API names, user preferences)' },
+        effort: { type: 'string', enum: [...EFFORTS], description: EFFORT_HINT },
       },
       ['role', 'objective'],
     ),
     roles: ['orchestrator'],
     run: async (input, ctx) => {
-      const r = await ctx.runtime.startWorker(ctx, input.role, input.objective, input.context, !!input.runInBackground, !!input.forkContext);
+      const r = await ctx.runtime.startWorker(ctx, input.role, input.objective, input.context, !!input.runInBackground, !!input.forkContext, input.effort);
       return { text: r.report, output: { agentId: r.agentId, role: input.role, ok: r.ok }, ok: r.ok };
     },
   },

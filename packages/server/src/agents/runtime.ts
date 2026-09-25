@@ -34,7 +34,7 @@ import { preHydrate, hydrationPrompt } from './pre-hydration.js';
 import { toolingEligible } from '../salesforce/tooling-compile.js';
 import { canonicalRole } from './built-in/index.js';
 import { forkMessages, FORK_DIRECTIVE } from './fork.js';
-import type { LlmMessage } from '../ai/types.js';
+import { capEffort, type Effort, type LlmMessage } from '../ai/types.js';
 import { executeCheckpoint, classifyFailure } from './validation-recovery.js';
 import {
   applyCompileResult,
@@ -578,6 +578,7 @@ export class SessionRuntime {
     research?: { sourceId: string; thoroughness: string },
     specialist?: CustomAgent,
     execution?: { agentId: string; signal: AbortSignal; history?: LlmMessage[] },
+    effort?: Effort,
   ): Promise<{ agentId: string; report: string; ok: boolean }> {
     const turn = this.active.get(sessionId);
     if (!turn) throw new Error('No active turn');
@@ -601,6 +602,9 @@ export class SessionRuntime {
     if (execution) ctx.signal = execution.signal;
     try {
       const resolved = this.app.ai.resolve(role, ctx.session.userId);
+      // The orchestrator's binding is the one effort switch: it picks each worker's level (or the
+      // role binding applies) and nothing a worker runs at may exceed its own.
+      const workerEffort = capEffort(effort ?? resolved.effort, this.app.ai.resolve('orchestrator', ctx.session.userId).effort);
       this.bus.emit(sessionId, { type: 'agent.spawned', agentId, parentAgentId: parentId, role, modelId: resolved.model.modelId, objective });
       // A specialist's instructions are appended to the base role's prompt (in the dynamic half),
       // never substituted for it: the role's safety rules and tool guidance must survive whatever
@@ -613,7 +617,7 @@ export class SessionRuntime {
           role,
           model: resolved.model,
           provider: resolved.provider,
-          effort: resolved.effort,
+          effort: workerEffort,
           // Thoroughness bounds the researcher's steps as well as its reads: a "quick" question must
           // not be allowed forty iterations of searching.
           maxIterations: research
@@ -681,9 +685,19 @@ export class SessionRuntime {
     }
   }
 
-  async startWorker(ctx: ToolContext, role: AgentRole, objective: string, context?: string, background = false, fork = false) {
+  async startWorker(ctx: ToolContext, role: AgentRole, objective: string, context?: string, background = false, fork = false, effort?: Effort) {
     if (ctx.agent.role !== 'orchestrator') throw badRequest('Workers cannot spawn other workers.');
-    return this.launchWorker(ctx.session.id, ctx.agent.id, role, objective, context, background, fork ? forkMessages(ctx.conversation?.() ?? []) : undefined);
+    return this.launchWorker(
+      ctx.session.id,
+      ctx.agent.id,
+      role,
+      objective,
+      context,
+      background,
+      fork ? forkMessages(ctx.conversation?.() ?? []) : undefined,
+      undefined,
+      effort,
+    );
   }
 
   private async launchWorker(
@@ -695,6 +709,7 @@ export class SessionRuntime {
     background = false,
     history?: LlmMessage[],
     resumeId?: string,
+    effort?: Effort,
   ) {
     const turn = this.active.get(sessionId);
     if (!turn || turn.abort.signal.aborted) throw badRequest('No active turn.');
@@ -717,7 +732,7 @@ export class SessionRuntime {
         old.ok = false;
       } else state.workers.push({ id: agentId, parentId, role, objective, status: 'running', report: '', ok: false });
     });
-    const promise = this.runSubagent(sessionId, parentId, role, objective, context, prior?.research, specialist, { agentId, signal, history })
+    const promise = this.runSubagent(sessionId, parentId, role, objective, context, prior?.research, specialist, { agentId, signal, history }, effort)
       .catch((error) => ({ agentId, report: `Worker failed: ${(error as Error).message}`, ok: false }))
       .then((result) => {
         this.app.repos.agentState.change(sessionId, (state) => {

@@ -34,7 +34,10 @@ export interface LlmTool {
   inputSchema: Record<string, unknown>;
 }
 
-export type Effort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+export const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'] as const;
+export type Effort = (typeof EFFORTS)[number];
+/** The lower of two effort levels: a sub-agent never thinks harder than the lead agent's binding allows. */
+export const capEffort = (effort: Effort, cap: Effort): Effort => (EFFORTS.indexOf(effort) > EFFORTS.indexOf(cap) ? cap : effort);
 
 export interface LlmRequest {
   model: AiModel;

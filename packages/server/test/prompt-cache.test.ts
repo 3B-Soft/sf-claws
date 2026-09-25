@@ -106,6 +106,32 @@ describe('prompt cache split', () => {
     expect(objectives.some((o) => o.includes('Count the accounts'))).toBe(true);
     expect(objectives.some((o) => o.includes('validation rules on Contact'))).toBe(true);
   });
+
+  it('runs a worker at the effort the orchestrator picks, capped at the orchestrator binding', async () => {
+    const provider = new FakeProvider([]);
+    const ctx = makeContext({ provider, sf: {} as never });
+    const { user, org } = await seedClientOrgUser(ctx);
+    ctx.repos.bindings.setAll(ctx.repos.bindings.list().map((b) => ({ ...b, effort: b.role === 'orchestrator' ? 'high' : 'xhigh' })));
+    const session = ctx.runtime.createSession({ userId: user.id, orgId: org.id, uiMode: 'visual' });
+    provider.script = [
+      () =>
+        toolCalls([
+          { name: 'run_subagent', input: { role: 'analyst', objective: 'Count the accounts', effort: 'low' } },
+          { name: 'run_subagent', input: { role: 'analyst', objective: 'Trace the Contact trigger', effort: 'max' } },
+          { name: 'run_subagent', input: { role: 'analyst', objective: 'List the Contact fields' } },
+        ]),
+      () => text('a'),
+      () => text('b'),
+      () => text('c'),
+      () => text('done'),
+    ];
+    ctx.runtime.startTurn(session.id, user.id, 'look around');
+    await waitForIdle(ctx, session.id);
+    const effortFor = (objective: string) => provider.requests.find((r) => (r.messages[0].content[0] as { text?: string }).text?.includes(objective))!.effort;
+    expect(effortFor('Count the accounts')).toBe('low');
+    expect(effortFor('Trace the Contact trigger')).toBe('high');
+    expect(effortFor('List the Contact fields')).toBe('high');
+  });
 });
 
 describe('cache-break probe', () => {
