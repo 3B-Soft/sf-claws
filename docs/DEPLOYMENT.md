@@ -29,7 +29,7 @@ Each org authorizes through a Salesforce External Client App (or a legacy Connec
 
 ## 2. GitHub
 
-Per client, create a fine-grained personal access token (or a GitHub App installation token) with `Contents: read/write` and `Pull requests: read/write` on the client's SFDX repository, and enter it in the client's GitHub tab. The repository must already contain the SFDX project (default `force-app/main/default`). For local development, `GITHUB_TOKEN` is an optional fallback for every configured repository that does not have its own token; a per-client token entered in the UI always wins.
+Set `GITHUB_TOKEN` in the server environment to share one GitHub account across configured client repositories and knowledge base sources. It needs `Contents: read/write` and `Pull requests: read/write` for client repositories, and read access to knowledge source repositories. For exceptions, enter a token in the client's GitHub tab or the knowledge source configuration; that token always overrides the environment token. Leave the token blank when creating a configuration to use the shared token; blank when editing preserves any existing custom token. Client repositories must already contain the SFDX project (default `force-app/main/default`).
 
 ## 3. AI providers
 

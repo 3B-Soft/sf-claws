@@ -50,6 +50,7 @@ export class KnowledgeService {
     private secrets: SecretBox,
     private log: Logger,
     fetchImpl: typeof fetch = fetch,
+    private defaultToken = '',
   ) {
     this.repos_ = new RepoStore(log, fetchImpl);
   }
@@ -234,14 +235,16 @@ export class KnowledgeService {
     return this.repos_.snapshot(source.repoRef, this.tokenFor(source));
   }
 
-  /**
-   * The token a source authenticates with. A knowledge source carries its own credential and never
-   * borrows a client's GitHub token: these are the agency's product repositories, a different trust
-   * domain from the client repository we commit to.
-   */
+  hasToken(source: KnowledgeSourceRow): boolean {
+    return !!source.tokenEnc || !!this.defaultToken.trim();
+  }
+
+  /** A source-specific credential overrides the shared environment token. */
   private tokenFor(source: KnowledgeSourceRow): string {
-    if (!source.tokenEnc) throw new Error(`Knowledge source "${source.name}" has no access token configured. A super admin must add one.`);
-    return this.secrets.decrypt(source.tokenEnc);
+    if (source.tokenEnc) return this.secrets.decrypt(source.tokenEnc);
+    const token = this.defaultToken.trim();
+    if (!token) throw new Error(`Knowledge source "${source.name}" has no access token configured. Set GITHUB_TOKEN or add a token for this source.`);
+    return token;
   }
 
   /** Validate a source's configuration by fetching its repository. */
@@ -260,9 +263,9 @@ export class KnowledgeService {
   }
 }
 
-export function toPublicSource(s: KnowledgeSourceRow): KnowledgeSource {
+export function toPublicSource(s: KnowledgeSourceRow, hasToken = s.hasToken): KnowledgeSource {
   const { tokenEnc: _tokenEnc, ...rest } = s;
-  return rest;
+  return { ...rest, hasToken };
 }
 
 const firstLine = (s: string) =>

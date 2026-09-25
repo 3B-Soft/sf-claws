@@ -288,7 +288,7 @@ every grep returns `totalMatches` and a continuation `offset` so a page is never
 whole result. The documentation index (paths and titles, sorted and capped) is part of the
 knowledge section of the prompt, in the cached prefix, so an agent can orient without a search.
 
-Each source carries its own read-only credential and never borrows a client's GitHub token.
+Sources use the server's `GITHUB_TOKEN` by default. A source-specific credential overrides it; client-specific credentials are never borrowed by knowledge sources.
 
 ## Standing instructions
 

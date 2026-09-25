@@ -58,6 +58,14 @@ describe('GithubService.commit', () => {
 
     expect(gh.hasToken(client.id)).toBe(true);
     expect(gh.repoFor(client.id).tokenEnc).toBeNull();
+    expect(await (gh as any).client(gh.repoFor(client.id)).auth()).toMatchObject({ token: 'github_pat_from_env' });
+
+    ctx.repos.github.upsert(client.id, {
+      ...gh.repoFor(client.id),
+      tokenEnc: ctx.secrets.encrypt('ghp_override'),
+    });
+    expect(await (gh as any).client(gh.repoFor(client.id)).auth()).toMatchObject({ token: 'ghp_override' });
+    ctx.db.close();
   });
 
   it('deletes paths and uploads binary content byte-exact in one commit', async () => {

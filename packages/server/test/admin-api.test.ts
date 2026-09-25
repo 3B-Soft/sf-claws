@@ -14,7 +14,7 @@ describe('admin api', () => {
   let adminToken = '';
   let userToken = '';
   let clientId = '';
-  const ctx = makeContext();
+  const ctx = makeContext({ githubToken: 'shared-github-secret' });
 
   beforeAll(async () => {
     app = await buildApp(ctx);
@@ -88,6 +88,33 @@ describe('admin api', () => {
       expect(body.hasToken).toBe(true);
       expect(JSON.stringify(body)).not.toContain('ghp_secret');
       expect(JSON.stringify(body)).not.toContain('tokenEnc');
+    });
+
+    it('reports the shared token on create, list and update without storing or exposing it', async () => {
+      const created = await app.inject({
+        method: 'POST',
+        url: '/api/v1/admin/knowledge',
+        headers: bearer(superToken),
+        payload: { kind: 'repo', name: 'Shared token source', repoRef: 'acme/shared', scope: 'global' },
+      });
+      expect(created.statusCode).toBe(200);
+      expect(created.json().hasToken).toBe(true);
+      const id = created.json().id;
+      expect(ctx.repos.knowledge.byId(id)?.tokenEnc).toBeNull();
+      const listed = await app.inject({ method: 'GET', url: '/api/v1/admin/knowledge', headers: bearer(superToken) });
+      expect(listed.json().find((s: { id: string }) => s.id === id).hasToken).toBe(true);
+      const updated = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/admin/knowledge/${id}`,
+        headers: bearer(superToken),
+        payload: { guidance: 'Updated' },
+      });
+      expect(updated.statusCode).toBe(200);
+      expect(updated.json().hasToken).toBe(true);
+      for (const response of [created, listed, updated]) {
+        expect(response.body).not.toContain('shared-github-secret');
+        expect(response.body).not.toContain('tokenEnc');
+      }
     });
 
     it('stores the token encrypted rather than in the clear', () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { gzipSync } from 'node:zlib';
 import { RepoStore, parseRepoRef, parseTar, globToRegExp } from '../src/knowledge/repo-store.js';
 import { splitFrontMatter } from '../src/knowledge/service.js';
@@ -245,7 +245,31 @@ describe('knowledge service', () => {
     expect(await ctx.knowledge.promptSection(empty.id)).toBe('');
   });
 
-  it('refuses to use a source with no token rather than borrowing another credential', async () => {
+  it.each(['docs', 'repo'] as const)('uses the environment token for a %s source unless overridden', async (kind) => {
+    const fetchImpl = vi.fn(fakeFetch(makeTarball(SAMPLE)));
+    const ctx = makeContext({ fetch: fetchImpl as unknown as typeof fetch, githubToken: '  shared-token  ' });
+    const source = ctx.repos.knowledge.create({ kind, name: 'Shared', repoRef: 'acme/product', scope: 'global' });
+
+    expect(ctx.knowledge.hasToken(source)).toBe(true);
+    expect((await ctx.knowledge.test(source.id)).ok).toBe(true);
+    expect(fetchImpl.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer shared-token' }),
+      }),
+    );
+    expect(ctx.repos.knowledge.byId(source.id)?.tokenEnc).toBeNull();
+
+    ctx.repos.knowledge.update(source.id, { tokenEnc: ctx.secrets.encrypt('source-token') });
+    expect((await ctx.knowledge.test(source.id)).ok).toBe(true);
+    expect(fetchImpl.mock.calls.at(-1)?.[1]).toEqual(
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer source-token' }),
+      }),
+    );
+    ctx.db.close();
+  });
+
+  it('refuses to use a source when neither a source nor environment token is available', async () => {
     const ctx = makeContext({ fetch: fakeFetch(makeTarball(SAMPLE)) });
     const { client } = await seedClientOrgUser(ctx);
     const source = ctx.repos.knowledge.create({ kind: 'repo', name: 'No token', repoRef: 'acme/product', guidance: '', scope: 'global' });

@@ -128,11 +128,11 @@ export default class GithubTab extends LightningElement {
   }
   get tokenHint() {
     return this.repo?.hasToken
-      ? 'A token is stored (write-only, never displayed). Enter a new one to replace it.'
-      : 'Fine-grained PAT with contents read/write on this repo. Stored encrypted.';
+      ? 'A token is available. Leave blank to keep it, or enter a repository-specific token to override the shared token.'
+      : 'Optional when the server has GITHUB_TOKEN configured. A custom token overrides it and needs contents read/write on this repo.';
   }
   get tokenStatus() {
-    return this.repo?.hasToken ? 'Token stored' : 'No token';
+    return this.repo?.hasToken ? 'Token available' : 'No token';
   }
   get tokenColor() {
     return this.repo?.hasToken ? 'emerald' : 'amber';
@@ -159,7 +159,7 @@ export default class GithubTab extends LightningElement {
     );
   }
   get cannotSave() {
-    return this.busy || !this.f.owner?.trim() || !this.f.repo?.trim() || (!this.repo?.hasToken && !this.f.token?.trim());
+    return this.busy || !this.f.owner?.trim() || !this.f.repo?.trim();
   }
   get sections() {
     return [

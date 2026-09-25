@@ -14,7 +14,7 @@
     <template lwc:if={isSources}>
       <div class="mb-4 rounded-xl border border-line bg-surface p-3 text-sm leading-relaxed text-content-muted">
         Point the agents at your own documentation and product repositories. They search documentation first and treat code as ground truth when the two
-        disagree. Each source uses its own read-only access token — never a client's GitHub token, which belongs to a different trust boundary.
+        disagree. Sources use the shared server GitHub token by default. Add a source-specific token to use a different account or repository permission.
       </div>
       <div class="mb-3 flex justify-end">
         <button class="btn-primary" onclick={onNewSource}><x-icon name="plus" cls="h-4 w-4"></x-icon> Add source</button>

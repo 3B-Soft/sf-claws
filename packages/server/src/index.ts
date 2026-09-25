@@ -33,7 +33,7 @@ export async function createContext(overrides: Parameters<typeof loadConfig>[0] 
   });
   const skills = new SkillsService(repos, log);
   const policy = new PolicyService(repos);
-  const knowledge = new KnowledgeService(repos, secrets, log);
+  const knowledge = new KnowledgeService(repos, secrets, log, undefined, config.GITHUB_TOKEN);
   const base = { config, db, repos, log, secrets, auth, sf, github, ai, skills, policy, knowledge };
   const runtime = new SessionRuntime(base);
   const ctx: AppContext = { ...base, runtime };

@@ -74,21 +74,21 @@ export const toolCalls = (calls: { name: string; input: unknown }[]): LlmRespons
   usage: { inputTokens: 100, outputTokens: 20, cachedInputTokens: 50 },
 });
 
-export function makeContext(opts: { provider?: LlmProvider; sf?: Partial<SalesforceService>; fetch?: typeof fetch } = {}): AppContext {
+export function makeContext(opts: { provider?: LlmProvider; sf?: Partial<SalesforceService>; fetch?: typeof fetch; githubToken?: string } = {}): AppContext {
   const config = testConfig();
   const db = openDb(':memory:');
   const repos = createRepos(db);
   const log = createLogger('error', false);
   const secrets = new SecretBox(config.MASTER_KEY, repos.tenantKeys);
   const auth = new AuthService(repos, config);
-  const github = new GithubService(repos, secrets, log);
+  const github = new GithubService(repos, secrets, log, opts.githubToken ?? '');
   const ai = new AiRegistry(repos, secrets, log);
   ai.seedDefaults();
   if (opts.provider) (ai as any).provider = () => opts.provider;
   repos.providers.set('anthropic', secrets.encrypt('sk-test'), null, 'test');
   const skills = new SkillsService(repos, log);
   const policy = new PolicyService(repos);
-  const knowledge = new KnowledgeService(repos, secrets, log, opts.fetch);
+  const knowledge = new KnowledgeService(repos, secrets, log, opts.fetch, opts.githubToken ?? '');
   const sf = (opts.sf ?? {}) as SalesforceService;
   const base = { config, db, repos, log, secrets, auth, sf, github, ai, skills, policy, knowledge };
   const runtime = new SessionRuntime(base);

@@ -301,7 +301,7 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
 
   app.get('/admin/knowledge', async (req) => {
     requireRole(req, 'admin');
-    return ctx.repos.knowledge.listAll().map(toPublicSource);
+    return ctx.repos.knowledge.listAll().map((s) => toPublicSource(s, ctx.knowledge.hasToken(s)));
   });
 
   app.post('/admin/knowledge', async (req) => {
@@ -325,7 +325,7 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
       details: { name: created.name, repoRef: created.repoRef, scope: created.scope },
       ip: ip(req),
     });
-    return toPublicSource(created);
+    return toPublicSource(created, ctx.knowledge.hasToken(created));
   });
 
   app.patch('/admin/knowledge/:id', async (req) => {
@@ -340,7 +340,7 @@ export async function adminRoutes(app: FastifyInstance, ctx: AppContext) {
     });
     ctx.knowledge.invalidate(id);
     ctx.repos.audit.log({ userId: admin.id, action: 'knowledge.update', target: id, details: { fields: Object.keys(body) }, ip: ip(req) });
-    return toPublicSource(updated!);
+    return toPublicSource(updated!, ctx.knowledge.hasToken(updated!));
   });
 
   app.delete('/admin/knowledge/:id', async (req) => {

@@ -82,7 +82,7 @@ export default class KnowledgePage extends LightningElement {
         scopeLabel: s.scope === 'global' ? 'All clients' : this.clientName(s.clientId),
         statusLabel: s.enabled ? 'Enabled' : 'Disabled',
         statusCls: `text-xs font-medium ${s.enabled ? 'text-emerald-700' : 'text-content-subtle'}`,
-        tokenLabel: s.hasToken ? 'Access token set' : 'No access token — the agents cannot read this',
+        tokenLabel: s.hasToken ? 'Access token available' : 'No access token — the agents cannot read this',
         tokenCls: `text-xs ${s.hasToken ? 'text-content-subtle' : 'text-amber-700'}`,
         hasTest: !!test,
         testMessage: test?.message,
@@ -145,8 +145,8 @@ export default class KnowledgePage extends LightningElement {
   }
   get tokenHint() {
     return this.form?.id
-      ? 'Leave blank to keep the current token. Use a read-only token scoped to this repository.'
-      : 'A read-only token with access to this repository. Never reuse a client GitHub token here.';
+      ? 'Leave blank to keep the current token or use the shared server token when no custom token is stored. A custom token overrides the shared token.'
+      : 'Optional when the server has GITHUB_TOKEN configured. Add a custom token with read access to override it for this source.';
   }
   get repoRefHint() {
     return 'owner/repo, or owner/repo#branch to pin a branch.';
