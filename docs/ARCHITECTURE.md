@@ -47,7 +47,7 @@ Modules:
   models and cost.
 - `agents/` — the runtime. See below.
 - `knowledge/` — documentation corpora and repository snapshots the agents research.
-- `skills/` — markdown skills with front matter, seeded on first boot, injected per role.
+- `skills/` — markdown skills with front matter, seeded on boot and re-synced on every restart unless an admin has edited that skill in the UI (then the UI edit wins), injected per role.
 
 ### Agent runtime (`packages/server/src/agents`)
 

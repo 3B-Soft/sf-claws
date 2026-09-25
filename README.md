@@ -115,7 +115,7 @@ approves them.
 | `packages/server` | Control plane and agent runtime (Fastify, bun:sqlite, jsforce, Octokit, Anthropic + OpenAI + Gemini + DeepSeek + DeepInfra). |
 | `packages/admin-ui` | Admin console (LWC OSS + Tailwind + Vite). |
 | `packages/extension` | Chrome MV3 side panel (LWC OSS + Tailwind + Vite). |
-| `skills/` | Default markdown skills seeded on first boot (policy, quality, playbooks). |
+| `skills/` | Default markdown skills (policy, quality, playbooks). Restart the server to pick up edits; a skill edited in the Admin UI is no longer overwritten from its file. |
 | `docs/` | Architecture, tenancy, deployment, admin and user guides. |
 
 ## The workflow it enforces

@@ -39,13 +39,25 @@ export class SkillsService {
       .readdirSync(dir)
       .filter((f) => f.endsWith('.md'))
       .sort()) {
-      if (this.repos.skills.bySeedFile(file)) continue;
       const raw = fs.readFileSync(path.join(dir, file), 'utf8');
       const { meta, body } = parseFrontMatter(raw);
       const kind = (['knowledge', 'policy', 'quality', 'playbook'].includes(meta.kind) ? meta.kind : 'knowledge') as SkillKind;
       const roles = Array.isArray(meta.roles) ? (meta.roles as AgentRole[]) : [];
+      const name = meta.name ?? file.replace(/\.md$/, '');
+      const existing = this.repos.skills.bySeedFile(file);
+      if (existing) {
+        // Re-sync a changed file, but only while no admin has edited the row (updatedBy stays null
+        // until someone saves it in the Admin UI) — their edit wins over the file.
+        const changed =
+          existing.content !== body || existing.name !== name || existing.kind !== kind || JSON.stringify(existing.roles) !== JSON.stringify(roles);
+        if (existing.updatedBy === null && changed) {
+          this.repos.skills.update(existing.id, { name, kind, roles, content: body });
+          this.log.info({ file }, 'Re-synced skill from file');
+        }
+        continue;
+      }
       this.repos.skills.create({
-        name: meta.name ?? file.replace(/\.md$/, ''),
+        name,
         kind,
         scope: 'global' as SkillScope,
         roles,
